@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -227,40 +226,60 @@ namespace TimelessTales.UI
                 Color.DarkGray * 0.9f);
             
             var items = player.Inventory.GetAllItems();
-            var itemList = items.ToList();
             
-            // Draw inventory slots
-            for (int row = 0; row < rows; row++)
+            // Draw inventory slots - iterate directly over dictionary
+            int index = 0;
+            foreach (var item in items)
             {
-                for (int col = 0; col < slotsPerRow; col++)
-                {
-                    int index = row * slotsPerRow + col;
-                    int x = gridX + spacing + (slotSize + spacing) * col;
-                    int y = gridY + spacing + (slotSize + spacing) * row;
+                if (index >= rows * slotsPerRow)
+                    break;
                     
-                    // Draw slot background
-                    spriteBatch.Draw(_pixelTexture,
-                        new Rectangle(x, y, slotSize, slotSize),
-                        Color.Gray * 0.6f);
-                    
-                    // Draw slot border
-                    int borderWidth = 2;
-                    spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), Color.Black);
-                    spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), Color.Black);
-                    spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), Color.Black);
-                    spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), Color.Black);
-                    
-                    // Draw item if exists
-                    if (index < itemList.Count)
-                    {
-                        var item = itemList[index];
-                        Color blockColor = BlockRegistry.Get(item.Key).Color;
-                        int padding = 8;
-                        spriteBatch.Draw(_pixelTexture,
-                            new Rectangle(x + padding, y + padding, slotSize - padding * 2, slotSize - padding * 2),
-                            blockColor);
-                    }
-                }
+                int row = index / slotsPerRow;
+                int col = index % slotsPerRow;
+                int x = gridX + spacing + (slotSize + spacing) * col;
+                int y = gridY + spacing + (slotSize + spacing) * row;
+                
+                // Draw slot background
+                spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(x, y, slotSize, slotSize),
+                    Color.Gray * 0.6f);
+                
+                // Draw slot border
+                int borderWidth = 2;
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), Color.Black);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), Color.Black);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), Color.Black);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), Color.Black);
+                
+                // Draw item
+                Color blockColor = BlockRegistry.Get(item.Key).Color;
+                int padding = 8;
+                spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(x + padding, y + padding, slotSize - padding * 2, slotSize - padding * 2),
+                    blockColor);
+                
+                index++;
+            }
+            
+            // Draw empty slots for remaining spaces
+            for (; index < rows * slotsPerRow; index++)
+            {
+                int row = index / slotsPerRow;
+                int col = index % slotsPerRow;
+                int x = gridX + spacing + (slotSize + spacing) * col;
+                int y = gridY + spacing + (slotSize + spacing) * row;
+                
+                // Draw slot background
+                spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(x, y, slotSize, slotSize),
+                    Color.Gray * 0.6f);
+                
+                // Draw slot border
+                int borderWidth = 2;
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), Color.Black);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), Color.Black);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), Color.Black);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), Color.Black);
             }
             
             // Draw "Press I to close" message

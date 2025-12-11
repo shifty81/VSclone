@@ -31,7 +31,8 @@ namespace TimelessTales.Core
             _previousMouseState = _currentMouseState;
             _currentMouseState = Mouse.GetState();
             
-            // Center mouse for captured mode
+            // Center mouse for captured mode after reading current state
+            // This is standard for FPS games to capture mouse delta then reset position
             if (_mouseCaptured && _screenCenter != Point.Zero)
             {
                 Mouse.SetPosition(_screenCenter.X, _screenCenter.Y);
