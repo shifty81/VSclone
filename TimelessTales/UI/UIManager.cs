@@ -334,16 +334,19 @@ namespace TimelessTales.UI
             if (_worldManager != null)
             {
                 int mapRange = 50; // Blocks to show on each side
+                if (mapRange <= 0) mapRange = 1; // Prevent division by zero
+                
                 int pixelsPerBlock = minimapSize / (mapRange * 2);
                 
                 Vector3 playerPos = player.Position;
                 int playerX = (int)Math.Floor(playerPos.X);
                 int playerZ = (int)Math.Floor(playerPos.Z);
                 
-                // Draw a simplified top-down view
-                for (int dx = -mapRange; dx < mapRange; dx++)
+                // Draw a simplified top-down view with reduced sampling for performance
+                int step = Math.Max(1, mapRange / 25); // Sample approximately 50x50 grid
+                for (int dx = -mapRange; dx < mapRange; dx += step)
                 {
-                    for (int dz = -mapRange; dz < mapRange; dz++)
+                    for (int dz = -mapRange; dz < mapRange; dz += step)
                     {
                         int worldX = playerX + dx;
                         int worldZ = playerZ + dz;
@@ -371,7 +374,7 @@ namespace TimelessTales.UI
                             if (pixelsPerBlock > 0)
                             {
                                 spriteBatch.Draw(_pixelTexture,
-                                    new Rectangle(pixelX, pixelZ, Math.Max(1, pixelsPerBlock), Math.Max(1, pixelsPerBlock)),
+                                    new Rectangle(pixelX, pixelZ, Math.Max(1, pixelsPerBlock * step), Math.Max(1, pixelsPerBlock * step)),
                                     terrainColor * 0.6f);
                             }
                         }
@@ -527,16 +530,20 @@ namespace TimelessTales.UI
             if (_worldManager != null)
             {
                 int mapRange = 200; // Show larger area on world map
+                if (mapRange <= 0) mapRange = 1; // Prevent division by zero
+                
                 int pixelsPerBlock = mapSize / (mapRange * 2);
                 
                 Vector3 playerPos = player.Position;
                 int playerX = (int)Math.Floor(playerPos.X);
                 int playerZ = (int)Math.Floor(playerPos.Z);
                 
-                // Draw a simplified top-down view
-                for (int dx = -mapRange; dx < mapRange; dx += 2) // Step by 2 for performance
+                // Draw a simplified top-down view with optimized sampling
+                // Step size adjusts based on map range for consistent performance
+                int step = Math.Max(2, mapRange / 50); // Sample approximately 100x100 grid
+                for (int dx = -mapRange; dx < mapRange; dx += step)
                 {
-                    for (int dz = -mapRange; dz < mapRange; dz += 2)
+                    for (int dz = -mapRange; dz < mapRange; dz += step)
                     {
                         int worldX = playerX + dx;
                         int worldZ = playerZ + dz;
@@ -558,13 +565,13 @@ namespace TimelessTales.UI
                             float heightFactor = MathHelper.Clamp(highestY / 100f, 0f, 1f);
                             Color terrainColor = Color.Lerp(new Color(0, 100, 0), new Color(200, 200, 200), heightFactor);
                             
-                            int pixelX = mapX + ((dx + mapRange) * pixelsPerBlock) / 2;
-                            int pixelZ = mapY + ((dz + mapRange) * pixelsPerBlock) / 2;
+                            int pixelX = mapX + ((dx + mapRange) * pixelsPerBlock) / step;
+                            int pixelZ = mapY + ((dz + mapRange) * pixelsPerBlock) / step;
                             
                             if (pixelsPerBlock > 0)
                             {
                                 spriteBatch.Draw(_pixelTexture,
-                                    new Rectangle(pixelX, pixelZ, Math.Max(2, pixelsPerBlock * 2), Math.Max(2, pixelsPerBlock * 2)),
+                                    new Rectangle(pixelX, pixelZ, Math.Max(2, pixelsPerBlock * step), Math.Max(2, pixelsPerBlock * step)),
                                     terrainColor * 0.7f);
                             }
                         }

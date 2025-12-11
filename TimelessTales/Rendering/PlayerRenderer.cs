@@ -12,6 +12,10 @@ namespace TimelessTales.Rendering
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly BasicEffect _effect;
+        
+        // Body visibility thresholds (in radians)
+        private const float BODY_VISIBILITY_THRESHOLD = 0.3f;  // ~17 degrees
+        private const float LEG_VISIBILITY_THRESHOLD = 0.8f;   // ~46 degrees
 
         public PlayerRenderer(GraphicsDevice graphicsDevice)
         {
@@ -100,9 +104,9 @@ namespace TimelessTales.Rendering
             AddBox(vertices, leftArmBase, armWidth, armHeight, armLength, armColor, forward, right, up);
             
             // Add body parts when looking down (pitch > 0 means looking down)
-            if (pitch > 0.3f) // Start showing body when looking down past 0.3 radians (~17 degrees)
+            if (pitch > BODY_VISIBILITY_THRESHOLD)
             {
-                float bodyVisibility = MathHelper.Clamp((pitch - 0.3f) / 0.5f, 0f, 1f);
+                float bodyVisibility = MathHelper.Clamp((pitch - BODY_VISIBILITY_THRESHOLD) / 0.5f, 0f, 1f);
                 
                 // Torso - positioned below camera view
                 float torsoWidth = 0.4f;
@@ -117,10 +121,10 @@ namespace TimelessTales.Rendering
                     AddBox(vertices, torsoBase, torsoWidth, torsoDepth, torsoHeight, torsoColor, up, right, forward);
                 }
                 
-                // Legs - only visible when looking down significantly (pitch > 0.8 radians ~46 degrees)
-                if (pitch > 0.8f)
+                // Legs - only visible when looking down significantly
+                if (pitch > LEG_VISIBILITY_THRESHOLD)
                 {
-                    float legVisibility = MathHelper.Clamp((pitch - 0.8f) / 0.5f, 0f, 1f);
+                    float legVisibility = MathHelper.Clamp((pitch - LEG_VISIBILITY_THRESHOLD) / 0.5f, 0f, 1f);
                     
                     if (legVisibility > 0.2f)
                     {
