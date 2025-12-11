@@ -203,22 +203,30 @@ namespace TimelessTales.Entities
                     int maxX = (int)MathF.Ceiling(result.X + PLAYER_WIDTH / 2);
                     int minZ = (int)MathF.Floor(result.Z - PLAYER_WIDTH / 2);
                     int maxZ = (int)MathF.Ceiling(result.Z + PLAYER_WIDTH / 2);
-                    int ceilingY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
+                    int headY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
                     
-                    // Find lowest ceiling block across player's width
-                    int lowestCeilingY = ceilingY;
+                    // Find the lowest Y coordinate of ceiling blocks
+                    int lowestCeilingY = int.MaxValue;
                     for (int x = minX; x < maxX; x++)
                     {
                         for (int z = minZ; z < maxZ; z++)
                         {
-                            if (world.IsBlockSolid(x, ceilingY, z))
+                            // Check a few blocks above head for ceiling
+                            for (int y = headY; y <= headY + 1; y++)
                             {
-                                lowestCeilingY = Math.Min(lowestCeilingY, ceilingY);
+                                if (world.IsBlockSolid(x, y, z))
+                                {
+                                    lowestCeilingY = Math.Min(lowestCeilingY, y);
+                                    break;
+                                }
                             }
                         }
                     }
                     
-                    result.Y = lowestCeilingY - PLAYER_HEIGHT;
+                    if (lowestCeilingY != int.MaxValue)
+                    {
+                        result.Y = lowestCeilingY - PLAYER_HEIGHT;
+                    }
                 }
                 Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
             }
