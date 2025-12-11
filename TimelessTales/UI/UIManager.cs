@@ -43,6 +43,7 @@ namespace TimelessTales.UI
             if (_player != null)
             {
                 DrawInventory(spriteBatch, _player);
+                DrawBlockBreakProgress(spriteBatch, _player);
             }
         }
 
@@ -81,31 +82,108 @@ namespace TimelessTales.UI
 
         private void DrawInventory(SpriteBatch spriteBatch, Player player)
         {
-            // Draw hotbar
-            int hotbarY = _screenHeight - 60;
-            int slotSize = 40;
-            int spacing = 5;
-            int startX = (_screenWidth - (slotSize + spacing) * 9) / 2;
+            // Draw hotbar at bottom of screen
+            int hotbarY = _screenHeight - 70;
+            int slotSize = 50;
+            int spacing = 8;
+            int hotbarSlots = 9;
+            int startX = (_screenWidth - (slotSize + spacing) * hotbarSlots + spacing) / 2;
             
             var items = player.Inventory.GetAllItems();
-            int index = 0;
             
-            foreach (var item in items.Take(9))
+            // Get the 9 basic block types for hotbar
+            var hotbarItems = new[] 
+            { 
+                BlockType.Stone, 
+                BlockType.Dirt, 
+                BlockType.Planks, 
+                BlockType.Cobblestone, 
+                BlockType.Wood,
+                BlockType.Grass,
+                BlockType.Sand,
+                BlockType.Gravel,
+                BlockType.Clay
+            };
+            
+            for (int i = 0; i < hotbarSlots; i++)
             {
-                int x = startX + (slotSize + spacing) * index;
+                int x = startX + (slotSize + spacing) * i;
+                
+                // Determine if this slot is selected
+                bool isSelected = (i < hotbarItems.Length && hotbarItems[i] == player.SelectedBlock);
                 
                 // Draw slot background
+                Color slotColor = isSelected ? Color.White * 0.9f : Color.DarkGray * 0.7f;
                 spriteBatch.Draw(_pixelTexture,
                     new Rectangle(x, hotbarY, slotSize, slotSize),
-                    Color.DarkGray * 0.7f);
+                    slotColor);
                 
-                // Draw block color (temporary representation)
-                Color blockColor = BlockRegistry.Get(item.Key).Color;
+                // Draw slot border
+                int borderWidth = isSelected ? 3 : 2;
+                Color borderColor = isSelected ? Color.Yellow : Color.Black;
+                
+                // Top border
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, hotbarY, slotSize, borderWidth), borderColor);
+                // Bottom border
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, hotbarY + slotSize - borderWidth, slotSize, borderWidth), borderColor);
+                // Left border
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, hotbarY, borderWidth, slotSize), borderColor);
+                // Right border
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, hotbarY, borderWidth, slotSize), borderColor);
+                
+                // Draw block color if item exists in inventory
+                if (i < hotbarItems.Length)
+                {
+                    BlockType blockType = hotbarItems[i];
+                    int count = items.ContainsKey(blockType) ? items[blockType] : 0;
+                    
+                    if (count > 0 || blockType == player.SelectedBlock)
+                    {
+                        Color blockColor = BlockRegistry.Get(blockType).Color;
+                        int padding = 8;
+                        spriteBatch.Draw(_pixelTexture,
+                            new Rectangle(x + padding, hotbarY + padding, slotSize - padding * 2, slotSize - padding * 2),
+                            blockColor);
+                        
+                        // Draw count if available (simplified - would use font in real implementation)
+                        // For now, we'll just show a visual indicator
+                    }
+                }
+                
+                // Draw slot number (1-9)
+                // Would use font here, but for now just a visual indicator at bottom
+            }
+        }
+        
+        private void DrawBlockBreakProgress(SpriteBatch spriteBatch, Player player)
+        {
+            // Draw block break progress indicator near crosshair
+            float progress = player.GetBreakProgress();
+            
+            if (progress > 0 && player.GetTargetBlockPos().HasValue)
+            {
+                int centerX = _screenWidth / 2;
+                int centerY = _screenHeight / 2;
+                int barWidth = 100;
+                int barHeight = 10;
+                int barX = centerX - barWidth / 2;
+                int barY = centerY + 30; // Below crosshair
+                
+                // Draw background
                 spriteBatch.Draw(_pixelTexture,
-                    new Rectangle(x + 5, hotbarY + 5, slotSize - 10, slotSize - 10),
-                    blockColor);
+                    new Rectangle(barX - 2, barY - 2, barWidth + 4, barHeight + 4),
+                    Color.Black * 0.7f);
                 
-                index++;
+                // Draw progress bar background
+                spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(barX, barY, barWidth, barHeight),
+                    Color.Gray * 0.5f);
+                
+                // Draw progress
+                int progressWidth = (int)(barWidth * progress);
+                spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(barX, barY, progressWidth, barHeight),
+                    Color.White);
             }
         }
     }

@@ -51,6 +51,12 @@ namespace TimelessTales.Entities
             Inventory.AddItem(BlockType.Stone, 64);
             Inventory.AddItem(BlockType.Dirt, 64);
             Inventory.AddItem(BlockType.Planks, 64);
+            Inventory.AddItem(BlockType.Cobblestone, 32);
+            Inventory.AddItem(BlockType.Wood, 32);
+            Inventory.AddItem(BlockType.Grass, 32);
+            Inventory.AddItem(BlockType.Sand, 32);
+            Inventory.AddItem(BlockType.Gravel, 32);
+            Inventory.AddItem(BlockType.Clay, 32);
         }
 
         public void Update(GameTime gameTime, InputManager input, WorldManager world)
@@ -400,12 +406,16 @@ namespace TimelessTales.Entities
 
         private void UpdateHotbar(InputManager input)
         {
-            // Number keys to select blocks
+            // Number keys to select blocks (1-9 for hotbar slots)
             if (input.IsKeyPressed(Keys.D1)) SelectedBlock = BlockType.Stone;
             if (input.IsKeyPressed(Keys.D2)) SelectedBlock = BlockType.Dirt;
             if (input.IsKeyPressed(Keys.D3)) SelectedBlock = BlockType.Planks;
             if (input.IsKeyPressed(Keys.D4)) SelectedBlock = BlockType.Cobblestone;
             if (input.IsKeyPressed(Keys.D5)) SelectedBlock = BlockType.Wood;
+            if (input.IsKeyPressed(Keys.D6)) SelectedBlock = BlockType.Grass;
+            if (input.IsKeyPressed(Keys.D7)) SelectedBlock = BlockType.Sand;
+            if (input.IsKeyPressed(Keys.D8)) SelectedBlock = BlockType.Gravel;
+            if (input.IsKeyPressed(Keys.D9)) SelectedBlock = BlockType.Clay;
         }
 
         public Vector3? GetTargetBlockPos() => _targetBlockPos;

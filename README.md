@@ -37,8 +37,10 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
 - **Inventory System**
   - 40-slot inventory
   - Item stacking
-  - Starting items (Stone, Dirt, Planks)
-  - Hotbar selection (1-5 keys)
+  - Starting items (Stone, Dirt, Planks, Cobblestone, Wood, Grass, Sand, Gravel, Clay)
+  - Hotbar selection (1-9 keys)
+  - Visual hotbar display with selected slot highlight
+  - Block breaking progress bar
 
 - **Rendering**
   - 3D voxel rendering with face culling
@@ -46,6 +48,11 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
   - Depth rendering
   - Basic lighting (directional shading on block faces)
   - Crosshair UI
+  - **Dynamic skybox with day/night cycle**
+  - **Sun and moon that transit across the sky**
+  - **Starry night sky with twinkling stars** (500+ stars)
+  - **Atmospheric color transitions** (dawn, day, dusk, night)
+  - **Ambient lighting based on time of day**
 
 ## Controls
 
@@ -55,9 +62,9 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
 | **Space** | Jump |
 | **Left Shift** | Sprint |
 | **Mouse** | Look around |
-| **Left Click** | Break block |
+| **Left Click** | Break block (hold to see progress) |
 | **Right Click** | Place block |
-| **1-5** | Select block type |
+| **1-9** | Select block type from hotbar |
 | **P** | Pause |
 | **Escape** | Exit game |
 
@@ -111,15 +118,17 @@ TimelessTales/
 See [GDD.md](../GDD.md) for the complete Game Design Document.
 
 ### Next Steps
+- [x] Day/night cycle
+- [x] Basic lighting system (ambient lighting)
+- [x] Improved inventory UI
+- [x] Block breaking visual feedback
 - [ ] Temporal stability system
 - [ ] Temperature and season system
 - [ ] Hunger and nutrition mechanics
 - [ ] Advanced crafting (knapping, pottery, metallurgy)
 - [ ] Prospecting system for ore discovery
-- [ ] Day/night cycle
-- [ ] Lighting system
+- [ ] Block textures (currently using colored blocks)
 - [ ] Hostile entities (Drifters)
-- [ ] Block textures
 - [ ] Sound effects and music
 - [ ] Save/load system
 
