@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using TimelessTales.Entities;
 using TimelessTales.Blocks;
-using System.Linq;
 
 namespace TimelessTales.UI
 {
