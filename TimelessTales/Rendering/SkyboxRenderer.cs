@@ -180,7 +180,7 @@ namespace TimelessTales.Rendering
             }
             
             // Rotate stars slightly with time to create twinkling effect
-            float twinkleRotation = (float)Math.Sin(timeManager.TimeOfDay * 100) * 0.1f;
+            float twinkleRotation = MathF.Sin(timeManager.TimeOfDay * 100) * 0.1f;
             _effect.World = Matrix.CreateRotationY(twinkleRotation);
             
             foreach (var pass in _effect.CurrentTechnique.Passes)

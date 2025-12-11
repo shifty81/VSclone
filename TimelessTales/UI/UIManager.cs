@@ -91,7 +91,7 @@ namespace TimelessTales.UI
             
             var items = player.Inventory.GetAllItems();
             
-            // Get the 5 basic block types for hotbar
+            // Get the 9 basic block types for hotbar
             var hotbarItems = new[] 
             { 
                 BlockType.Stone, 
