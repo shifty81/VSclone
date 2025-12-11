@@ -61,14 +61,57 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
 | **W/A/S/D** | Move forward/left/backward/right |
 | **Space** | Jump (can jump while moving) |
 | **Left Shift** | Sprint |
-| **Mouse** | Look around (mouse is captured) |
+| **Mouse** | Free look camera (smooth mouse look) |
 | **Left Click** | Break block (hold to see progress) |
 | **Right Click** | Place block |
 | **1-9** | Select block type from hotbar |
 | **I** | Toggle inventory |
+| **M** | Toggle world map |
 | **F11** | Toggle fullscreen |
 | **P** | Pause |
 | **Escape** | Exit game |
+
+## User Interface
+
+### HUD Elements
+- **Crosshair**: Center screen targeting reticle
+- **Hotbar**: Bottom of screen showing 9 quick-access block slots
+- **Block Breaking Progress**: Progress bar displayed when breaking blocks
+
+### Minimap (Upper Right)
+- **Location**: Top-right corner of screen
+- **Size**: 150x150 pixel overhead view
+- **Features**:
+  - Terrain height visualization (green lowlands to gray highlands)
+  - Red player position indicator at center
+  - Player coordinates displayed as colored bars below minimap:
+    - Red bars = X coordinate
+    - Green bars = Y coordinate (height)
+    - Blue bars = Z coordinate
+
+### Clock Gauge (Below Minimap)
+- **Display**: Time of day progression gauge
+- **Features**:
+  - Yellow gauge fill during daytime
+  - Dark blue gauge fill during nighttime
+  - Moving sun/moon indicator shows current time position
+  - Day count displayed as white bars (up to 10 days)
+  - Visual representation of 10-minute day/night cycle
+
+### World Map (Press M)
+- **Display**: Full-screen overhead map view
+- **Features**:
+  - Large terrain area display (200 block radius)
+  - Height-based terrain coloring
+  - Red player position marker at center
+  - Press M again to close
+
+### First-Person View
+- **Arms**: Visible in first-person view
+- **Body Visibility**: Look down to see your character
+  - Torso visible when looking down ~17+ degrees
+  - Legs visible when looking down ~46+ degrees
+  - Blue shirt and dark blue pants rendering
 
 ## Building & Running
 
