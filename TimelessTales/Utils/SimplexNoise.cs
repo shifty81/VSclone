@@ -90,7 +90,9 @@ namespace TimelessTales.Utils
 
         public float Evaluate(float x, float y, float z)
         {
-            // Simplified 3D noise using 2D
+            // TODO: Implement proper 3D simplex noise for better performance
+            // This is a simplified version that averages three 2D samples
+            // Consider implementing full 3D simplex noise algorithm
             return (Evaluate(x, y) + Evaluate(y, z) + Evaluate(x, z)) / 3.0f;
         }
 

@@ -93,11 +93,8 @@ namespace TimelessTales.World
             return chunk;
         }
 
-        public BlockType GetBlock(int worldX, int worldY, int worldZ)
+        private (int chunkX, int chunkZ, int localX, int localZ) WorldToChunkCoordinates(int worldX, int worldZ)
         {
-            if (worldY < 0 || worldY >= Chunk.CHUNK_HEIGHT)
-                return BlockType.Air;
-
             int chunkX = (int)MathF.Floor((float)worldX / Chunk.CHUNK_SIZE);
             int chunkZ = (int)MathF.Floor((float)worldZ / Chunk.CHUNK_SIZE);
             
@@ -106,9 +103,18 @@ namespace TimelessTales.World
             
             if (localX < 0) { localX += Chunk.CHUNK_SIZE; chunkX--; }
             if (localZ < 0) { localZ += Chunk.CHUNK_SIZE; chunkZ--; }
+            
+            return (chunkX, chunkZ, localX, localZ);
+        }
 
-            var chunk = GetOrCreateChunk(chunkX, chunkZ);
-            return chunk.GetBlock(localX, worldY, localZ);
+        public BlockType GetBlock(int worldX, int worldY, int worldZ)
+        {
+            if (worldY < 0 || worldY >= Chunk.CHUNK_HEIGHT)
+                return BlockType.Air;
+
+            var coords = WorldToChunkCoordinates(worldX, worldZ);
+            var chunk = GetOrCreateChunk(coords.chunkX, coords.chunkZ);
+            return chunk.GetBlock(coords.localX, worldY, coords.localZ);
         }
 
         public void SetBlock(int worldX, int worldY, int worldZ, BlockType blockType)
@@ -116,17 +122,9 @@ namespace TimelessTales.World
             if (worldY < 0 || worldY >= Chunk.CHUNK_HEIGHT)
                 return;
 
-            int chunkX = (int)MathF.Floor((float)worldX / Chunk.CHUNK_SIZE);
-            int chunkZ = (int)MathF.Floor((float)worldZ / Chunk.CHUNK_SIZE);
-            
-            int localX = worldX - chunkX * Chunk.CHUNK_SIZE;
-            int localZ = worldZ - chunkZ * Chunk.CHUNK_SIZE;
-            
-            if (localX < 0) { localX += Chunk.CHUNK_SIZE; chunkX--; }
-            if (localZ < 0) { localZ += Chunk.CHUNK_SIZE; chunkZ--; }
-
-            var chunk = GetOrCreateChunk(chunkX, chunkZ);
-            chunk.SetBlock(localX, worldY, localZ, blockType);
+            var coords = WorldToChunkCoordinates(worldX, worldZ);
+            var chunk = GetOrCreateChunk(coords.chunkX, coords.chunkZ);
+            chunk.SetBlock(coords.localX, worldY, coords.localZ, blockType);
         }
 
         public IEnumerable<Chunk> GetLoadedChunks()

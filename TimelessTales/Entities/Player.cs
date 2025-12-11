@@ -244,6 +244,8 @@ namespace TimelessTales.Entities
             Vector3 rayStart = Position + new Vector3(0, PLAYER_EYE_HEIGHT - PLAYER_HEIGHT, 0);
             Vector3 rayDir = GetLookDirection();
             
+            // TODO: Consider using DDA algorithm for more efficient raycasting
+            // Current implementation uses fixed 0.1f steps which may be inefficient
             // Step through ray
             for (float t = 0; t < REACH_DISTANCE; t += 0.1f)
             {

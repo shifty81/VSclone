@@ -93,8 +93,8 @@ namespace TimelessTales.Core
                 // Update player
                 _player.Update(gameTime, _inputManager, _worldManager);
                 
-                // Update camera to follow player
-                _camera.Position = _player.Position;
+                // Update camera to follow player (with eye height offset)
+                _camera.Position = _player.Position + new Vector3(0, 1.62f - 1.8f, 0); // Eye height offset
                 _camera.Rotation = _player.Rotation;
                 
                 // Update world

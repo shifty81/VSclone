@@ -110,9 +110,9 @@ namespace TimelessTales.Rendering
 
         private bool IsBlockOpaque(Chunk chunk, int x, int y, int z)
         {
-            // Check bounds
+            // Check bounds - treat out of bounds as transparent to see into adjacent chunks
             if (y < 0 || y >= Chunk.CHUNK_HEIGHT) return false;
-            if (x < 0 || x >= Chunk.CHUNK_SIZE || z < 0 || z >= Chunk.CHUNK_SIZE) return true;
+            if (x < 0 || x >= Chunk.CHUNK_SIZE || z < 0 || z >= Chunk.CHUNK_SIZE) return false;
             
             BlockType block = chunk.GetBlock(x, y, z);
             return !BlockRegistry.IsTransparent(block);
