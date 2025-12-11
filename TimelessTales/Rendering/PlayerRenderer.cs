@@ -64,12 +64,17 @@ namespace TimelessTales.Rendering
             
             // Arm color (tan/skin color)
             Color armColor = new Color(210, 180, 140);
+            Color torsoColor = new Color(60, 100, 180); // Blue shirt
+            Color legColor = new Color(50, 50, 120); // Dark blue pants
             
             // Calculate arm positions relative to camera
             Vector3 cameraPos = camera.Position;
             Vector3 forward = camera.GetForwardVector();
             Vector3 right = camera.GetRightVector();
             Vector3 up = Vector3.Up;
+            
+            // Get camera pitch to determine how much of the body to show
+            float pitch = camera.Rotation.X;
             
             // Right arm dimensions (sized to be visible but not obtrusive)
             float armLength = 0.5f;
@@ -93,6 +98,54 @@ namespace TimelessTales.Rendering
                 + forward * 0.4f;    // Move forward
             
             AddBox(vertices, leftArmBase, armWidth, armHeight, armLength, armColor, forward, right, up);
+            
+            // Add body parts when looking down (pitch > 0 means looking down)
+            if (pitch > 0.3f) // Start showing body when looking down past 0.3 radians (~17 degrees)
+            {
+                float bodyVisibility = MathHelper.Clamp((pitch - 0.3f) / 0.5f, 0f, 1f);
+                
+                // Torso - positioned below camera view
+                float torsoWidth = 0.4f;
+                float torsoDepth = 0.2f;
+                float torsoHeight = 0.6f;
+                Vector3 torsoBase = cameraPos 
+                    - up * 0.8f         // Below camera
+                    + forward * 0.3f;    // Slightly forward
+                
+                if (bodyVisibility > 0.3f)
+                {
+                    AddBox(vertices, torsoBase, torsoWidth, torsoDepth, torsoHeight, torsoColor, up, right, forward);
+                }
+                
+                // Legs - only visible when looking down significantly (pitch > 0.8 radians ~46 degrees)
+                if (pitch > 0.8f)
+                {
+                    float legVisibility = MathHelper.Clamp((pitch - 0.8f) / 0.5f, 0f, 1f);
+                    
+                    if (legVisibility > 0.2f)
+                    {
+                        float legWidth = 0.18f;
+                        float legDepth = 0.18f;
+                        float legHeight = 0.8f;
+                        
+                        // Right leg
+                        Vector3 rightLegBase = cameraPos 
+                            + right * 0.09f      // Slightly to the right
+                            - up * 1.4f          // Below torso
+                            + forward * 0.2f;    // Slightly forward
+                        
+                        AddBox(vertices, rightLegBase, legWidth, legDepth, legHeight, legColor, up, right, forward);
+                        
+                        // Left leg
+                        Vector3 leftLegBase = cameraPos 
+                            - right * 0.09f      // Slightly to the left
+                            - up * 1.4f          // Below torso
+                            + forward * 0.2f;    // Slightly forward
+                        
+                        AddBox(vertices, leftLegBase, legWidth, legDepth, legHeight, legColor, up, right, forward);
+                    }
+                }
+            }
             
             return vertices.ToArray();
         }

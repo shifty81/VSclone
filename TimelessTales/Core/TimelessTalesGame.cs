@@ -32,6 +32,7 @@ namespace TimelessTales.Core
         // Game state
         private bool _isPaused = false;
         private bool _inventoryOpen = false;
+        private bool _worldMapOpen = false;
         
         public TimelessTalesGame()
         {
@@ -107,6 +108,10 @@ namespace TimelessTales.Core
             if (_inputManager.IsKeyPressed(Keys.I))
                 _inventoryOpen = !_inventoryOpen;
             
+            // Toggle world map
+            if (_inputManager.IsKeyPressed(Keys.M))
+                _worldMapOpen = !_worldMapOpen;
+            
             // Toggle fullscreen
             if (_inputManager.IsKeyPressed(Keys.F11))
             {
@@ -119,7 +124,7 @@ namespace TimelessTales.Core
                 _inputManager.SetScreenCenter(centerX, centerY);
             }
             
-            if (!_isPaused && !_inventoryOpen)
+            if (!_isPaused && !_inventoryOpen && !_worldMapOpen)
             {
                 // Update time
                 _timeManager.Update(gameTime);
@@ -136,7 +141,7 @@ namespace TimelessTales.Core
             }
             
             // Always update UI
-            _uiManager.Update(gameTime, _player, _isPaused, _inventoryOpen);
+            _uiManager.Update(gameTime, _player, _timeManager, _worldManager, _isPaused, _inventoryOpen, _worldMapOpen);
 
             base.Update(gameTime);
         }
