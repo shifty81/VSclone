@@ -205,16 +205,16 @@ namespace TimelessTales.Entities
                                 if (minPenetrationY <= minPenetrationX && minPenetrationY <= minPenetrationZ)
                                 {
                                     // Resolve on Y axis
-                                    if (penetrationBottom < penetrationTop && Velocity.Y <= 0)
+                                    if (penetrationBottom < penetrationTop)
                                     {
-                                        // Collision from below (standing on block)
+                                        // Player is more on top of the block - collision from above (standing on block)
                                         result.Y = blockMaxY;
                                         Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
                                         _isOnGround = true;
                                     }
-                                    else if (Velocity.Y >= 0)
+                                    else
                                     {
-                                        // Collision from above (hitting ceiling)
+                                        // Player is more below the block - collision from below (hitting ceiling)
                                         result.Y = blockMinY - PLAYER_HEIGHT;
                                         Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
                                     }
