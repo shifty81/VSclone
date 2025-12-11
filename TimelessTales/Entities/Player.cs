@@ -142,20 +142,117 @@ namespace TimelessTales.Entities
 
         private Vector3 ResolveCollisions(WorldManager world, Vector3 targetPos)
         {
-            Vector3 result = targetPos;
+            // Resolve collisions axis by axis: X, Y, Z
+            // This prevents issues where resolving one collision creates another
+            Vector3 result = Position; // Start from current position
             
             // Reset ground state
             _isOnGround = false;
             
-            // Check blocks around player's bounding box at target position
-            int minX = (int)MathF.Floor(result.X - PLAYER_WIDTH / 2);
-            int maxX = (int)MathF.Ceiling(result.X + PLAYER_WIDTH / 2);
-            int minY = (int)MathF.Floor(result.Y);
-            int maxY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
-            int minZ = (int)MathF.Floor(result.Z - PLAYER_WIDTH / 2);
-            int maxZ = (int)MathF.Ceiling(result.Z + PLAYER_WIDTH / 2);
+            // Try to move on X axis
+            result.X = targetPos.X;
+            if (CheckCollision(world, result))
+            {
+                result.X = Position.X; // Revert X movement if collision
+            }
             
-            // Check for collisions
+            // Try to move on Y axis
+            result.Y = targetPos.Y;
+            if (CheckCollision(world, result))
+            {
+                // Find the correct Y position
+                if (Velocity.Y < 0)
+                {
+                    // Falling - find the highest solid block below player across their entire width
+                    int minBlockY = (int)MathF.Floor(result.Y);
+                    int maxBlockY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
+                    
+                    // Check all blocks the player overlaps horizontally
+                    int minX = (int)MathF.Floor(result.X - PLAYER_WIDTH / 2);
+                    int maxX = (int)MathF.Ceiling(result.X + PLAYER_WIDTH / 2);
+                    int minZ = (int)MathF.Floor(result.Z - PLAYER_WIDTH / 2);
+                    int maxZ = (int)MathF.Ceiling(result.Z + PLAYER_WIDTH / 2);
+                    
+                    // Find highest solid block (sentinel value indicates no block found)
+                    const int NO_BLOCK_FOUND = -1;
+                    int highestBlockY = NO_BLOCK_FOUND;
+                    for (int x = minX; x < maxX; x++)
+                    {
+                        for (int z = minZ; z < maxZ; z++)
+                        {
+                            for (int y = maxBlockY - 1; y >= minBlockY; y--)
+                            {
+                                if (world.IsBlockSolid(x, y, z))
+                                {
+                                    highestBlockY = highestBlockY == NO_BLOCK_FOUND ? y : Math.Max(highestBlockY, y);
+                                    break; // Found highest in this column, move to next column
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (highestBlockY != NO_BLOCK_FOUND)
+                    {
+                        result.Y = highestBlockY + 1; // Stand on top of highest block
+                        _isOnGround = true;
+                    }
+                }
+                else
+                {
+                    // Rising - hit ceiling, find the lowest ceiling block
+                    int minX = (int)MathF.Floor(result.X - PLAYER_WIDTH / 2);
+                    int maxX = (int)MathF.Ceiling(result.X + PLAYER_WIDTH / 2);
+                    int minZ = (int)MathF.Floor(result.Z - PLAYER_WIDTH / 2);
+                    int maxZ = (int)MathF.Ceiling(result.Z + PLAYER_WIDTH / 2);
+                    int headY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
+                    
+                    // Find the lowest Y coordinate of ceiling blocks (sentinel value indicates no ceiling)
+                    const int NO_CEILING_FOUND = int.MaxValue;
+                    int lowestCeilingY = NO_CEILING_FOUND;
+                    for (int x = minX; x < maxX; x++)
+                    {
+                        for (int z = minZ; z < maxZ; z++)
+                        {
+                            // Check a few blocks above head for ceiling
+                            for (int y = headY; y <= headY + 1; y++)
+                            {
+                                if (world.IsBlockSolid(x, y, z))
+                                {
+                                    lowestCeilingY = Math.Min(lowestCeilingY, y);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (lowestCeilingY != NO_CEILING_FOUND)
+                    {
+                        result.Y = lowestCeilingY - PLAYER_HEIGHT;
+                    }
+                }
+                Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
+            }
+            
+            // Try to move on Z axis
+            result.Z = targetPos.Z;
+            if (CheckCollision(world, result))
+            {
+                result.Z = Position.Z; // Revert Z movement if collision
+            }
+            
+            return result;
+        }
+        
+        private bool CheckCollision(WorldManager world, Vector3 pos)
+        {
+            // Check blocks around player's bounding box at given position
+            int minX = (int)MathF.Floor(pos.X - PLAYER_WIDTH / 2);
+            int maxX = (int)MathF.Ceiling(pos.X + PLAYER_WIDTH / 2);
+            int minY = (int)MathF.Floor(pos.Y);
+            int maxY = (int)MathF.Ceiling(pos.Y + PLAYER_HEIGHT);
+            int minZ = (int)MathF.Floor(pos.Z - PLAYER_WIDTH / 2);
+            int maxZ = (int)MathF.Ceiling(pos.Z + PLAYER_WIDTH / 2);
+            
             for (int x = minX; x < maxX; x++)
             {
                 for (int y = minY; y < maxY; y++)
@@ -172,13 +269,13 @@ namespace TimelessTales.Entities
                             float blockMinZ = z;
                             float blockMaxZ = z + 1;
                             
-                            // Get player bounds at target position
-                            float playerMinX = result.X - PLAYER_WIDTH / 2;
-                            float playerMaxX = result.X + PLAYER_WIDTH / 2;
-                            float playerMinY = result.Y;
-                            float playerMaxY = result.Y + PLAYER_HEIGHT;
-                            float playerMinZ = result.Z - PLAYER_WIDTH / 2;
-                            float playerMaxZ = result.Z + PLAYER_WIDTH / 2;
+                            // Get player bounds
+                            float playerMinX = pos.X - PLAYER_WIDTH / 2;
+                            float playerMaxX = pos.X + PLAYER_WIDTH / 2;
+                            float playerMinY = pos.Y;
+                            float playerMaxY = pos.Y + PLAYER_HEIGHT;
+                            float playerMinZ = pos.Z - PLAYER_WIDTH / 2;
+                            float playerMaxZ = pos.Z + PLAYER_WIDTH / 2;
                             
                             // Check if player AABB intersects with block AABB
                             bool collisionX = playerMaxX > blockMinX && playerMinX < blockMaxX;
@@ -187,73 +284,14 @@ namespace TimelessTales.Entities
                             
                             if (collisionX && collisionY && collisionZ)
                             {
-                                // Collision detected - resolve by pushing player out
-                                // Calculate penetration depth on each axis
-                                float penetrationLeft = playerMaxX - blockMinX;
-                                float penetrationRight = blockMaxX - playerMinX;
-                                float penetrationBottom = playerMaxY - blockMinY;
-                                float penetrationTop = blockMaxY - playerMinY;
-                                float penetrationFront = playerMaxZ - blockMinZ;
-                                float penetrationBack = blockMaxZ - playerMinZ;
-                                
-                                // Find minimum penetration to resolve collision
-                                float minPenetrationX = MathF.Min(penetrationLeft, penetrationRight);
-                                float minPenetrationY = MathF.Min(penetrationBottom, penetrationTop);
-                                float minPenetrationZ = MathF.Min(penetrationFront, penetrationBack);
-                                
-                                // Resolve collision on the axis with minimum penetration
-                                if (minPenetrationY <= minPenetrationX && minPenetrationY <= minPenetrationZ)
-                                {
-                                    // Resolve on Y axis
-                                    if (penetrationBottom < penetrationTop && Velocity.Y <= 0)
-                                    {
-                                        // Collision from below (standing on block)
-                                        result.Y = blockMaxY;
-                                        Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
-                                        _isOnGround = true;
-                                    }
-                                    else if (Velocity.Y >= 0)
-                                    {
-                                        // Collision from above (hitting ceiling)
-                                        result.Y = blockMinY - PLAYER_HEIGHT;
-                                        Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
-                                    }
-                                }
-                                else if (minPenetrationX <= minPenetrationZ)
-                                {
-                                    // Resolve on X axis
-                                    if (penetrationLeft < penetrationRight)
-                                    {
-                                        // Collision from left
-                                        result.X = blockMinX - PLAYER_WIDTH / 2;
-                                    }
-                                    else
-                                    {
-                                        // Collision from right
-                                        result.X = blockMaxX + PLAYER_WIDTH / 2;
-                                    }
-                                }
-                                else
-                                {
-                                    // Resolve on Z axis
-                                    if (penetrationFront < penetrationBack)
-                                    {
-                                        // Collision from front
-                                        result.Z = blockMinZ - PLAYER_WIDTH / 2;
-                                    }
-                                    else
-                                    {
-                                        // Collision from back
-                                        result.Z = blockMaxZ + PLAYER_WIDTH / 2;
-                                    }
-                                }
+                                return true;
                             }
                         }
                     }
                 }
             }
             
-            return result;
+            return false;
         }
 
         private void HandleBlockInteraction(InputManager input, WorldManager world, float deltaTime)
