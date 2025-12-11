@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TimelessTales.Entities;
@@ -26,6 +27,9 @@ namespace TimelessTales.Rendering
 
         public void Draw(Camera camera, Player player)
         {
+            // TODO: Use player parameter for context-aware rendering (e.g., showing selected block in hand)
+            // For now, we render static arms regardless of player state
+            
             // Update camera matrices
             _effect.View = camera.ViewMatrix;
             _effect.Projection = camera.ProjectionMatrix;
