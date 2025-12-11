@@ -114,15 +114,15 @@ namespace TimelessTales.Entities
             if (input.IsKeyDown(Keys.LeftShift))
                 speed *= SPRINT_MULTIPLIER;
             
-            // Apply horizontal movement
+            // Apply horizontal movement (maintain Y velocity for jumping)
             Velocity = new Vector3(
                 moveDirection.X * speed,
                 Velocity.Y,
                 moveDirection.Z * speed
             );
             
-            // Jump
-            if (input.IsKeyPressed(Keys.Space) && _isOnGround)
+            // Jump - can jump while moving, maintains horizontal momentum
+            if (input.IsKeyDown(Keys.Space) && _isOnGround)
             {
                 Velocity = new Vector3(Velocity.X, JUMP_FORCE, Velocity.Z);
                 _isOnGround = false;

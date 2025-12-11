@@ -31,6 +31,7 @@ namespace TimelessTales.Core
         
         // Game state
         private bool _isPaused = false;
+        private bool _inventoryOpen = false;
         
         public TimelessTalesGame()
         {
@@ -41,6 +42,7 @@ namespace TimelessTales.Core
             // Set window size
             _graphics.PreferredBackBufferWidth = 1280;
             _graphics.PreferredBackBufferHeight = 720;
+            _graphics.IsFullScreen = false;
             _graphics.ApplyChanges();
             
             Window.Title = "Timeless Tales - Alpha 0.1";
@@ -53,6 +55,11 @@ namespace TimelessTales.Core
             
             // Initialize input manager
             _inputManager = new InputManager();
+            
+            // Set screen center for mouse capture
+            int centerX = GraphicsDevice.Viewport.Width / 2;
+            int centerY = GraphicsDevice.Viewport.Height / 2;
+            _inputManager.SetScreenCenter(centerX, centerY);
             
             // Initialize time manager
             _timeManager = new TimeManager();
@@ -96,7 +103,23 @@ namespace TimelessTales.Core
             if (_inputManager.IsKeyPressed(Keys.P))
                 _isPaused = !_isPaused;
             
-            if (!_isPaused)
+            // Toggle inventory
+            if (_inputManager.IsKeyPressed(Keys.I))
+                _inventoryOpen = !_inventoryOpen;
+            
+            // Toggle fullscreen
+            if (_inputManager.IsKeyPressed(Keys.F11))
+            {
+                _graphics.IsFullScreen = !_graphics.IsFullScreen;
+                _graphics.ApplyChanges();
+                
+                // Update screen center for mouse capture
+                int centerX = GraphicsDevice.Viewport.Width / 2;
+                int centerY = GraphicsDevice.Viewport.Height / 2;
+                _inputManager.SetScreenCenter(centerX, centerY);
+            }
+            
+            if (!_isPaused && !_inventoryOpen)
             {
                 // Update time
                 _timeManager.Update(gameTime);
@@ -113,7 +136,7 @@ namespace TimelessTales.Core
             }
             
             // Always update UI
-            _uiManager.Update(gameTime, _player, _isPaused);
+            _uiManager.Update(gameTime, _player, _isPaused, _inventoryOpen);
 
             base.Update(gameTime);
         }

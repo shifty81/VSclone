@@ -59,12 +59,14 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
 | Key | Action |
 |-----|--------|
 | **W/A/S/D** | Move forward/left/backward/right |
-| **Space** | Jump |
+| **Space** | Jump (can jump while moving) |
 | **Left Shift** | Sprint |
-| **Mouse** | Look around |
+| **Mouse** | Look around (mouse is captured) |
 | **Left Click** | Break block (hold to see progress) |
 | **Right Click** | Place block |
 | **1-9** | Select block type from hotbar |
+| **I** | Toggle inventory |
+| **F11** | Toggle fullscreen |
 | **P** | Pause |
 | **Escape** | Exit game |
 
