@@ -173,8 +173,9 @@ namespace TimelessTales.Entities
                     int minZ = (int)MathF.Floor(result.Z - PLAYER_WIDTH / 2);
                     int maxZ = (int)MathF.Ceiling(result.Z + PLAYER_WIDTH / 2);
                     
-                    // Find highest solid block
-                    int highestBlockY = minBlockY - 1;
+                    // Find highest solid block (sentinel value indicates no block found)
+                    const int NO_BLOCK_FOUND = -1;
+                    int highestBlockY = NO_BLOCK_FOUND;
                     for (int x = minX; x < maxX; x++)
                     {
                         for (int z = minZ; z < maxZ; z++)
@@ -183,14 +184,14 @@ namespace TimelessTales.Entities
                             {
                                 if (world.IsBlockSolid(x, y, z))
                                 {
-                                    highestBlockY = Math.Max(highestBlockY, y);
+                                    highestBlockY = highestBlockY == NO_BLOCK_FOUND ? y : Math.Max(highestBlockY, y);
                                     break; // Found highest in this column, move to next column
                                 }
                             }
                         }
                     }
                     
-                    if (highestBlockY >= minBlockY)
+                    if (highestBlockY != NO_BLOCK_FOUND)
                     {
                         result.Y = highestBlockY + 1; // Stand on top of highest block
                         _isOnGround = true;
@@ -205,8 +206,9 @@ namespace TimelessTales.Entities
                     int maxZ = (int)MathF.Ceiling(result.Z + PLAYER_WIDTH / 2);
                     int headY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
                     
-                    // Find the lowest Y coordinate of ceiling blocks
-                    int lowestCeilingY = int.MaxValue;
+                    // Find the lowest Y coordinate of ceiling blocks (sentinel value indicates no ceiling)
+                    const int NO_CEILING_FOUND = int.MaxValue;
+                    int lowestCeilingY = NO_CEILING_FOUND;
                     for (int x = minX; x < maxX; x++)
                     {
                         for (int z = minZ; z < maxZ; z++)
@@ -223,7 +225,7 @@ namespace TimelessTales.Entities
                         }
                     }
                     
-                    if (lowestCeilingY != int.MaxValue)
+                    if (lowestCeilingY != NO_CEILING_FOUND)
                     {
                         result.Y = lowestCeilingY - PLAYER_HEIGHT;
                     }
