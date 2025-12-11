@@ -1,2 +1,143 @@
-# VSclone
-VS CLone
+# Timeless Tales - Vintage Story Clone
+
+A Vintage Story inspired voxel-based survival sandbox game built with C# and MonoGame for Windows.
+
+## Current Features (Alpha 0.1)
+
+### ✅ Implemented
+- **World Generation**
+  - Procedural chunk-based terrain (16x256x16 blocks per chunk)
+  - Realistic geological layers (sedimentary, metamorphic, igneous rock strata)
+  - Multiple biomes (Tundra, Boreal, Temperate, Desert, Tropical)
+  - Cave systems
+  - Non-uniform ore distribution (Copper, Tin, Iron, Coal)
+
+- **Player Character**
+  - First-person 3D movement (WASD)
+  - Sprint (Shift)
+  - Jump with physics (Space)
+  - Mouse look camera
+  - Collision detection
+
+- **Block System**
+  - 20+ block types including:
+    - Natural blocks: Stone, Dirt, Grass, Sand, Gravel, Clay
+    - Geological rocks: Granite, Limestone, Basalt, Sandstone, Slate
+    - Ores: Copper Ore, Tin Ore, Iron Ore, Coal
+    - Wood blocks: Wood, Leaves, Planks
+  - Each block has properties (hardness, transparency, gravity)
+
+- **Block Interaction**
+  - **Left Click**: Break blocks (adds to inventory)
+  - **Right Click**: Place blocks (from inventory)
+  - Block breaking progress indicator
+  - Raycasting for block selection
+  - Reach distance: 5 blocks
+
+- **Inventory System**
+  - 40-slot inventory
+  - Item stacking
+  - Starting items (Stone, Dirt, Planks)
+  - Hotbar selection (1-5 keys)
+
+- **Rendering**
+  - 3D voxel rendering with face culling
+  - Chunk-based mesh optimization
+  - Depth rendering
+  - Basic lighting (directional shading on block faces)
+  - Crosshair UI
+
+## Controls
+
+| Key | Action |
+|-----|--------|
+| **W/A/S/D** | Move forward/left/backward/right |
+| **Space** | Jump |
+| **Left Shift** | Sprint |
+| **Mouse** | Look around |
+| **Left Click** | Break block |
+| **Right Click** | Place block |
+| **1-5** | Select block type |
+| **P** | Pause |
+| **Escape** | Exit game |
+
+## Building & Running
+
+### Prerequisites
+- .NET 8.0 SDK or later
+- Windows 10/11 (64-bit)
+- DirectX 11 compatible GPU
+
+### Build Instructions
+```bash
+cd TimelessTales
+dotnet build
+dotnet run
+```
+
+### Build for Release
+```bash
+cd TimelessTales
+dotnet build -c Release
+```
+
+The executable will be in `bin/Release/net8.0/`
+
+## Project Structure
+```
+TimelessTales/
+├── Core/           # Core game systems
+│   ├── TimelessTalesGame.cs  # Main game class
+│   └── InputManager.cs       # Input handling
+├── World/          # World generation and management
+│   ├── WorldManager.cs       # Chunk loading/unloading
+│   ├── WorldGenerator.cs     # Terrain generation
+│   └── Chunk.cs              # Chunk data structure
+├── Blocks/         # Block system
+│   └── BlockRegistry.cs      # Block definitions
+├── Entities/       # Game entities
+│   └── Player.cs             # Player character & inventory
+├── Rendering/      # Graphics rendering
+│   ├── WorldRenderer.cs      # 3D world rendering
+│   └── Camera.cs             # Camera system
+├── UI/             # User interface
+│   └── UIManager.cs          # HUD and UI
+└── Utils/          # Utilities
+    └── SimplexNoise.cs       # Noise generation
+```
+
+## Roadmap
+
+See [GDD.md](../GDD.md) for the complete Game Design Document.
+
+### Next Steps
+- [ ] Temporal stability system
+- [ ] Temperature and season system
+- [ ] Hunger and nutrition mechanics
+- [ ] Advanced crafting (knapping, pottery, metallurgy)
+- [ ] Prospecting system for ore discovery
+- [ ] Day/night cycle
+- [ ] Lighting system
+- [ ] Hostile entities (Drifters)
+- [ ] Block textures
+- [ ] Sound effects and music
+- [ ] Save/load system
+
+## Technologies Used
+- **C# 12** (.NET 8.0)
+- **MonoGame 3.8.4** - Cross-platform game framework
+- **SimplexNoise** - Procedural terrain generation
+
+## Inspired By
+This project is inspired by **Vintage Story** by Anego Studios, a remarkable survival sandbox game that emphasizes geological realism, complex crafting systems, and immersive gameplay.
+
+## License
+This is an educational project created for learning game development concepts.
+
+## Development Notes
+- World seed: 12345 (configurable in TimelessTalesGame.cs)
+- Render distance: 8 chunks
+- Chunk size: 16x256x16 blocks
+- Player height: 1.8 blocks
+- Reach distance: 5 blocks
+
