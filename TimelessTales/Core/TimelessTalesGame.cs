@@ -20,6 +20,7 @@ namespace TimelessTales.Core
         private WorldManager? _worldManager;
         private Player? _player;
         private WorldRenderer? _worldRenderer;
+        private PlayerRenderer? _playerRenderer;
         private UIManager? _uiManager;
         private InputManager? _inputManager;
         
@@ -69,6 +70,7 @@ namespace TimelessTales.Core
             
             // Initialize renderer
             _worldRenderer = new WorldRenderer(GraphicsDevice, _worldManager);
+            _playerRenderer = new PlayerRenderer(GraphicsDevice);
             
             // Initialize UI
             _uiManager = new UIManager(_spriteBatch, Content);
@@ -94,7 +96,7 @@ namespace TimelessTales.Core
                 _player.Update(gameTime, _inputManager, _worldManager);
                 
                 // Update camera to follow player (with eye height offset)
-                _camera.Position = _player.Position + new Vector3(0, 1.62f - 1.8f, 0); // Eye height offset
+                _camera.Position = _player.Position + new Vector3(0, 1.62f, 0); // Eye height offset from feet
                 _camera.Rotation = _player.Rotation;
                 
                 // Update world
@@ -113,6 +115,9 @@ namespace TimelessTales.Core
 
             // Draw 3D world
             _worldRenderer.Draw(_camera, gameTime);
+            
+            // Draw player arms (first-person view)
+            _playerRenderer.Draw(_camera, _player);
             
             // Draw UI (2D overlay)
             _spriteBatch.Begin();
