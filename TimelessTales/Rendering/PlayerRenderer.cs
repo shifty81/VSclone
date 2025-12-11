@@ -16,6 +16,14 @@ namespace TimelessTales.Rendering
         // Body visibility thresholds (in radians)
         private const float BODY_VISIBILITY_THRESHOLD = 0.3f;  // ~17 degrees
         private const float LEG_VISIBILITY_THRESHOLD = 0.8f;   // ~46 degrees
+        
+        // Visibility fade-in ranges (in radians)
+        private const float BODY_FADE_RANGE = 0.5f;  // How quickly body fades in
+        private const float LEG_FADE_RANGE = 0.5f;   // How quickly legs fade in
+        
+        // Visibility cutoff percentages
+        private const float BODY_MIN_VISIBILITY = 0.3f;  // Show body when visibility > 30%
+        private const float LEG_MIN_VISIBILITY = 0.2f;   // Show legs when visibility > 20%
 
         public PlayerRenderer(GraphicsDevice graphicsDevice)
         {
@@ -106,7 +114,7 @@ namespace TimelessTales.Rendering
             // Add body parts when looking down (pitch > 0 means looking down)
             if (pitch > BODY_VISIBILITY_THRESHOLD)
             {
-                float bodyVisibility = MathHelper.Clamp((pitch - BODY_VISIBILITY_THRESHOLD) / 0.5f, 0f, 1f);
+                float bodyVisibility = MathHelper.Clamp((pitch - BODY_VISIBILITY_THRESHOLD) / BODY_FADE_RANGE, 0f, 1f);
                 
                 // Torso - positioned below camera view
                 float torsoWidth = 0.4f;
@@ -116,7 +124,7 @@ namespace TimelessTales.Rendering
                     - up * 0.8f         // Below camera
                     + forward * 0.3f;    // Slightly forward
                 
-                if (bodyVisibility > 0.3f)
+                if (bodyVisibility > BODY_MIN_VISIBILITY)
                 {
                     AddBox(vertices, torsoBase, torsoWidth, torsoDepth, torsoHeight, torsoColor, up, right, forward);
                 }
@@ -124,9 +132,9 @@ namespace TimelessTales.Rendering
                 // Legs - only visible when looking down significantly
                 if (pitch > LEG_VISIBILITY_THRESHOLD)
                 {
-                    float legVisibility = MathHelper.Clamp((pitch - LEG_VISIBILITY_THRESHOLD) / 0.5f, 0f, 1f);
+                    float legVisibility = MathHelper.Clamp((pitch - LEG_VISIBILITY_THRESHOLD) / LEG_FADE_RANGE, 0f, 1f);
                     
-                    if (legVisibility > 0.2f)
+                    if (legVisibility > LEG_MIN_VISIBILITY)
                     {
                         float legWidth = 0.18f;
                         float legDepth = 0.18f;

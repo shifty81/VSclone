@@ -334,8 +334,6 @@ namespace TimelessTales.UI
             if (_worldManager != null)
             {
                 int mapRange = 50; // Blocks to show on each side
-                if (mapRange <= 0) mapRange = 1; // Prevent division by zero
-                
                 int pixelsPerBlock = minimapSize / (mapRange * 2);
                 
                 Vector3 playerPos = player.Position;
@@ -370,11 +368,12 @@ namespace TimelessTales.UI
                             
                             int pixelX = minimapX + (dx + mapRange) * pixelsPerBlock;
                             int pixelZ = minimapY + (dz + mapRange) * pixelsPerBlock;
+                            int pixelSize = Math.Max(1, pixelsPerBlock * step);
                             
                             if (pixelsPerBlock > 0)
                             {
                                 spriteBatch.Draw(_pixelTexture,
-                                    new Rectangle(pixelX, pixelZ, Math.Max(1, pixelsPerBlock * step), Math.Max(1, pixelsPerBlock * step)),
+                                    new Rectangle(pixelX, pixelZ, pixelSize, pixelSize),
                                     terrainColor * 0.6f);
                             }
                         }
@@ -530,8 +529,6 @@ namespace TimelessTales.UI
             if (_worldManager != null)
             {
                 int mapRange = 200; // Show larger area on world map
-                if (mapRange <= 0) mapRange = 1; // Prevent division by zero
-                
                 int pixelsPerBlock = mapSize / (mapRange * 2);
                 
                 Vector3 playerPos = player.Position;
@@ -565,13 +562,14 @@ namespace TimelessTales.UI
                             float heightFactor = MathHelper.Clamp(highestY / 100f, 0f, 1f);
                             Color terrainColor = Color.Lerp(new Color(0, 100, 0), new Color(200, 200, 200), heightFactor);
                             
-                            int pixelX = mapX + ((dx + mapRange) * pixelsPerBlock) / step;
-                            int pixelZ = mapY + ((dz + mapRange) * pixelsPerBlock) / step;
+                            int pixelX = mapX + (dx + mapRange) * pixelsPerBlock;
+                            int pixelZ = mapY + (dz + mapRange) * pixelsPerBlock;
+                            int pixelSize = Math.Max(2, pixelsPerBlock * step);
                             
                             if (pixelsPerBlock > 0)
                             {
                                 spriteBatch.Draw(_pixelTexture,
-                                    new Rectangle(pixelX, pixelZ, Math.Max(2, pixelsPerBlock * step), Math.Max(2, pixelsPerBlock * step)),
+                                    new Rectangle(pixelX, pixelZ, pixelSize, pixelSize),
                                     terrainColor * 0.7f);
                             }
                         }
