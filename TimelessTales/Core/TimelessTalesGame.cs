@@ -23,6 +23,8 @@ namespace TimelessTales.Core
         private PlayerRenderer? _playerRenderer;
         private UIManager? _uiManager;
         private InputManager? _inputManager;
+        private TimeManager? _timeManager;
+        private SkyboxRenderer? _skyboxRenderer;
         
         // Camera
         private Camera? _camera;
@@ -52,6 +54,9 @@ namespace TimelessTales.Core
             // Initialize input manager
             _inputManager = new InputManager();
             
+            // Initialize time manager
+            _timeManager = new TimeManager();
+            
             base.Initialize();
         }
 
@@ -71,6 +76,7 @@ namespace TimelessTales.Core
             // Initialize renderer
             _worldRenderer = new WorldRenderer(GraphicsDevice, _worldManager);
             _playerRenderer = new PlayerRenderer(GraphicsDevice);
+            _skyboxRenderer = new SkyboxRenderer(GraphicsDevice);
             
             // Initialize UI
             _uiManager = new UIManager(_spriteBatch, Content);
@@ -92,6 +98,9 @@ namespace TimelessTales.Core
             
             if (!_isPaused)
             {
+                // Update time
+                _timeManager.Update(gameTime);
+                
                 // Update player
                 _player.Update(gameTime, _inputManager, _worldManager);
                 
@@ -111,8 +120,12 @@ namespace TimelessTales.Core
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            // Use sky color from time manager instead of static color
+            GraphicsDevice.Clear(_timeManager.GetSkyColor());
 
+            // Draw skybox first (before everything else)
+            _skyboxRenderer.Draw(_camera, _timeManager);
+            
             // Draw 3D world
             _worldRenderer.Draw(_camera, gameTime);
             
