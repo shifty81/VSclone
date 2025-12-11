@@ -357,7 +357,7 @@ namespace TimelessTales.Entities
         private (Vector3 blockPos, Vector3? placePos)? RaycastBlock(WorldManager world)
         {
             // Cast ray from player's eye position
-            Vector3 rayStart = Position + new Vector3(0, PLAYER_EYE_HEIGHT - PLAYER_HEIGHT, 0);
+            Vector3 rayStart = Position + new Vector3(0, PLAYER_EYE_HEIGHT, 0);
             Vector3 rayDir = GetLookDirection();
             
             // TODO: Consider using DDA algorithm for more efficient raycasting
