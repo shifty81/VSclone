@@ -17,6 +17,7 @@ namespace TimelessTales.UI
         
         private readonly int _screenWidth;
         private readonly int _screenHeight;
+        private Player? _player;
 
         public UIManager(SpriteBatch spriteBatch, ContentManager content)
         {
@@ -31,6 +32,7 @@ namespace TimelessTales.UI
 
         public void Update(GameTime gameTime, Player player, bool isPaused)
         {
+            _player = player;
             // UI update logic if needed
         }
 
@@ -38,6 +40,10 @@ namespace TimelessTales.UI
         {
             DrawCrosshair(spriteBatch);
             DrawHUD(spriteBatch);
+            if (_player != null)
+            {
+                DrawInventory(spriteBatch, _player);
+            }
         }
 
         private void DrawCrosshair(SpriteBatch spriteBatch)
