@@ -163,29 +163,62 @@ namespace TimelessTales.Entities
                 // Find the correct Y position
                 if (Velocity.Y < 0)
                 {
-                    // Falling - find the block we're standing on
-                    // Player's feet should be at the top of the highest block we're colliding with
+                    // Falling - find the highest solid block below player across their entire width
                     int minBlockY = (int)MathF.Floor(result.Y);
                     int maxBlockY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
                     
-                    // Find highest solid block below player
-                    for (int y = maxBlockY - 1; y >= minBlockY; y--)
+                    // Check all blocks the player overlaps horizontally
+                    int minX = (int)MathF.Floor(result.X - PLAYER_WIDTH / 2);
+                    int maxX = (int)MathF.Ceiling(result.X + PLAYER_WIDTH / 2);
+                    int minZ = (int)MathF.Floor(result.Z - PLAYER_WIDTH / 2);
+                    int maxZ = (int)MathF.Ceiling(result.Z + PLAYER_WIDTH / 2);
+                    
+                    // Find highest solid block
+                    int highestBlockY = minBlockY - 1;
+                    for (int x = minX; x < maxX; x++)
                     {
-                        int blockX = (int)MathF.Floor(result.X);
-                        int blockZ = (int)MathF.Floor(result.Z);
-                        if (world.IsBlockSolid(blockX, y, blockZ))
+                        for (int z = minZ; z < maxZ; z++)
                         {
-                            result.Y = y + 1; // Stand on top of this block
-                            _isOnGround = true;
-                            break;
+                            for (int y = maxBlockY - 1; y >= minBlockY; y--)
+                            {
+                                if (world.IsBlockSolid(x, y, z))
+                                {
+                                    highestBlockY = Math.Max(highestBlockY, y);
+                                    break; // Found highest in this column, move to next column
+                                }
+                            }
                         }
+                    }
+                    
+                    if (highestBlockY >= minBlockY)
+                    {
+                        result.Y = highestBlockY + 1; // Stand on top of highest block
+                        _isOnGround = true;
                     }
                 }
                 else
                 {
-                    // Rising - hit ceiling
-                    int blockY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
-                    result.Y = blockY - PLAYER_HEIGHT;
+                    // Rising - hit ceiling, find the lowest ceiling block
+                    int minX = (int)MathF.Floor(result.X - PLAYER_WIDTH / 2);
+                    int maxX = (int)MathF.Ceiling(result.X + PLAYER_WIDTH / 2);
+                    int minZ = (int)MathF.Floor(result.Z - PLAYER_WIDTH / 2);
+                    int maxZ = (int)MathF.Ceiling(result.Z + PLAYER_WIDTH / 2);
+                    int ceilingY = (int)MathF.Ceiling(result.Y + PLAYER_HEIGHT);
+                    
+                    // Find lowest ceiling block across player's width
+                    int lowestCeilingY = ceilingY;
+                    for (int x = minX; x < maxX; x++)
+                    {
+                        for (int z = minZ; z < maxZ; z++)
+                        {
+                            if (world.IsBlockSolid(x, ceilingY, z))
+                            {
+                                lowestCeilingY = Math.Min(lowestCeilingY, ceilingY);
+                            }
+                        }
+                    }
+                    
+                    result.Y = lowestCeilingY - PLAYER_HEIGHT;
                 }
                 Velocity = new Vector3(Velocity.X, 0, Velocity.Z);
             }
