@@ -91,9 +91,9 @@ namespace TimelessTales.Entities
             
             // WASD movement
             if (input.IsKeyDown(Keys.W))
-                moveDirection += new Vector3(MathF.Sin(Rotation.Y), 0, MathF.Cos(Rotation.Y));
+                moveDirection += new Vector3(MathF.Sin(Rotation.Y), 0, -MathF.Cos(Rotation.Y));
             if (input.IsKeyDown(Keys.S))
-                moveDirection -= new Vector3(MathF.Sin(Rotation.Y), 0, MathF.Cos(Rotation.Y));
+                moveDirection -= new Vector3(MathF.Sin(Rotation.Y), 0, -MathF.Cos(Rotation.Y));
             if (input.IsKeyDown(Keys.A))
                 moveDirection -= new Vector3(MathF.Cos(Rotation.Y), 0, -MathF.Sin(Rotation.Y));
             if (input.IsKeyDown(Keys.D))
