@@ -322,6 +322,32 @@ namespace TimelessTales.UI
             spriteBatch.Draw(_pixelTexture, new Rectangle(minimapX, minimapY, borderWidth, minimapSize), Color.White);
             spriteBatch.Draw(_pixelTexture, new Rectangle(minimapX + minimapSize - borderWidth, minimapY, borderWidth, minimapSize), Color.White);
             
+            // Draw cardinal direction markers on minimap edges
+            int markerSize = 8;
+            int markerThickness = 3;
+            int compassCenterX = minimapX + minimapSize / 2;
+            int compassCenterY = minimapY + minimapSize / 2;
+            
+            // North (top) - White marker
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(compassCenterX - markerThickness / 2, minimapY + 2, markerThickness, markerSize),
+                Color.White);
+            
+            // South (bottom) - Gray marker
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(compassCenterX - markerThickness / 2, minimapY + minimapSize - markerSize - 2, markerThickness, markerSize),
+                Color.Gray);
+            
+            // East (right) - White marker
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(minimapX + minimapSize - markerSize - 2, compassCenterY - markerThickness / 2, markerSize, markerThickness),
+                Color.White);
+            
+            // West (left) - Gray marker
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(minimapX + 2, compassCenterY - markerThickness / 2, markerSize, markerThickness),
+                Color.Gray);
+            
             // Draw player position indicator (red dot at center)
             int playerDotSize = 6;
             int centerX = minimapX + minimapSize / 2 - playerDotSize / 2;
@@ -329,6 +355,21 @@ namespace TimelessTales.UI
             spriteBatch.Draw(_pixelTexture,
                 new Rectangle(centerX, centerY, playerDotSize, playerDotSize),
                 Color.Red);
+            
+            // Draw player facing direction indicator
+            float yaw = player.Rotation.Y;
+            int directionLineLength = 20;
+            // Calculate endpoint of direction line (yaw: 0 = forward/north, increases clockwise)
+            // In screen coordinates: +X is right, +Y is down
+            // We want: yaw 0 = point up (north), yaw PI/2 = point right (east)
+            float dirEndX = centerX + playerDotSize / 2 + MathF.Sin(yaw) * directionLineLength;
+            float dirEndY = centerY + playerDotSize / 2 - MathF.Cos(yaw) * directionLineLength;
+            
+            // Draw direction line from player dot to direction point
+            DrawLine(spriteBatch, 
+                centerX + playerDotSize / 2, centerY + playerDotSize / 2,
+                (int)dirEndX, (int)dirEndY, 
+                Color.Yellow, 2);
             
             // Draw simple terrain representation if world manager is available
             if (_worldManager != null)
@@ -421,17 +462,89 @@ namespace TimelessTales.UI
                     new Rectangle(barStartX + i * (barWidth + barSpacing), coordY + 16, barWidth, 5),
                     Color.Blue);
             }
+            
+            // Draw compass direction below coordinates
+            int compassY = coordY + coordBoxHeight + 3;
+            int compassBoxHeight = 18;
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(minimapX, compassY, minimapSize, compassBoxHeight),
+                Color.Black * 0.7f);
+            
+            // Determine cardinal direction based on player yaw
+            // Yaw: 0 = North, PI/2 = East, PI = South, 3PI/2 = West
+            float playerYaw = player.Rotation.Y;
+            // Normalize yaw to 0-2PI range
+            while (playerYaw < 0) playerYaw += MathHelper.TwoPi;
+            while (playerYaw >= MathHelper.TwoPi) playerYaw -= MathHelper.TwoPi;
+            
+            // Determine which cardinal direction (with 45 degree segments)
+            string direction;
+            if (playerYaw < MathHelper.PiOver4 || playerYaw >= 7 * MathHelper.PiOver4)
+                direction = "N";  // North
+            else if (playerYaw < 3 * MathHelper.PiOver4)
+                direction = "E";  // East
+            else if (playerYaw < 5 * MathHelper.PiOver4)
+                direction = "S";  // South
+            else
+                direction = "W";  // West
+            
+            // Draw direction indicator bars
+            // We'll create a simple visual pattern for each direction
+            int dirBarStartX = minimapX + minimapSize / 2 - 20;
+            int dirBarY = compassY + 3;
+            int dirBarHeight = 12;
+            
+            // Visual pattern based on direction (since no font available)
+            // N = 2 tall bars, E = 3 medium bars, S = 1 wide bar, W = 2 wide bars
+            switch (direction)
+            {
+                case "N": // North - two tall bars (like "II")
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(dirBarStartX + 10, dirBarY, 4, dirBarHeight),
+                        Color.Cyan);
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(dirBarStartX + 26, dirBarY, 4, dirBarHeight),
+                        Color.Cyan);
+                    break;
+                    
+                case "E": // East - three medium bars (like "III")
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(dirBarStartX + 5, dirBarY, 3, dirBarHeight),
+                        Color.Yellow);
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(dirBarStartX + 17, dirBarY, 3, dirBarHeight),
+                        Color.Yellow);
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(dirBarStartX + 29, dirBarY, 3, dirBarHeight),
+                        Color.Yellow);
+                    break;
+                    
+                case "S": // South - one wide horizontal bar
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(dirBarStartX + 5, dirBarY + 4, 30, 4),
+                        Color.Orange);
+                    break;
+                    
+                case "W": // West - two wide bars stacked
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(dirBarStartX + 5, dirBarY + 1, 30, 4),
+                        Color.Magenta);
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(dirBarStartX + 5, dirBarY + 7, 30, 4),
+                        Color.Magenta);
+                    break;
+            }
         }
         
         private void DrawClock(SpriteBatch spriteBatch)
         {
             if (_timeManager == null) return;
             
-            // Clock below minimap
+            // Clock below minimap and compass
             int minimapSize = 150;
             int padding = 10;
             int clockX = _screenWidth - minimapSize - padding;
-            int clockY = padding + minimapSize + 30; // Below coordinates
+            int clockY = padding + minimapSize + 30 + 18 + 3; // Below coordinates and compass (20 for coords, 18 for compass, 3*3 for spacing)
             int clockWidth = minimapSize;
             int clockHeight = 40;
             
@@ -608,6 +721,37 @@ namespace TimelessTales.UI
             spriteBatch.Draw(_pixelTexture,
                 new Rectangle(messageX, messageY, messageWidth, 30),
                 Color.DarkGray * 0.8f);
+        }
+        
+        /// <summary>
+        /// Helper method to draw a line using the pixel texture
+        /// </summary>
+        private void DrawLine(SpriteBatch spriteBatch, int x1, int y1, int x2, int y2, Color color, int thickness)
+        {
+            // Calculate line parameters
+            int dx = x2 - x1;
+            int dy = y2 - y1;
+            float length = MathF.Sqrt(dx * dx + dy * dy);
+            
+            if (length < 1) return; // Line too short to draw
+            
+            float angle = MathF.Atan2(dy, dx);
+            
+            // Draw rotated rectangle to form a line
+            Rectangle rect = new Rectangle(x1, y1 - thickness / 2, (int)length, thickness);
+            
+            // For simplicity, we'll approximate with multiple small rectangles for angled lines
+            // This is not perfect but works for short lines
+            int steps = (int)length;
+            for (int i = 0; i <= steps; i++)
+            {
+                float t = steps > 0 ? i / (float)steps : 0;
+                int x = (int)(x1 + dx * t);
+                int y = (int)(y1 + dy * t);
+                spriteBatch.Draw(_pixelTexture,
+                    new Rectangle(x - thickness / 2, y - thickness / 2, thickness, thickness),
+                    color);
+            }
         }
     }
 }
