@@ -1,3 +1,4 @@
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -18,6 +19,7 @@ namespace TimelessTales.UI
         private readonly int _screenWidth;
         private readonly int _screenHeight;
         private Player? _player;
+        private bool _inventoryOpen;
 
         public UIManager(SpriteBatch spriteBatch, ContentManager content)
         {
@@ -30,9 +32,10 @@ namespace TimelessTales.UI
             _pixelTexture.SetData(new[] { Color.White });
         }
 
-        public void Update(GameTime gameTime, Player player, bool isPaused)
+        public void Update(GameTime gameTime, Player player, bool isPaused, bool inventoryOpen = false)
         {
             _player = player;
+            _inventoryOpen = inventoryOpen;
             // UI update logic if needed
         }
 
@@ -42,7 +45,14 @@ namespace TimelessTales.UI
             DrawHUD(spriteBatch);
             if (_player != null)
             {
-                DrawInventory(spriteBatch, _player);
+                if (_inventoryOpen)
+                {
+                    DrawFullInventory(spriteBatch, _player);
+                }
+                else
+                {
+                    DrawInventory(spriteBatch, _player);
+                }
                 DrawBlockBreakProgress(spriteBatch, _player);
             }
         }
@@ -185,6 +195,76 @@ namespace TimelessTales.UI
                     new Rectangle(barX, barY, progressWidth, barHeight),
                     Color.White);
             }
+        }
+        
+        private void DrawFullInventory(SpriteBatch spriteBatch, Player player)
+        {
+            // Draw semi-transparent overlay
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(0, 0, _screenWidth, _screenHeight),
+                Color.Black * 0.7f);
+            
+            // Draw inventory title area
+            int titleHeight = 60;
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(0, 0, _screenWidth, titleHeight),
+                Color.DarkSlateGray * 0.9f);
+            
+            // Draw inventory grid
+            int slotSize = 60;
+            int spacing = 10;
+            int slotsPerRow = 8;
+            int rows = 5;
+            
+            int gridWidth = (slotSize + spacing) * slotsPerRow + spacing;
+            int gridHeight = (slotSize + spacing) * rows + spacing;
+            int gridX = (_screenWidth - gridWidth) / 2;
+            int gridY = (_screenHeight - gridHeight) / 2 + 30;
+            
+            // Draw inventory background
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(gridX - 20, gridY - 20, gridWidth + 40, gridHeight + 40),
+                Color.DarkGray * 0.9f);
+            
+            var items = player.Inventory.GetAllItems();
+            var itemList = items.ToList();
+            
+            // Draw inventory slots
+            for (int row = 0; row < rows; row++)
+            {
+                for (int col = 0; col < slotsPerRow; col++)
+                {
+                    int index = row * slotsPerRow + col;
+                    int x = gridX + spacing + (slotSize + spacing) * col;
+                    int y = gridY + spacing + (slotSize + spacing) * row;
+                    
+                    // Draw slot background
+                    spriteBatch.Draw(_pixelTexture,
+                        new Rectangle(x, y, slotSize, slotSize),
+                        Color.Gray * 0.6f);
+                    
+                    // Draw slot border
+                    int borderWidth = 2;
+                    spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), Color.Black);
+                    spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), Color.Black);
+                    spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), Color.Black);
+                    spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), Color.Black);
+                    
+                    // Draw item if exists
+                    if (index < itemList.Count)
+                    {
+                        var item = itemList[index];
+                        Color blockColor = BlockRegistry.Get(item.Key).Color;
+                        int padding = 8;
+                        spriteBatch.Draw(_pixelTexture,
+                            new Rectangle(x + padding, y + padding, slotSize - padding * 2, slotSize - padding * 2),
+                            blockColor);
+                    }
+                }
+            }
+            
+            // Draw "Press I to close" message
+            // (Would use font here in real implementation)
         }
     }
 }

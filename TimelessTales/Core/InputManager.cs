@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
 namespace TimelessTales.Core
@@ -11,6 +12,8 @@ namespace TimelessTales.Core
         private KeyboardState _previousKeyState;
         private MouseState _currentMouseState;
         private MouseState _previousMouseState;
+        private Point _screenCenter;
+        private bool _mouseCaptured;
 
         public InputManager()
         {
@@ -18,6 +21,7 @@ namespace TimelessTales.Core
             _previousKeyState = _currentKeyState;
             _currentMouseState = Mouse.GetState();
             _previousMouseState = _currentMouseState;
+            _mouseCaptured = true;
         }
 
         public void Update()
@@ -26,6 +30,22 @@ namespace TimelessTales.Core
             _currentKeyState = Keyboard.GetState();
             _previousMouseState = _currentMouseState;
             _currentMouseState = Mouse.GetState();
+            
+            // Center mouse for captured mode
+            if (_mouseCaptured && _screenCenter != Point.Zero)
+            {
+                Mouse.SetPosition(_screenCenter.X, _screenCenter.Y);
+            }
+        }
+        
+        public void SetScreenCenter(int x, int y)
+        {
+            _screenCenter = new Point(x, y);
+        }
+        
+        public void SetMouseCaptured(bool captured)
+        {
+            _mouseCaptured = captured;
         }
 
         public bool IsKeyDown(Keys key)
