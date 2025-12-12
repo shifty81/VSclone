@@ -389,22 +389,13 @@ namespace TimelessTales.UI
                         int worldX = playerX + dx;
                         int worldZ = playerZ + dz;
                         
-                        // Find highest solid block
-                        int highestY = -1;
-                        for (int y = 100; y >= 0; y--)
-                        {
-                            if (_worldManager.IsBlockSolid(worldX, y, worldZ))
-                            {
-                                highestY = y;
-                                break;
-                            }
-                        }
+                        // Get top surface block (ignores caves and underground)
+                        var (surfaceY, blockType) = _worldManager.GetTopSurfaceBlock(worldX, worldZ);
                         
-                        if (highestY >= 0)
+                        if (surfaceY >= 0)
                         {
-                            // Color based on height
-                            float heightFactor = MathHelper.Clamp(highestY / 100f, 0f, 1f);
-                            Color terrainColor = Color.Lerp(new Color(0, 100, 0), new Color(150, 150, 150), heightFactor);
+                            // Color based on block type and height for better visual distinction
+                            Color terrainColor = GetTerrainColorForMap(blockType, surfaceY);
                             
                             int pixelX = minimapX + (dx + mapRange) * pixelsPerBlock;
                             int pixelZ = minimapY + (dz + mapRange) * pixelsPerBlock;
@@ -414,7 +405,7 @@ namespace TimelessTales.UI
                             {
                                 spriteBatch.Draw(_pixelTexture,
                                     new Rectangle(pixelX, pixelZ, pixelSize, pixelSize),
-                                    terrainColor * 0.6f);
+                                    terrainColor);
                             }
                         }
                     }
@@ -641,22 +632,13 @@ namespace TimelessTales.UI
                         int worldX = playerX + dx;
                         int worldZ = playerZ + dz;
                         
-                        // Find highest solid block
-                        int highestY = -1;
-                        for (int y = 100; y >= 0; y--)
-                        {
-                            if (_worldManager.IsBlockSolid(worldX, y, worldZ))
-                            {
-                                highestY = y;
-                                break;
-                            }
-                        }
+                        // Get top surface block (ignores caves and underground)
+                        var (surfaceY, blockType) = _worldManager.GetTopSurfaceBlock(worldX, worldZ);
                         
-                        if (highestY >= 0)
+                        if (surfaceY >= 0)
                         {
-                            // Color based on height
-                            float heightFactor = MathHelper.Clamp(highestY / 100f, 0f, 1f);
-                            Color terrainColor = Color.Lerp(new Color(0, 100, 0), new Color(200, 200, 200), heightFactor);
+                            // Color based on block type and height for better visual distinction
+                            Color terrainColor = GetTerrainColorForMap(blockType, surfaceY);
                             
                             int pixelX = mapX + (dx + mapRange) * pixelsPerBlock;
                             int pixelZ = mapY + (dz + mapRange) * pixelsPerBlock;
@@ -666,7 +648,7 @@ namespace TimelessTales.UI
                             {
                                 spriteBatch.Draw(_pixelTexture,
                                     new Rectangle(pixelX, pixelZ, pixelSize, pixelSize),
-                                    terrainColor * 0.7f);
+                                    terrainColor);
                             }
                         }
                     }
