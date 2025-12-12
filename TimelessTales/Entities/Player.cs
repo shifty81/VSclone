@@ -511,10 +511,10 @@ namespace TimelessTales.Entities
                             }
                             
                             // 10% chance to drop a seed (for replanting)
+                            // Seed system planned for future update - will add OakSeed, PineSeed, BirchSeed block types
                             if (random.NextDouble() < 0.1)
                             {
-                                // TODO: Add seed block types in future
-                                Logger.Info($"Found a seed! (Seed system coming soon)");
+                                Logger.Info($"Found a {BlockRegistry.Get(brokenBlock).Name} seed! (Seed planting system coming in future update)");
                             }
                         }
                         

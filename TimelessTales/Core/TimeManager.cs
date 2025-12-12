@@ -195,7 +195,9 @@ namespace TimelessTales.Core
                 
                 if (moonHeight > 0)
                 {
-                    // Moon provides additional light when above horizon (up to 0.3 additional)
+                    // Moon provides additional light when above horizon
+                    // Maximum contribution is 0.3 when moon is directly overhead
+                    // Total nighttime light is capped at 0.8 (so effective moon contribution varies with base light)
                     float moonLight = moonHeight * 0.3f;
                     baseLight = Math.Min(baseLight + moonLight, 0.8f); // Cap at 0.8 for nighttime
                 }

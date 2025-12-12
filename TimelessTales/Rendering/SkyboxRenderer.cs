@@ -124,6 +124,7 @@ namespace TimelessTales.Rendering
         /// <summary>
         /// Gets the moon light intensity (0.0 to 1.0)
         /// Full moon provides decent light at night
+        /// Note: TimeManager caps total nighttime light at 0.8, so effective moon contribution is ~30%
         /// </summary>
         public float GetMoonLightIntensity(TimeManager timeManager)
         {
@@ -133,9 +134,9 @@ namespace TimelessTales.Rendering
             
             if (moonY < 0) return 0f; // Moon below horizon
             
-            // Moon provides up to 40% of daylight when directly overhead
-            // This gives decent visibility at night
-            return moonY * 0.4f;
+            // Moon provides up to 30% additional ambient light when directly overhead
+            // This gives decent visibility at night (actual value is capped in TimeManager)
+            return moonY * 0.3f;
         }
         
         private void DrawSkyDome(Camera camera, TimeManager timeManager)
