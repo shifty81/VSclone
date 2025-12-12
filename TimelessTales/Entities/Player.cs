@@ -35,8 +35,9 @@ namespace TimelessTales.Entities
         private float _breakProgress;
         private Vector3? _targetBlockPos;
         
-        // Inventory
+        // Inventory and equipment
         public Inventory Inventory { get; private set; }
+        public Equipment Equipment { get; private set; }
         public BlockType SelectedBlock { get; set; }
 
         public Player(Vector3 startPosition)
@@ -45,6 +46,7 @@ namespace TimelessTales.Entities
             Rotation = Vector2.Zero;
             Velocity = Vector3.Zero;
             Inventory = new Inventory(40);
+            Equipment = new Equipment();
             SelectedBlock = BlockType.Stone;
             
             // Start with some basic blocks
@@ -473,5 +475,59 @@ namespace TimelessTales.Entities
         }
 
         public Dictionary<BlockType, int> GetAllItems() => new Dictionary<BlockType, int>(_items);
+    }
+
+    /// <summary>
+    /// Equipment slot types
+    /// </summary>
+    public enum EquipmentSlot
+    {
+        Head,
+        Chest,
+        Legs,
+        Feet,
+        Hands,
+        Back,  // For backpacks
+        MainHand,
+        OffHand
+    }
+
+    /// <summary>
+    /// Player equipment system
+    /// </summary>
+    public class Equipment
+    {
+        private readonly Dictionary<EquipmentSlot, BlockType?> _equippedItems;
+
+        public Equipment()
+        {
+            _equippedItems = new Dictionary<EquipmentSlot, BlockType?>();
+            foreach (EquipmentSlot slot in Enum.GetValues(typeof(EquipmentSlot)))
+            {
+                _equippedItems[slot] = null;
+            }
+        }
+
+        public void Equip(EquipmentSlot slot, BlockType item)
+        {
+            _equippedItems[slot] = item;
+        }
+
+        public BlockType? Unequip(EquipmentSlot slot)
+        {
+            BlockType? item = _equippedItems[slot];
+            _equippedItems[slot] = null;
+            return item;
+        }
+
+        public BlockType? GetEquipped(EquipmentSlot slot)
+        {
+            return _equippedItems.TryGetValue(slot, out var item) ? item : null;
+        }
+
+        public bool IsSlotEmpty(EquipmentSlot slot)
+        {
+            return _equippedItems[slot] == null;
+        }
     }
 }

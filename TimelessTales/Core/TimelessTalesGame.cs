@@ -25,11 +25,13 @@ namespace TimelessTales.Core
         private InputManager? _inputManager;
         private TimeManager? _timeManager;
         private SkyboxRenderer? _skyboxRenderer;
+        private TitleScreen? _titleScreen;
         
         // Camera
         private Camera? _camera;
         
         // Game state
+        private GameState _currentState = GameState.MainMenu;
         private bool _isPaused = false;
         private bool _inventoryOpen = false;
         private bool _worldMapOpen = false;
@@ -38,7 +40,7 @@ namespace TimelessTales.Core
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
-            IsMouseVisible = false;
+            IsMouseVisible = true; // Start with mouse visible for title screen
             
             // Set window size
             _graphics.PreferredBackBufferWidth = 1280;
@@ -72,14 +74,24 @@ namespace TimelessTales.Core
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             
+            // Initialize title screen
+            _titleScreen = new TitleScreen(GraphicsDevice);
+            _titleScreen.OnNewGame += StartNewGame;
+        }
+        
+        private void StartNewGame()
+        {
+            _currentState = GameState.Loading;
+            IsMouseVisible = false;
+            
             // Initialize world manager
             _worldManager = new WorldManager(12345); // Seed for world generation
             _worldManager.Initialize();
             
             // Create player at spawn position
-            Vector3 spawnPosition = _worldManager.GetSpawnPosition();
+            Vector3 spawnPosition = _worldManager!.GetSpawnPosition();
             _player = new Player(spawnPosition);
-            _camera.Position = spawnPosition;
+            _camera!.Position = spawnPosition;
             
             // Initialize renderer
             _worldRenderer = new WorldRenderer(GraphicsDevice, _worldManager);
@@ -87,7 +99,9 @@ namespace TimelessTales.Core
             _skyboxRenderer = new SkyboxRenderer(GraphicsDevice);
             
             // Initialize UI
-            _uiManager = new UIManager(_spriteBatch, Content);
+            _uiManager = new UIManager(_spriteBatch!, Content);
+            
+            _currentState = GameState.Playing;
         }
 
         protected override void Update(GameTime gameTime)
@@ -95,75 +109,106 @@ namespace TimelessTales.Core
             // Handle exit
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
                 Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
+            {
+                if (_currentState == GameState.Playing)
+                {
+                    // Return to main menu from game
+                    _currentState = GameState.MainMenu;
+                    IsMouseVisible = true;
+                }
+                else if (_currentState == GameState.MainMenu)
+                {
+                    Exit();
+                }
+            }
 
-            // Update input
-            _inputManager.Update();
-            
-            // Toggle pause
-            if (_inputManager.IsKeyPressed(Keys.P))
-                _isPaused = !_isPaused;
-            
-            // Toggle inventory
-            if (_inputManager.IsKeyPressed(Keys.I))
-                _inventoryOpen = !_inventoryOpen;
-            
-            // Toggle world map
-            if (_inputManager.IsKeyPressed(Keys.M))
-                _worldMapOpen = !_worldMapOpen;
-            
-            // Toggle fullscreen
-            if (_inputManager.IsKeyPressed(Keys.F11))
+            if (_currentState == GameState.MainMenu)
             {
-                _graphics.IsFullScreen = !_graphics.IsFullScreen;
-                _graphics.ApplyChanges();
-                
-                // Update screen center for mouse capture
-                int centerX = GraphicsDevice.Viewport.Width / 2;
-                int centerY = GraphicsDevice.Viewport.Height / 2;
-                _inputManager.SetScreenCenter(centerX, centerY);
+                _titleScreen!.Update(gameTime);
             }
-            
-            if (!_isPaused && !_inventoryOpen && !_worldMapOpen)
+            else if (_currentState == GameState.Playing)
             {
-                // Update time
-                _timeManager.Update(gameTime);
+                // Update input
+                _inputManager!.Update();
                 
-                // Update player
-                _player.Update(gameTime, _inputManager, _worldManager);
+                // Toggle pause
+                if (_inputManager.IsKeyPressed(Keys.P))
+                    _isPaused = !_isPaused;
                 
-                // Update camera to follow player (with eye height offset)
-                _camera.Position = _player.Position + new Vector3(0, 1.62f, 0); // Eye height offset from feet
-                _camera.Rotation = _player.Rotation;
+                // Toggle inventory
+                if (_inputManager.IsKeyPressed(Keys.I))
+                {
+                    _inventoryOpen = !_inventoryOpen;
+                    IsMouseVisible = _inventoryOpen;
+                }
                 
-                // Update world
-                _worldManager.Update(_player.Position);
+                // Toggle world map
+                if (_inputManager.IsKeyPressed(Keys.M))
+                {
+                    _worldMapOpen = !_worldMapOpen;
+                    IsMouseVisible = _worldMapOpen;
+                }
+                
+                // Toggle fullscreen
+                if (_inputManager.IsKeyPressed(Keys.F11))
+                {
+                    _graphics.IsFullScreen = !_graphics.IsFullScreen;
+                    _graphics.ApplyChanges();
+                    
+                    // Update screen center for mouse capture
+                    int centerX = GraphicsDevice.Viewport.Width / 2;
+                    int centerY = GraphicsDevice.Viewport.Height / 2;
+                    _inputManager.SetScreenCenter(centerX, centerY);
+                }
+                
+                if (!_isPaused && !_inventoryOpen && !_worldMapOpen)
+                {
+                    // Update time
+                    _timeManager!.Update(gameTime);
+                    
+                    // Update player
+                    _player!.Update(gameTime, _inputManager, _worldManager!);
+                    
+                    // Update camera to follow player (with eye height offset)
+                    _camera!.Position = _player.Position + new Vector3(0, 1.62f, 0); // Eye height offset from feet
+                    _camera.Rotation = _player.Rotation;
+                    
+                    // Update world
+                    _worldManager!.Update(_player.Position);
+                }
+                
+                // Always update UI
+                _uiManager!.Update(gameTime, _player!, _timeManager!, _worldManager!, _isPaused, _inventoryOpen, _worldMapOpen);
             }
-            
-            // Always update UI
-            _uiManager.Update(gameTime, _player, _timeManager, _worldManager, _isPaused, _inventoryOpen, _worldMapOpen);
 
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            // Use sky color from time manager instead of static color
-            GraphicsDevice.Clear(_timeManager.GetSkyColor());
+            if (_currentState == GameState.MainMenu)
+            {
+                _titleScreen!.Draw(_spriteBatch!);
+            }
+            else if (_currentState == GameState.Playing)
+            {
+                // Use sky color from time manager instead of static color
+                GraphicsDevice.Clear(_timeManager!.GetSkyColor());
 
-            // Draw skybox first (before everything else)
-            _skyboxRenderer.Draw(_camera, _timeManager);
-            
-            // Draw 3D world
-            _worldRenderer.Draw(_camera, gameTime);
-            
-            // Draw player arms (first-person view)
-            _playerRenderer.Draw(_camera, _player);
-            
-            // Draw UI (2D overlay)
-            _spriteBatch.Begin();
-            _uiManager.Draw(_spriteBatch);
-            _spriteBatch.End();
+                // Draw skybox first (before everything else)
+                _skyboxRenderer!.Draw(_camera!, _timeManager);
+                
+                // Draw 3D world
+                _worldRenderer!.Draw(_camera!, gameTime);
+                
+                // Draw player arms (first-person view)
+                _playerRenderer!.Draw(_camera!, _player!);
+                
+                // Draw UI (2D overlay)
+                _spriteBatch!.Begin();
+                _uiManager!.Draw(_spriteBatch);
+                _spriteBatch.End();
+            }
 
             base.Draw(gameTime);
         }
