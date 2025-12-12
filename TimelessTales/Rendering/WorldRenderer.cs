@@ -88,6 +88,9 @@ namespace TimelessTales.Rendering
                         BlockType block = chunk.GetBlock(x, y, z);
                         if (block == BlockType.Air) continue;
                         
+                        // Skip water blocks - they're rendered separately by WaterRenderer
+                        if (block == BlockType.Water || block == BlockType.Saltwater) continue;
+                        
                         // Check neighboring blocks to determine which faces to render
                         bool renderTop = !IsBlockOpaque(chunk, x, y + 1, z);
                         bool renderBottom = !IsBlockOpaque(chunk, x, y - 1, z);
