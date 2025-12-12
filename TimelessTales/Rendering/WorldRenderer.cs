@@ -162,7 +162,7 @@ namespace TimelessTales.Rendering
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
             // Get or calculate cached cel-shaded colors for performance
-            int colorKey = color.PackedValue;
+            int colorKey = unchecked((int)color.PackedValue);
             Color topColor = GetCachedCelShadedColor(colorKey, 0, color);
             Color bottomColor = GetCachedCelShadedColor(colorKey, 1, color);
             Color sideColor = GetCachedCelShadedColor(colorKey, 2, color);
