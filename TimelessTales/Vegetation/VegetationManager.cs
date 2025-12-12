@@ -18,7 +18,11 @@ namespace TimelessTales.Vegetation
         // Vegetation placement parameters
         private const float GRASS_SPAWN_CHANCE = 0.15f;
         private const float SHRUB_SPAWN_CHANCE = 0.05f;
+        private const float UNDERWATER_VEGETATION_SPAWN_CHANCE = 0.12f;
+        private const float KELP_SPAWN_CHANCE = 0.03f;
+        private const float CORAL_SPAWN_CHANCE = 0.02f;
         private const int VEGETATION_CHECK_INTERVAL = 100; // Check every 100 blocks
+        private const int SEA_LEVEL = 64;
         
         public VegetationManager(WorldManager worldManager)
         {
@@ -70,10 +74,15 @@ namespace TimelessTales.Vegetation
                         BlockType groundBlock = chunk.GetBlock(x, topY, z);
                         BlockType aboveBlock = chunk.GetBlock(x, topY + 1, z);
                         
-                        // Only place on grass blocks with air above
+                        // Place land vegetation on grass blocks with air above
                         if (groundBlock == BlockType.Grass && aboveBlock == BlockType.Air)
                         {
                             TryPlaceVegetation(worldX + x, topY + 1, worldZ + z, groundBlock);
+                        }
+                        // Place underwater vegetation on solid blocks with water above
+                        else if (IsWaterBlock(aboveBlock) && BlockRegistry.IsSolid(groundBlock) && topY < SEA_LEVEL)
+                        {
+                            TryPlaceUnderwaterVegetation(worldX + x, topY + 1, worldZ + z, groundBlock);
                         }
                     }
                 }
@@ -125,6 +134,73 @@ namespace TimelessTales.Vegetation
                     PlacePlant(position, VegetationType.Grass);
                 }
             }
+        }
+        
+        /// <summary>
+        /// Attempt to place underwater vegetation at a position
+        /// </summary>
+        private void TryPlaceUnderwaterVegetation(int x, int y, int z, BlockType groundType)
+        {
+            Vector3 position = new Vector3(x, y, z);
+            
+            // Don't place if vegetation already exists
+            if (_plants.ContainsKey(position))
+            {
+                return;
+            }
+            
+            float roll = (float)_random.NextDouble();
+            
+            // Calculate water depth (distance from sea level)
+            int waterDepth = SEA_LEVEL - y;
+            
+            // Safety check: only place vegetation if underwater (positive depth)
+            if (waterDepth <= 0)
+            {
+                return;
+            }
+            
+            // Different vegetation based on depth
+            if (waterDepth > 10) // Deep water
+            {
+                if (roll < KELP_SPAWN_CHANCE)
+                {
+                    // Place kelp in deep water
+                    PlacePlant(position, VegetationType.Kelp, GrowthStage.Mature);
+                }
+                else if (roll < KELP_SPAWN_CHANCE + CORAL_SPAWN_CHANCE)
+                {
+                    // Place coral in deep water
+                    PlacePlant(position, VegetationType.Coral, GrowthStage.Mature);
+                }
+            }
+            else if (waterDepth > 3) // Medium depth
+            {
+                if (roll < UNDERWATER_VEGETATION_SPAWN_CHANCE)
+                {
+                    // Randomly choose between seaweed and sea grass
+                    VegetationType plantType = roll < UNDERWATER_VEGETATION_SPAWN_CHANCE / 2 
+                        ? VegetationType.Seaweed 
+                        : VegetationType.SeaGrass;
+                    PlacePlant(position, plantType, GrowthStage.Mature);
+                }
+            }
+            else // Shallow water
+            {
+                if (roll < UNDERWATER_VEGETATION_SPAWN_CHANCE * 0.7f)
+                {
+                    // Mostly sea grass in shallow water
+                    PlacePlant(position, VegetationType.SeaGrass, GrowthStage.Mature);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Check if a block type is water
+        /// </summary>
+        private bool IsWaterBlock(BlockType blockType)
+        {
+            return blockType == BlockType.Water || blockType == BlockType.Saltwater;
         }
         
         /// <summary>

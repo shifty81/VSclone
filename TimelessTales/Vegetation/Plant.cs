@@ -109,6 +109,20 @@ namespace TimelessTales.Vegetation
         /// </summary>
         public Color GetColorTint()
         {
+            // Underwater plants have different color schemes
+            if (IsUnderwaterPlant())
+            {
+                return Type switch
+                {
+                    VegetationType.Kelp => new Color(40, 100, 60),      // Dark green
+                    VegetationType.Seaweed => new Color(60, 120, 80),   // Medium green
+                    VegetationType.Coral => new Color(255, 100, 150),   // Pink/red
+                    VegetationType.SeaGrass => new Color(80, 140, 100), // Light green
+                    _ => Color.Green
+                };
+            }
+            
+            // Land plants use growth-based colors
             return Stage switch
             {
                 GrowthStage.Seedling => Color.Lerp(new Color(200, 255, 200), Color.LightGreen, GrowthProgress),
@@ -116,6 +130,17 @@ namespace TimelessTales.Vegetation
                 GrowthStage.Mature => Color.Green,
                 _ => Color.White
             };
+        }
+        
+        /// <summary>
+        /// Check if this is an underwater plant type
+        /// </summary>
+        public bool IsUnderwaterPlant()
+        {
+            return Type == VegetationType.Kelp || 
+                   Type == VegetationType.Seaweed || 
+                   Type == VegetationType.Coral || 
+                   Type == VegetationType.SeaGrass;
         }
     }
 }
