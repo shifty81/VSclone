@@ -25,6 +25,11 @@ namespace TimelessTales.UI
         private WorldManager? _worldManager;
         private bool _inventoryOpen;
         private bool _worldMapOpen;
+        
+        // Simple text rendering constants
+        private const int CHAR_WIDTH = 4;  // 3 pixels + 1 spacing
+        private const int CHAR_HEIGHT = 5;
+        private const int PIXEL_SIZE = 1;
 
         public UIManager(SpriteBatch spriteBatch, ContentManager content)
         {
@@ -739,27 +744,23 @@ namespace TimelessTales.UI
         /// </summary>
         private void DrawSimpleText(SpriteBatch spriteBatch, string text, int x, int y, Color color)
         {
-            int charWidth = 4;  // 3 pixels + 1 spacing
-            int charHeight = 5;
-            int pixelSize = 1;
-            
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
-                int charX = x + i * charWidth;
+                int charX = x + i * CHAR_WIDTH;
                 
                 // Define simple 3x5 pixel patterns for each character
                 bool[,] pattern = GetCharPattern(c);
                 
                 // Draw the character pattern
-                for (int py = 0; py < 5; py++)
+                for (int py = 0; py < CHAR_HEIGHT; py++)
                 {
                     for (int px = 0; px < 3; px++)
                     {
                         if (pattern[py, px])
                         {
                             spriteBatch.Draw(_pixelTexture,
-                                new Rectangle(charX + px * pixelSize, y + py * pixelSize, pixelSize, pixelSize),
+                                new Rectangle(charX + px * PIXEL_SIZE, y + py * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE),
                                 color);
                         }
                     }
