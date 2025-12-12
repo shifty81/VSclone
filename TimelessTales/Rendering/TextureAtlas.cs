@@ -497,8 +497,15 @@ namespace TimelessTales.Rendering
                 return coords;
             }
             
-            // Return default texture (first tile)
-            return _textureMap["tile_0"];
+            // Return default texture (stone texture as fallback)
+            const string DEFAULT_TEXTURE = "tile_0";
+            if (_textureMap.TryGetValue(DEFAULT_TEXTURE, out var defaultCoords))
+            {
+                return defaultCoords;
+            }
+            
+            // If even default is missing, return full atlas (shouldn't happen)
+            return new TextureCoordinates(0, 0, 1, 1);
         }
 
         public TextureCoordinates GetTextureCoordinates(int tileIndex)
