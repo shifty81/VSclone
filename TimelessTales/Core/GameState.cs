@@ -1,0 +1,13 @@
+namespace TimelessTales.Core
+{
+    /// <summary>
+    /// Represents the current state of the game
+    /// </summary>
+    public enum GameState
+    {
+        MainMenu,
+        Playing,
+        Paused,
+        Loading
+    }
+}

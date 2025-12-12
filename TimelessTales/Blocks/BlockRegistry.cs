@@ -30,7 +30,17 @@ namespace TimelessTales.Blocks
         Leaves,
         // Crafted
         Planks,
-        Cobblestone
+        Cobblestone,
+        // Trees
+        OakLog,
+        OakLeaves,
+        PineLog,
+        PineLeaves,
+        BirchLog,
+        BirchLeaves,
+        // Water
+        Water,
+        Saltwater
     }
 
     /// <summary>
@@ -101,6 +111,18 @@ namespace TimelessTales.Blocks
             // Wood
             Register(new BlockDefinition(BlockType.Wood, "Wood", 1.0f, new Color(139, 90, 43)));
             Register(new BlockDefinition(BlockType.Leaves, "Leaves", 0.2f, Color.DarkGreen, true));
+            
+            // Tree types
+            Register(new BlockDefinition(BlockType.OakLog, "Oak Log", 1.2f, new Color(101, 67, 33)));
+            Register(new BlockDefinition(BlockType.OakLeaves, "Oak Leaves", 0.2f, new Color(34, 139, 34), true));
+            Register(new BlockDefinition(BlockType.PineLog, "Pine Log", 1.1f, new Color(85, 53, 24)));
+            Register(new BlockDefinition(BlockType.PineLeaves, "Pine Leaves", 0.2f, new Color(28, 95, 28), true));
+            Register(new BlockDefinition(BlockType.BirchLog, "Birch Log", 1.0f, new Color(220, 220, 200)));
+            Register(new BlockDefinition(BlockType.BirchLeaves, "Birch Leaves", 0.2f, new Color(50, 150, 50), true));
+            
+            // Water
+            Register(new BlockDefinition(BlockType.Water, "Water", 0.0f, new Color(30, 80, 200, 180), true));
+            Register(new BlockDefinition(BlockType.Saltwater, "Saltwater", 0.0f, new Color(20, 60, 160, 180), true));
             
             // Crafted
             Register(new BlockDefinition(BlockType.Planks, "Planks", 1.0f, new Color(160, 110, 60)));

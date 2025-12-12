@@ -39,8 +39,7 @@ namespace TimelessTales.Rendering
 
         public void Draw(Camera camera, Player player)
         {
-            // TODO: Use player parameter for context-aware rendering (e.g., showing selected block in hand)
-            // For now, we render static arms regardless of player state
+            // Use skeleton bones for rendering with proper transformations
             
             // Update camera matrices
             _effect.View = camera.ViewMatrix;
@@ -50,8 +49,8 @@ namespace TimelessTales.Rendering
             _graphicsDevice.DepthStencilState = DepthStencilState.Default;
             _graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
             
-            // Build arm vertices
-            var vertices = BuildArmVertices(camera);
+            // Build arm vertices using skeleton data
+            var vertices = BuildSkeletonVertices(camera, player);
             
             if (vertices.Length > 0)
             {
@@ -70,66 +69,75 @@ namespace TimelessTales.Rendering
             }
         }
 
-        private VertexPositionColor[] BuildArmVertices(Camera camera)
+        private VertexPositionColor[] BuildSkeletonVertices(Camera camera, Player player)
         {
             var vertices = new List<VertexPositionColor>();
             
-            // Arm color (tan/skin color)
+            // Colors for different body parts
             Color armColor = new Color(210, 180, 140);
             Color torsoColor = new Color(60, 100, 180); // Blue shirt
             Color legColor = new Color(50, 50, 120); // Dark blue pants
             
-            // Calculate arm positions relative to camera
+            // Calculate view directions
             Vector3 cameraPos = camera.Position;
             Vector3 forward = camera.GetForwardVector();
             Vector3 right = camera.GetRightVector();
             Vector3 up = Vector3.Up;
-            
-            // Get camera pitch to determine how much of the body to show
             float pitch = camera.Rotation.X;
             
-            // Right arm dimensions (sized to be visible but not obtrusive)
+            // Get skeleton bones
+            var skeleton = player.Skeleton;
+            Bone? rightArmBone = skeleton.GetBone("right_arm");
+            Bone? leftArmBone = skeleton.GetBone("left_arm");
+            Bone? torsoBone = skeleton.GetBone("torso");
+            Bone? rightLegBone = skeleton.GetBone("right_leg");
+            Bone? leftLegBone = skeleton.GetBone("left_leg");
+            
+            // Arm dimensions
             float armLength = 0.5f;
             float armWidth = 0.12f;
             float armHeight = 0.12f;
             
-            // Position right arm in view
-            // Offset from camera: right, down, and forward
-            Vector3 armBase = cameraPos 
-                + right * 0.35f      // Move to the right
-                - up * 0.25f         // Move down
-                + forward * 0.4f;    // Move forward
+            // Draw right arm with bone rotation
+            if (rightArmBone != null)
+            {
+                Vector3 armBase = cameraPos + right * 0.35f - up * 0.25f + forward * 0.4f;
+                Matrix armRotation = Matrix.CreateRotationX(rightArmBone.LocalRotation.X) *
+                                   Matrix.CreateRotationY(rightArmBone.LocalRotation.Y) *
+                                   Matrix.CreateRotationZ(rightArmBone.LocalRotation.Z);
+                AddBoxWithRotation(vertices, armBase, armWidth, armHeight, armLength, armColor, forward, right, up, armRotation);
+            }
             
-            // Create a simple rectangular arm
-            AddBox(vertices, armBase, armWidth, armHeight, armLength, armColor, forward, right, up);
+            // Draw left arm with bone rotation
+            if (leftArmBone != null)
+            {
+                Vector3 leftArmBase = cameraPos - right * 0.35f - up * 0.25f + forward * 0.4f;
+                Matrix armRotation = Matrix.CreateRotationX(leftArmBone.LocalRotation.X) *
+                                   Matrix.CreateRotationY(leftArmBone.LocalRotation.Y) *
+                                   Matrix.CreateRotationZ(leftArmBone.LocalRotation.Z);
+                AddBoxWithRotation(vertices, leftArmBase, armWidth, armHeight, armLength, armColor, forward, right, up, armRotation);
+            }
             
-            // Left arm (optional, mirror of right arm)
-            Vector3 leftArmBase = cameraPos 
-                - right * 0.35f      // Move to the left
-                - up * 0.25f         // Move down
-                + forward * 0.4f;    // Move forward
-            
-            AddBox(vertices, leftArmBase, armWidth, armHeight, armLength, armColor, forward, right, up);
-            
-            // Add body parts when looking down (pitch > 0 means looking down)
+            // Add body parts when looking down
             if (pitch > BODY_VISIBILITY_THRESHOLD)
             {
                 float bodyVisibility = MathHelper.Clamp((pitch - BODY_VISIBILITY_THRESHOLD) / BODY_FADE_RANGE, 0f, 1f);
                 
-                // Torso - positioned below camera view
-                float torsoWidth = 0.4f;
-                float torsoDepth = 0.2f;
-                float torsoHeight = 0.6f;
-                Vector3 torsoBase = cameraPos 
-                    - up * 0.8f         // Below camera
-                    + forward * 0.3f;    // Slightly forward
-                
-                if (bodyVisibility > BODY_MIN_VISIBILITY)
+                // Torso with animation
+                if (bodyVisibility > BODY_MIN_VISIBILITY && torsoBone != null)
                 {
-                    AddBox(vertices, torsoBase, torsoWidth, torsoDepth, torsoHeight, torsoColor, up, right, forward);
+                    float torsoWidth = 0.4f;
+                    float torsoDepth = 0.2f;
+                    float torsoHeight = 0.6f;
+                    Vector3 torsoBase = cameraPos - up * 0.8f + forward * 0.3f;
+                    
+                    Matrix torsoRotation = Matrix.CreateRotationX(torsoBone.LocalRotation.X) *
+                                         Matrix.CreateRotationY(torsoBone.LocalRotation.Y) *
+                                         Matrix.CreateRotationZ(torsoBone.LocalRotation.Z);
+                    AddBoxWithRotation(vertices, torsoBase, torsoWidth, torsoDepth, torsoHeight, torsoColor, up, right, forward, torsoRotation);
                 }
                 
-                // Legs - only visible when looking down significantly
+                // Legs with animation
                 if (pitch > LEG_VISIBILITY_THRESHOLD)
                 {
                     float legVisibility = MathHelper.Clamp((pitch - LEG_VISIBILITY_THRESHOLD) / LEG_FADE_RANGE, 0f, 1f);
@@ -140,21 +148,25 @@ namespace TimelessTales.Rendering
                         float legDepth = 0.18f;
                         float legHeight = 0.8f;
                         
-                        // Right leg
-                        Vector3 rightLegBase = cameraPos 
-                            + right * 0.09f      // Slightly to the right
-                            - up * 1.4f          // Below torso
-                            + forward * 0.2f;    // Slightly forward
+                        // Right leg with animation
+                        if (rightLegBone != null)
+                        {
+                            Vector3 rightLegBase = cameraPos + right * 0.09f - up * 1.4f + forward * 0.2f;
+                            Matrix legRotation = Matrix.CreateRotationX(rightLegBone.LocalRotation.X) *
+                                               Matrix.CreateRotationY(rightLegBone.LocalRotation.Y) *
+                                               Matrix.CreateRotationZ(rightLegBone.LocalRotation.Z);
+                            AddBoxWithRotation(vertices, rightLegBase, legWidth, legDepth, legHeight, legColor, up, right, forward, legRotation);
+                        }
                         
-                        AddBox(vertices, rightLegBase, legWidth, legDepth, legHeight, legColor, up, right, forward);
-                        
-                        // Left leg
-                        Vector3 leftLegBase = cameraPos 
-                            - right * 0.09f      // Slightly to the left
-                            - up * 1.4f          // Below torso
-                            + forward * 0.2f;    // Slightly forward
-                        
-                        AddBox(vertices, leftLegBase, legWidth, legDepth, legHeight, legColor, up, right, forward);
+                        // Left leg with animation
+                        if (leftLegBone != null)
+                        {
+                            Vector3 leftLegBase = cameraPos - right * 0.09f - up * 1.4f + forward * 0.2f;
+                            Matrix legRotation = Matrix.CreateRotationX(leftLegBone.LocalRotation.X) *
+                                               Matrix.CreateRotationY(leftLegBone.LocalRotation.Y) *
+                                               Matrix.CreateRotationZ(leftLegBone.LocalRotation.Z);
+                            AddBoxWithRotation(vertices, leftLegBase, legWidth, legDepth, legHeight, legColor, up, right, forward, legRotation);
+                        }
                     }
                 }
             }
@@ -166,21 +178,36 @@ namespace TimelessTales.Rendering
                            float width, float height, float length, Color color,
                            Vector3 forward, Vector3 right, Vector3 up)
         {
+            AddBoxWithRotation(vertices, basePos, width, height, length, color, forward, right, up, Matrix.Identity);
+        }
+        
+        private void AddBoxWithRotation(List<VertexPositionColor> vertices, Vector3 basePos, 
+                           float width, float height, float length, Color color,
+                           Vector3 forward, Vector3 right, Vector3 up, Matrix rotation)
+        {
             // Calculate box corners relative to base position
             // The box extends along the forward direction
             Vector3 halfWidth = right * (width / 2);
             Vector3 halfHeight = up * (height / 2);
             Vector3 fullLength = forward * length;
             
-            // Define 8 corners of the box
-            Vector3 c0 = basePos - halfWidth - halfHeight;           // Back bottom left
-            Vector3 c1 = basePos + halfWidth - halfHeight;           // Back bottom right
-            Vector3 c2 = basePos - halfWidth + halfHeight;           // Back top left
-            Vector3 c3 = basePos + halfWidth + halfHeight;           // Back top right
-            Vector3 c4 = basePos - halfWidth - halfHeight + fullLength; // Front bottom left
-            Vector3 c5 = basePos + halfWidth - halfHeight + fullLength; // Front bottom right
-            Vector3 c6 = basePos - halfWidth + halfHeight + fullLength; // Front top left
-            Vector3 c7 = basePos + halfWidth + halfHeight + fullLength; // Front top right
+            // Define 8 corners of the box (before rotation)
+            Vector3[] localCorners = new Vector3[8];
+            localCorners[0] = -halfWidth - halfHeight;           // Back bottom left
+            localCorners[1] = halfWidth - halfHeight;           // Back bottom right
+            localCorners[2] = -halfWidth + halfHeight;           // Back top left
+            localCorners[3] = halfWidth + halfHeight;           // Back top right
+            localCorners[4] = -halfWidth - halfHeight + fullLength; // Front bottom left
+            localCorners[5] = halfWidth - halfHeight + fullLength; // Front bottom right
+            localCorners[6] = -halfWidth + halfHeight + fullLength; // Front top left
+            localCorners[7] = halfWidth + halfHeight + fullLength; // Front top right
+            
+            // Apply rotation and translation
+            Vector3[] corners = new Vector3[8];
+            for (int i = 0; i < 8; i++)
+            {
+                corners[i] = Vector3.Transform(localCorners[i], rotation) + basePos;
+            }
             
             // Add slightly darker colors for different faces
             Color topColor = Color.Lerp(color, Color.White, 0.2f);
@@ -188,22 +215,22 @@ namespace TimelessTales.Rendering
             Color sideColor = Color.Lerp(color, Color.Black, 0.1f);
             
             // Front face
-            AddQuad(vertices, c4, c5, c7, c6, color);
+            AddQuad(vertices, corners[4], corners[5], corners[7], corners[6], color);
             
             // Back face
-            AddQuad(vertices, c1, c0, c2, c3, color);
+            AddQuad(vertices, corners[1], corners[0], corners[2], corners[3], color);
             
             // Top face
-            AddQuad(vertices, c2, c3, c7, c6, topColor);
+            AddQuad(vertices, corners[2], corners[3], corners[7], corners[6], topColor);
             
             // Bottom face
-            AddQuad(vertices, c0, c1, c5, c4, bottomColor);
+            AddQuad(vertices, corners[0], corners[1], corners[5], corners[4], bottomColor);
             
             // Right face
-            AddQuad(vertices, c5, c1, c3, c7, sideColor);
+            AddQuad(vertices, corners[5], corners[1], corners[3], corners[7], sideColor);
             
             // Left face
-            AddQuad(vertices, c0, c4, c6, c2, sideColor);
+            AddQuad(vertices, corners[0], corners[4], corners[6], corners[2], sideColor);
         }
 
         private void AddQuad(List<VertexPositionColor> vertices,
