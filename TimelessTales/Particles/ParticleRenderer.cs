@@ -12,6 +12,8 @@ namespace TimelessTales.Particles
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly BasicEffect _effect;
+        private VertexPositionColor[] _vertexBuffer;
+        private const int MAX_PARTICLES = 1000; // Maximum particles to render at once
         
         public ParticleRenderer(GraphicsDevice graphicsDevice)
         {
@@ -22,6 +24,9 @@ namespace TimelessTales.Particles
                 LightingEnabled = false,
                 TextureEnabled = false
             };
+            
+            // Pre-allocate vertex buffer (6 vertices per particle quad)
+            _vertexBuffer = new VertexPositionColor[MAX_PARTICLES * 6];
         }
         
         public void Draw(Camera camera, IEnumerable<ParticleEmitter> emitters)
@@ -36,28 +41,35 @@ namespace TimelessTales.Particles
             _graphicsDevice.DepthStencilState = DepthStencilState.DepthRead; // Don't write to depth buffer
             _graphicsDevice.RasterizerState = RasterizerState.CullNone;
             
-            var vertices = new List<VertexPositionColor>();
+            int vertexIndex = 0;
             
-            // Collect all particles from all emitters
+            // Collect all particles from all emitters into pre-allocated buffer
             foreach (var emitter in emitters)
             {
                 foreach (var particle in emitter.GetParticles())
                 {
-                    AddParticleBillboard(vertices, particle, camera);
+                    // Check buffer capacity
+                    if (vertexIndex + 6 > _vertexBuffer.Length)
+                        break; // Buffer full, stop adding particles
+                    
+                    AddParticleBillboard(camera, particle, ref vertexIndex);
                 }
+                
+                if (vertexIndex + 6 > _vertexBuffer.Length)
+                    break; // Buffer full
             }
             
-            // Draw all particles in one batch
-            if (vertices.Count > 0)
+            // Draw all particles in one batch if we have any
+            if (vertexIndex > 0)
             {
                 foreach (var pass in _effect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
                     _graphicsDevice.DrawUserPrimitives(
                         PrimitiveType.TriangleList,
-                        vertices.ToArray(),
+                        _vertexBuffer,
                         0,
-                        vertices.Count / 3
+                        vertexIndex / 3
                     );
                 }
             }
@@ -68,11 +80,20 @@ namespace TimelessTales.Particles
             _graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
         }
         
-        private void AddParticleBillboard(List<VertexPositionColor> vertices, Particle particle, Camera camera)
+        private void AddParticleBillboard(Camera camera, Particle particle, ref int vertexIndex)
         {
             // Billboard: quad that always faces the camera
-            Vector3 up = camera.ViewMatrix.Up;
-            Vector3 right = camera.ViewMatrix.Right;
+            // Calculate right and up vectors from camera's forward direction
+            Vector3 cameraForward = camera.ViewMatrix.Forward;
+            Vector3 worldUp = Vector3.Up;
+            
+            // Right vector perpendicular to camera forward and world up
+            Vector3 right = Vector3.Cross(worldUp, cameraForward);
+            right.Normalize();
+            
+            // Up vector perpendicular to camera forward and right
+            Vector3 up = Vector3.Cross(cameraForward, right);
+            up.Normalize();
             
             float halfSize = particle.Size / 2;
             
@@ -87,14 +108,14 @@ namespace TimelessTales.Particles
             Vector3 bottomRight = particle.Position - (up * halfSize) + (right * halfSize);
             
             // First triangle
-            vertices.Add(new VertexPositionColor(bottomLeft, color));
-            vertices.Add(new VertexPositionColor(topLeft, color));
-            vertices.Add(new VertexPositionColor(topRight, color));
+            _vertexBuffer[vertexIndex++] = new VertexPositionColor(bottomLeft, color);
+            _vertexBuffer[vertexIndex++] = new VertexPositionColor(topLeft, color);
+            _vertexBuffer[vertexIndex++] = new VertexPositionColor(topRight, color);
             
             // Second triangle
-            vertices.Add(new VertexPositionColor(topRight, color));
-            vertices.Add(new VertexPositionColor(bottomRight, color));
-            vertices.Add(new VertexPositionColor(bottomLeft, color));
+            _vertexBuffer[vertexIndex++] = new VertexPositionColor(topRight, color);
+            _vertexBuffer[vertexIndex++] = new VertexPositionColor(bottomRight, color);
+            _vertexBuffer[vertexIndex++] = new VertexPositionColor(bottomLeft, color);
         }
     }
 }

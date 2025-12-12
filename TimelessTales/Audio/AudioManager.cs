@@ -11,6 +11,7 @@ namespace TimelessTales.Audio
     {
         private readonly Dictionary<string, SoundEffect> _soundEffects;
         private readonly Dictionary<string, SoundEffectInstance> _loopingSounds;
+        private readonly Dictionary<string, float> _originalVolumes; // Track original volumes
         private bool _isUnderwater;
         
         // Audio parameters
@@ -37,6 +38,7 @@ namespace TimelessTales.Audio
         {
             _soundEffects = new Dictionary<string, SoundEffect>();
             _loopingSounds = new Dictionary<string, SoundEffectInstance>();
+            _originalVolumes = new Dictionary<string, float>();
             _isUnderwater = false;
         }
         
@@ -83,7 +85,12 @@ namespace TimelessTales.Audio
             {
                 var instance = sound.CreateInstance();
                 instance.IsLooped = true;
-                instance.Volume = volume * SoundEffectVolume * MasterVolume;
+                
+                float finalVolume = volume * SoundEffectVolume * MasterVolume;
+                instance.Volume = finalVolume;
+                
+                // Store original volume for this instance
+                _originalVolumes[key] = finalVolume;
                 
                 if (_isUnderwater)
                 {
@@ -106,6 +113,7 @@ namespace TimelessTales.Audio
                 instance.Stop();
                 instance.Dispose();
                 _loopingSounds.Remove(key);
+                _originalVolumes.Remove(key);
             }
         }
         
@@ -120,6 +128,7 @@ namespace TimelessTales.Audio
                 instance.Dispose();
             }
             _loopingSounds.Clear();
+            _originalVolumes.Clear();
         }
         
         /// <summary>
@@ -127,17 +136,23 @@ namespace TimelessTales.Audio
         /// </summary>
         private void ApplyUnderwaterEffect()
         {
-            foreach (var instance in _loopingSounds.Values)
+            foreach (var kvp in _loopingSounds)
             {
-                if (_isUnderwater)
+                string key = kvp.Key;
+                SoundEffectInstance instance = kvp.Value;
+                
+                if (_originalVolumes.TryGetValue(key, out float originalVolume))
                 {
-                    instance.Volume *= UNDERWATER_VOLUME_MULTIPLIER;
-                    instance.Pitch = UNDERWATER_PITCH_SHIFT;
-                }
-                else
-                {
-                    instance.Volume = SoundEffectVolume * MasterVolume;
-                    instance.Pitch = 0.0f;
+                    if (_isUnderwater)
+                    {
+                        instance.Volume = originalVolume * UNDERWATER_VOLUME_MULTIPLIER;
+                        instance.Pitch = UNDERWATER_PITCH_SHIFT;
+                    }
+                    else
+                    {
+                        instance.Volume = originalVolume;
+                        instance.Pitch = 0.0f;
+                    }
                 }
             }
         }

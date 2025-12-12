@@ -1,7 +1,6 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using TimelessTales.World;
 using TimelessTales.Blocks;
 
@@ -33,9 +32,8 @@ namespace TimelessTales.Vegetation
         /// </summary>
         public void Update(float deltaTime)
         {
-            // Update all plants
-            var plantsToUpdate = _plants.Values.ToList();
-            foreach (var plant in plantsToUpdate)
+            // Update all plants directly from dictionary values (no copy needed)
+            foreach (var plant in _plants.Values)
             {
                 if (plant.Update(deltaTime))
                 {
