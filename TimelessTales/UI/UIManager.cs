@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using TimelessTales.Entities;
 using TimelessTales.Blocks;
 using TimelessTales.Core;
@@ -24,6 +25,17 @@ namespace TimelessTales.UI
         private WorldManager? _worldManager;
         private bool _inventoryOpen;
         private bool _worldMapOpen;
+        private InputManager? _inputManager;
+        
+        // Mouse interaction state
+        private int _hoveredSlotIndex = -1;
+        
+        // Inventory grid layout constants
+        private const int INVENTORY_SLOT_SIZE = 60;
+        private const int INVENTORY_SPACING = 10;
+        private const int INVENTORY_SLOTS_PER_ROW = 8;
+        private const int INVENTORY_ROWS = 5;
+        private const int INVENTORY_GRID_OFFSET_Y = 30;
         
         // Simple text rendering constants
         private const int CHAR_WIDTH = 4;  // 3 pixels + 1 spacing
@@ -44,14 +56,24 @@ namespace TimelessTales.UI
             _pixelTexture.SetData(new[] { Color.White });
         }
 
-        public void Update(GameTime gameTime, Player player, TimeManager timeManager, WorldManager worldManager, bool isPaused, bool inventoryOpen = false, bool worldMapOpen = false)
+        public void Update(GameTime gameTime, Player player, TimeManager timeManager, WorldManager worldManager, bool isPaused, bool inventoryOpen = false, bool worldMapOpen = false, InputManager? inputManager = null)
         {
             _player = player;
             _timeManager = timeManager;
             _worldManager = worldManager;
             _inventoryOpen = inventoryOpen;
             _worldMapOpen = worldMapOpen;
-            // UI update logic if needed
+            _inputManager = inputManager;
+            
+            // Update mouse hover state for inventory
+            if (_inventoryOpen && _inputManager != null)
+            {
+                UpdateInventoryMouseHover();
+            }
+            else
+            {
+                _hoveredSlotIndex = -1;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -227,16 +249,8 @@ namespace TimelessTales.UI
                 new Rectangle(0, 0, _screenWidth, titleHeight),
                 Color.DarkSlateGray * 0.9f);
             
-            // Draw inventory grid
-            int slotSize = 60;
-            int spacing = 10;
-            int slotsPerRow = 8;
-            int rows = 5;
-            
-            int gridWidth = (slotSize + spacing) * slotsPerRow + spacing;
-            int gridHeight = (slotSize + spacing) * rows + spacing;
-            int gridX = (_screenWidth - gridWidth) / 2;
-            int gridY = (_screenHeight - gridHeight) / 2 + 30;
+            // Calculate inventory grid layout
+            var (gridX, gridY, gridWidth, gridHeight) = CalculateInventoryGridBounds();
             
             // Draw inventory background
             spriteBatch.Draw(_pixelTexture,
@@ -249,55 +263,63 @@ namespace TimelessTales.UI
             int index = 0;
             foreach (var item in items)
             {
-                if (index >= rows * slotsPerRow)
+                if (index >= INVENTORY_ROWS * INVENTORY_SLOTS_PER_ROW)
                     break;
                     
-                int row = index / slotsPerRow;
-                int col = index % slotsPerRow;
-                int x = gridX + spacing + (slotSize + spacing) * col;
-                int y = gridY + spacing + (slotSize + spacing) * row;
+                int row = index / INVENTORY_SLOTS_PER_ROW;
+                int col = index % INVENTORY_SLOTS_PER_ROW;
+                int x = gridX + INVENTORY_SPACING + (INVENTORY_SLOT_SIZE + INVENTORY_SPACING) * col;
+                int y = gridY + INVENTORY_SPACING + (INVENTORY_SLOT_SIZE + INVENTORY_SPACING) * row;
                 
-                // Draw slot background
+                // Determine if this slot is hovered
+                bool isHovered = (index == _hoveredSlotIndex);
+                
+                // Draw slot background (brighter if hovered)
                 spriteBatch.Draw(_pixelTexture,
-                    new Rectangle(x, y, slotSize, slotSize),
-                    Color.Gray * 0.6f);
+                    new Rectangle(x, y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE),
+                    isHovered ? Color.LightGray * 0.9f : Color.Gray * 0.6f);
                 
-                // Draw slot border
+                // Draw slot border (different color if hovered)
                 int borderWidth = 2;
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), Color.Black);
+                Color borderColor = isHovered ? Color.Yellow : Color.Black;
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, INVENTORY_SLOT_SIZE, borderWidth), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + INVENTORY_SLOT_SIZE - borderWidth, INVENTORY_SLOT_SIZE, borderWidth), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, INVENTORY_SLOT_SIZE), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x + INVENTORY_SLOT_SIZE - borderWidth, y, borderWidth, INVENTORY_SLOT_SIZE), borderColor);
                 
                 // Draw item
                 Color blockColor = BlockRegistry.Get(item.Key).Color;
                 int padding = 8;
                 spriteBatch.Draw(_pixelTexture,
-                    new Rectangle(x + padding, y + padding, slotSize - padding * 2, slotSize - padding * 2),
+                    new Rectangle(x + padding, y + padding, INVENTORY_SLOT_SIZE - padding * 2, INVENTORY_SLOT_SIZE - padding * 2),
                     blockColor);
                 
                 index++;
             }
             
             // Draw empty slots for remaining spaces
-            for (; index < rows * slotsPerRow; index++)
+            for (; index < INVENTORY_ROWS * INVENTORY_SLOTS_PER_ROW; index++)
             {
-                int row = index / slotsPerRow;
-                int col = index % slotsPerRow;
-                int x = gridX + spacing + (slotSize + spacing) * col;
-                int y = gridY + spacing + (slotSize + spacing) * row;
+                int row = index / INVENTORY_SLOTS_PER_ROW;
+                int col = index % INVENTORY_SLOTS_PER_ROW;
+                int x = gridX + INVENTORY_SPACING + (INVENTORY_SLOT_SIZE + INVENTORY_SPACING) * col;
+                int y = gridY + INVENTORY_SPACING + (INVENTORY_SLOT_SIZE + INVENTORY_SPACING) * row;
                 
-                // Draw slot background
+                // Determine if this slot is hovered
+                bool isHovered = (index == _hoveredSlotIndex);
+                
+                // Draw slot background (brighter if hovered)
                 spriteBatch.Draw(_pixelTexture,
-                    new Rectangle(x, y, slotSize, slotSize),
-                    Color.Gray * 0.6f);
+                    new Rectangle(x, y, INVENTORY_SLOT_SIZE, INVENTORY_SLOT_SIZE),
+                    isHovered ? Color.LightGray * 0.9f : Color.Gray * 0.6f);
                 
-                // Draw slot border
+                // Draw slot border (different color if hovered)
                 int borderWidth = 2;
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), Color.Black);
+                Color borderColor = isHovered ? Color.Yellow : Color.Black;
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, INVENTORY_SLOT_SIZE, borderWidth), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + INVENTORY_SLOT_SIZE - borderWidth, INVENTORY_SLOT_SIZE, borderWidth), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, INVENTORY_SLOT_SIZE), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x + INVENTORY_SLOT_SIZE - borderWidth, y, borderWidth, INVENTORY_SLOT_SIZE), borderColor);
             }
             
             // Draw "Press I to close" message
@@ -986,6 +1008,54 @@ namespace TimelessTales.UI
             }
             
             return pattern;
+        }
+        
+        private void UpdateInventoryMouseHover()
+        {
+            if (_inputManager == null || _player == null)
+            {
+                _hoveredSlotIndex = -1;
+                return;
+            }
+            
+            // Get mouse position
+            int mouseX = _inputManager.GetMouseX();
+            int mouseY = _inputManager.GetMouseY();
+            
+            // Calculate inventory grid layout
+            var (gridX, gridY, gridWidth, gridHeight) = CalculateInventoryGridBounds();
+            
+            // Check which slot is hovered
+            _hoveredSlotIndex = -1;
+            bool found = false;
+            for (int row = 0; row < INVENTORY_ROWS && !found; row++)
+            {
+                for (int col = 0; col < INVENTORY_SLOTS_PER_ROW; col++)
+                {
+                    int slotIndex = row * INVENTORY_SLOTS_PER_ROW + col;
+                    int x = gridX + INVENTORY_SPACING + (INVENTORY_SLOT_SIZE + INVENTORY_SPACING) * col;
+                    int y = gridY + INVENTORY_SPACING + (INVENTORY_SLOT_SIZE + INVENTORY_SPACING) * row;
+                    
+                    // Check if mouse is over this slot
+                    if (mouseX >= x && mouseX < x + INVENTORY_SLOT_SIZE &&
+                        mouseY >= y && mouseY < y + INVENTORY_SLOT_SIZE)
+                    {
+                        _hoveredSlotIndex = slotIndex;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        private (int gridX, int gridY, int gridWidth, int gridHeight) CalculateInventoryGridBounds()
+        {
+            int gridWidth = (INVENTORY_SLOT_SIZE + INVENTORY_SPACING) * INVENTORY_SLOTS_PER_ROW + INVENTORY_SPACING;
+            int gridHeight = (INVENTORY_SLOT_SIZE + INVENTORY_SPACING) * INVENTORY_ROWS + INVENTORY_SPACING;
+            int gridX = (_screenWidth - gridWidth) / 2;
+            int gridY = (_screenHeight - gridHeight) / 2 + INVENTORY_GRID_OFFSET_Y;
+            
+            return (gridX, gridY, gridWidth, gridHeight);
         }
     }
 }
