@@ -18,8 +18,8 @@ namespace TimelessTales.Rendering
 
         // Water visual parameters
         private const int SEA_LEVEL = 64;
-        private const float WAVE_SPEED = 0.3f;
-        private const float WAVE_HEIGHT = 0.05f;
+        private const float WAVE_SPEED = 0.5f;
+        private const float WAVE_HEIGHT = 0.08f;
         private const float MAX_DEPTH_FOR_COLOR_CALCULATION = 20.0f;
         
         // Cel shading parameters
@@ -225,17 +225,20 @@ namespace TimelessTales.Rendering
 
         private float CalculateWaveOffset(int worldX, int worldZ)
         {
-            // Simple sine wave pattern for water surface animation
+            // Enhanced wave pattern for more visible water motion
+            // Multiple overlapping waves at different frequencies create a more natural look
             float wave1 = MathF.Sin(worldX * 0.3f + _time) * WAVE_HEIGHT;
             float wave2 = MathF.Sin(worldZ * 0.4f + _time * 1.2f) * WAVE_HEIGHT;
-            return wave1 + wave2;
+            float wave3 = MathF.Sin((worldX + worldZ) * 0.2f + _time * 0.8f) * WAVE_HEIGHT * 0.5f;
+            return wave1 + wave2 + wave3;
         }
 
         private void AddWaterFaces(List<VertexPositionColor> vertices, Vector3 pos, Color color, float waveOffset,
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
-            // Apply cel shading to edge colors to create toon-like appearance
-            Color topColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.White, 0.3f), CEL_SHADING_BANDS); // Lighter top
+            // Apply cel shading to side/bottom faces but NOT to top surface to avoid grid lines
+            // Top surface should be smooth to prevent visible banding/grid effect
+            Color topColor = Color.Lerp(color, Color.White, 0.3f); // Lighter top, no cel shading
             Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.2f), CEL_SHADING_BANDS);
             Color sideColor = CelShadingUtility.ApplyCelShading(color, CEL_SHADING_BANDS);
             

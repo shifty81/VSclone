@@ -185,7 +185,7 @@ namespace TimelessTales.Tests
             // Wave offset should change based on position and time
             // Using sine waves for animation
             
-            const float WAVE_HEIGHT = 0.05f;
+            const float WAVE_HEIGHT = 0.08f; // Updated from 0.05f
             
             float time1 = 0.0f;
             float time2 = 1.0f;
@@ -193,12 +193,23 @@ namespace TimelessTales.Tests
             int worldX = 0;
             int worldZ = 0;
             
-            // Calculate wave at two different times
+            // Calculate wave at two different times (enhanced with third wave component)
             float wave1_t1 = MathF.Sin(worldX * 0.3f + time1) * WAVE_HEIGHT;
+            float wave2_t1 = MathF.Sin(worldZ * 0.4f + time1 * 1.2f) * WAVE_HEIGHT;
+            float wave3_t1 = MathF.Sin((worldX + worldZ) * 0.2f + time1 * 0.8f) * WAVE_HEIGHT * 0.5f;
+            float totalWave_t1 = wave1_t1 + wave2_t1 + wave3_t1;
+            
             float wave1_t2 = MathF.Sin(worldX * 0.3f + time2) * WAVE_HEIGHT;
+            float wave2_t2 = MathF.Sin(worldZ * 0.4f + time2 * 1.2f) * WAVE_HEIGHT;
+            float wave3_t2 = MathF.Sin((worldX + worldZ) * 0.2f + time2 * 0.8f) * WAVE_HEIGHT * 0.5f;
+            float totalWave_t2 = wave1_t2 + wave2_t2 + wave3_t2;
             
             // Assert wave position changes over time
-            Assert.NotEqual(wave1_t1, wave1_t2);
+            Assert.NotEqual(totalWave_t1, totalWave_t2);
+            
+            // Verify wave amplitude is within expected range
+            Assert.True(MathF.Abs(totalWave_t1) <= WAVE_HEIGHT * 2.5f);
+            Assert.True(MathF.Abs(totalWave_t2) <= WAVE_HEIGHT * 2.5f);
         }
     }
 }
