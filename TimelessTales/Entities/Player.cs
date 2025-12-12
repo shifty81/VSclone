@@ -27,6 +27,15 @@ namespace TimelessTales.Entities
         private const float GRAVITY = 20.0f;
         private const float MOUSE_SENSITIVITY = 0.003f;
         
+        // Water physics parameters
+        private const float BUOYANT_FORCE = 15.0f; // Upward force when underwater
+        private const float WATER_DRAG = 0.9f; // Resistance in water (0-1, lower = more drag)
+        private const float WATER_GRAVITY_MULTIPLIER = 0.3f; // Reduced gravity in water
+        private const int SEA_LEVEL = 64;
+        private const float BUOYANCY_THRESHOLD = 0.5f; // Minimum submersion depth to apply buoyancy
+        private const float MIN_WATER_SPEED_FACTOR = 0.5f; // Minimum speed multiplier in water (50%)
+        private const float WATER_SPEED_RANGE = 0.5f; // Range of speed reduction (50% to 100%)
+        
         // Block interaction
         private const float REACH_DISTANCE = 5.0f;
         private const float BREAK_TIME = 1.0f;
@@ -34,6 +43,10 @@ namespace TimelessTales.Entities
         private bool _isOnGround;
         private float _breakProgress;
         private Vector3? _targetBlockPos;
+        
+        // Water state
+        private bool _isInWater;
+        private float _submersionDepth; // 0 = not in water, 1 = fully submerged
         
         // Inventory and equipment
         public Inventory Inventory { get; private set; }
@@ -96,6 +109,9 @@ namespace TimelessTales.Entities
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
             
+            // Check if player is in water
+            UpdateWaterState(world);
+            
             // Update camera rotation
             UpdateRotation(input);
             
@@ -107,7 +123,7 @@ namespace TimelessTales.Entities
             // Update movement
             UpdateMovement(input, deltaTime);
             
-            // Apply physics
+            // Apply physics (includes buoyancy if in water)
             ApplyPhysics(world, deltaTime);
             
             // Handle block interaction
@@ -117,8 +133,11 @@ namespace TimelessTales.Entities
             // Handle hotbar
             UpdateHotbar(input);
             
+            // Determine if player is swimming (moving in water)
+            bool isSwimming = _isInWater && isMoving;
+            
             // Update animations
-            AnimationController.Update(deltaTime, isMoving, isSprinting, isBreaking, _breakProgress);
+            AnimationController.Update(deltaTime, isMoving, isSprinting, isBreaking, _breakProgress, _isInWater, isSwimming);
         }
 
         private void UpdateRotation(InputManager input)
@@ -131,6 +150,36 @@ namespace TimelessTales.Entities
                 MathHelper.Clamp(Rotation.X - deltaY * MOUSE_SENSITIVITY, -MathHelper.PiOver2 + 0.01f, MathHelper.PiOver2 - 0.01f),
                 Rotation.Y - deltaX * MOUSE_SENSITIVITY
             );
+        }
+        
+        private void UpdateWaterState(WorldManager world)
+        {
+            // Check multiple sample points in player's body to determine water submersion
+            int samples = 0;
+            int waterSamples = 0;
+            
+            // Sample at feet, waist, chest, and head level
+            float[] sampleHeights = { 0.0f, 0.5f, 1.0f, 1.5f };
+            
+            foreach (float heightOffset in sampleHeights)
+            {
+                Vector3 samplePos = Position + new Vector3(0, heightOffset, 0);
+                int x = (int)MathF.Floor(samplePos.X);
+                int y = (int)MathF.Floor(samplePos.Y);
+                int z = (int)MathF.Floor(samplePos.Z);
+                
+                BlockType block = world.GetBlock(x, y, z);
+                samples++;
+                
+                if (block == BlockType.Water || block == BlockType.Saltwater)
+                {
+                    waterSamples++;
+                }
+            }
+            
+            // Calculate submersion depth (0 = not in water, 1 = fully submerged)
+            _submersionDepth = waterSamples / (float)samples;
+            _isInWater = _submersionDepth > 0;
         }
 
         private void UpdateMovement(InputManager input, float deltaTime)
@@ -163,6 +212,10 @@ namespace TimelessTales.Entities
             if (input.IsKeyDown(Keys.LeftShift))
                 speed *= SPRINT_MULTIPLIER;
             
+            // Reduce speed in water
+            if (_isInWater)
+                speed *= (MIN_WATER_SPEED_FACTOR + WATER_SPEED_RANGE * (1.0f - _submersionDepth));
+            
             // Apply horizontal movement (maintain Y velocity for jumping)
             Velocity = new Vector3(
                 moveDirection.X * speed,
@@ -171,19 +224,54 @@ namespace TimelessTales.Entities
             );
             
             // Jump - can jump while moving, maintains horizontal momentum
-            if (input.IsKeyDown(Keys.Space) && _isOnGround)
+            // In water, space makes you swim upward
+            if (input.IsKeyDown(Keys.Space))
             {
-                Velocity = new Vector3(Velocity.X, JUMP_FORCE, Velocity.Z);
-                _isOnGround = false;
+                if (_isInWater)
+                {
+                    // Swimming upward - only when space is pressed
+                    Velocity = new Vector3(Velocity.X, 3.0f, Velocity.Z);
+                }
+                else if (_isOnGround)
+                {
+                    // Normal jump on ground
+                    Velocity = new Vector3(Velocity.X, JUMP_FORCE, Velocity.Z);
+                    _isOnGround = false;
+                }
+            }
+            
+            // Crouch/dive in water - make player sink
+            if (input.IsKeyDown(Keys.LeftControl) && _isInWater)
+            {
+                Velocity = new Vector3(Velocity.X, -3.0f, Velocity.Z);
             }
         }
 
         private void ApplyPhysics(WorldManager world, float deltaTime)
         {
-            // Apply gravity
+            // Apply gravity (reduced in water)
             if (!_isOnGround)
             {
-                Velocity = new Vector3(Velocity.X, Velocity.Y - GRAVITY * deltaTime, Velocity.Z);
+                float gravityMultiplier = _isInWater ? WATER_GRAVITY_MULTIPLIER : 1.0f;
+                Velocity = new Vector3(Velocity.X, Velocity.Y - GRAVITY * gravityMultiplier * deltaTime, Velocity.Z);
+            }
+            
+            // Apply buoyancy force when in water (keeps player floating at surface)
+            if (_isInWater && _submersionDepth > BUOYANCY_THRESHOLD) // Only apply when mostly submerged
+            {
+                // Buoyancy force proportional to submersion depth
+                // This creates a natural floating effect - player bobs at water surface
+                float buoyancyForce = BUOYANT_FORCE * _submersionDepth * deltaTime;
+                Velocity = new Vector3(Velocity.X, Velocity.Y + buoyancyForce, Velocity.Z);
+                
+                // Apply water drag to vertical velocity (prevents excessive bobbing)
+                Velocity = new Vector3(Velocity.X, Velocity.Y * WATER_DRAG, Velocity.Z);
+            }
+            
+            // Apply water drag to horizontal movement
+            if (_isInWater)
+            {
+                Velocity = new Vector3(Velocity.X * WATER_DRAG, Velocity.Y, Velocity.Z * WATER_DRAG);
             }
             
             // Apply velocity

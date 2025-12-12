@@ -20,6 +20,7 @@ namespace TimelessTales.Core
         private WorldManager? _worldManager;
         private Player? _player;
         private WorldRenderer? _worldRenderer;
+        private WaterRenderer? _waterRenderer;
         private PlayerRenderer? _playerRenderer;
         private UIManager? _uiManager;
         private InputManager? _inputManager;
@@ -144,6 +145,7 @@ namespace TimelessTales.Core
                 // Initialize renderer
                 Logger.Info("Initializing renderers...");
                 _worldRenderer = new WorldRenderer(GraphicsDevice, _worldManager);
+                _waterRenderer = new WaterRenderer(GraphicsDevice, _worldManager);
                 _playerRenderer = new PlayerRenderer(GraphicsDevice);
                 _skyboxRenderer = new SkyboxRenderer(GraphicsDevice);
                 Logger.Info("Renderers initialized");
@@ -241,6 +243,9 @@ namespace TimelessTales.Core
                         
                         // Update world
                         _worldManager!.Update(_player.Position);
+                        
+                        // Update water renderer (for wave animation)
+                        _waterRenderer!.Update(gameTime);
                     }
                     
                     // Always update UI
@@ -272,8 +277,11 @@ namespace TimelessTales.Core
                     // Draw skybox first (before everything else)
                     _skyboxRenderer!.Draw(_camera!, _timeManager);
                     
-                    // Draw 3D world
+                    // Draw 3D world (opaque blocks)
                     _worldRenderer!.Draw(_camera!, gameTime);
+                    
+                    // Draw translucent water (after opaque blocks)
+                    _waterRenderer!.Draw(_camera!);
                     
                     // Draw player arms (first-person view)
                     _playerRenderer!.Draw(_camera!, _player!);

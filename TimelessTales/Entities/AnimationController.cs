@@ -12,7 +12,9 @@ namespace TimelessTales.Entities
         Walking,
         Running,
         Breaking,
-        Jumping
+        Jumping,
+        TreadingWater,
+        Swimming
     }
 
     /// <summary>
@@ -32,20 +34,26 @@ namespace TimelessTales.Entities
         private const float ARM_SWING_AMOUNT = 0.5f;
         private const float LEG_SWING_AMOUNT = 0.4f;
         private const float BREAK_SWING_AMOUNT = 1.2f;
+        private const float TREAD_WATER_SPEED = 1.5f;
+        private const float SWIM_SPEED = 2.5f;
         
         public AnimationController(Skeleton skeleton)
         {
             _skeleton = skeleton;
         }
         
-        public void Update(float deltaTime, bool isMoving, bool isSprinting, bool isBreaking, float breakProgress)
+        public void Update(float deltaTime, bool isMoving, bool isSprinting, bool isBreaking, float breakProgress, bool isInWater = false, bool isSwimming = false)
         {
             _animationTime += deltaTime;
             _isBreaking = isBreaking;
             _breakingProgress = breakProgress;
             
             // Determine current animation
-            if (isBreaking)
+            if (isInWater)
+            {
+                _currentAnimation = isSwimming ? AnimationType.Swimming : AnimationType.TreadingWater;
+            }
+            else if (isBreaking)
             {
                 _currentAnimation = AnimationType.Breaking;
             }
@@ -78,6 +86,12 @@ namespace TimelessTales.Entities
                     break;
                 case AnimationType.Breaking:
                     ApplyBreakingAnimation();
+                    break;
+                case AnimationType.TreadingWater:
+                    ApplyTreadingWaterAnimation();
+                    break;
+                case AnimationType.Swimming:
+                    ApplySwimmingAnimation();
                     break;
             }
             
@@ -180,6 +194,100 @@ namespace TimelessTales.Entities
             leftArm?.SetRotation(Vector3.Zero);
             rightLeg?.SetRotation(Vector3.Zero);
             leftLeg?.SetRotation(Vector3.Zero);
+        }
+        
+        private void ApplyTreadingWaterAnimation()
+        {
+            // Idle treading water - subtle movements to stay afloat
+            float phase = _animationTime * TREAD_WATER_SPEED;
+            
+            // Arms gently move in circular motion (like treading water)
+            Bone? rightArm = _skeleton.GetBone("right_arm");
+            Bone? leftArm = _skeleton.GetBone("left_arm");
+            
+            if (rightArm != null)
+            {
+                float armX = MathF.Sin(phase) * 0.3f;
+                float armY = MathF.Cos(phase) * 0.2f;
+                rightArm.SetRotation(new Vector3(armX, armY, 0));
+            }
+            
+            if (leftArm != null)
+            {
+                float armX = MathF.Sin(phase + MathF.PI) * 0.3f;
+                float armY = MathF.Cos(phase + MathF.PI) * 0.2f;
+                leftArm.SetRotation(new Vector3(armX, armY, 0));
+            }
+            
+            // Legs kick gently
+            Bone? rightLeg = _skeleton.GetBone("right_leg");
+            Bone? leftLeg = _skeleton.GetBone("left_leg");
+            
+            if (rightLeg != null)
+            {
+                float legSwing = MathF.Sin(phase * 1.5f) * 0.25f;
+                rightLeg.SetRotation(new Vector3(legSwing, 0, 0));
+            }
+            
+            if (leftLeg != null)
+            {
+                float legSwing = MathF.Sin(phase * 1.5f + MathF.PI) * 0.25f;
+                leftLeg.SetRotation(new Vector3(legSwing, 0, 0));
+            }
+            
+            // Body stays mostly upright with slight bobbing
+            Bone? torso = _skeleton.GetBone("torso");
+            if (torso != null)
+            {
+                float bob = MathF.Sin(phase * 2) * 0.03f;
+                torso.SetRotation(new Vector3(bob, 0, 0));
+            }
+        }
+        
+        private void ApplySwimmingAnimation()
+        {
+            // Swimming animation - more vigorous arm and leg movements
+            float phase = _animationTime * SWIM_SPEED;
+            
+            // Arms stroke in alternating pattern
+            Bone? rightArm = _skeleton.GetBone("right_arm");
+            Bone? leftArm = _skeleton.GetBone("left_arm");
+            
+            if (rightArm != null)
+            {
+                float armSwing = MathF.Sin(phase) * 0.8f;
+                rightArm.SetRotation(new Vector3(armSwing, 0, 0));
+            }
+            
+            if (leftArm != null)
+            {
+                float armSwing = MathF.Sin(phase + MathF.PI) * 0.8f;
+                leftArm.SetRotation(new Vector3(armSwing, 0, 0));
+            }
+            
+            // Legs kick in alternating pattern (flutter kick)
+            Bone? rightLeg = _skeleton.GetBone("right_leg");
+            Bone? leftLeg = _skeleton.GetBone("left_leg");
+            
+            if (rightLeg != null)
+            {
+                float legSwing = MathF.Sin(phase * 2) * 0.4f;
+                rightLeg.SetRotation(new Vector3(legSwing, 0, 0));
+            }
+            
+            if (leftLeg != null)
+            {
+                float legSwing = MathF.Sin(phase * 2 + MathF.PI) * 0.4f;
+                leftLeg.SetRotation(new Vector3(legSwing, 0, 0));
+            }
+            
+            // Torso tilts forward slightly when swimming
+            Bone? torso = _skeleton.GetBone("torso");
+            if (torso != null)
+            {
+                float tilt = 0.2f; // Lean forward
+                torso.SetRotation(new Vector3(tilt, 0, 0));
+            }
         }
     }
 }
