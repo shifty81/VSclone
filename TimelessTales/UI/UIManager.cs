@@ -444,23 +444,28 @@ namespace TimelessTales.UI
                         int worldX = playerX + dx;
                         int worldZ = playerZ + dz;
                         
-                        // Get top surface block (ignores caves and underground)
-                        var (surfaceY, blockType) = _worldManager.GetTopSurfaceBlock(worldX, worldZ);
+                        // Get top surface block ONLY if chunk is loaded (doesn't generate new chunks)
+                        var surfaceData = _worldManager.GetTopSurfaceBlockIfLoaded(worldX, worldZ);
                         
-                        if (surfaceY >= 0)
+                        if (surfaceData.HasValue)
                         {
-                            // Color based on block type and height for better visual distinction
-                            Color terrainColor = GetTerrainColorForMap(blockType, surfaceY);
+                            var (surfaceY, blockType) = surfaceData.Value;
                             
-                            int pixelX = minimapX + (dx + mapRange) * pixelsPerBlock;
-                            int pixelZ = minimapY + (dz + mapRange) * pixelsPerBlock;
-                            int pixelSize = Math.Max(1, pixelsPerBlock * step);
-                            
-                            if (pixelsPerBlock > 0)
+                            if (surfaceY >= 0)
                             {
-                                spriteBatch.Draw(_pixelTexture,
-                                    new Rectangle(pixelX, pixelZ, pixelSize, pixelSize),
-                                    terrainColor);
+                                // Color based on block type and height for better visual distinction
+                                Color terrainColor = GetTerrainColorForMap(blockType, surfaceY);
+                                
+                                int pixelX = minimapX + (dx + mapRange) * pixelsPerBlock;
+                                int pixelZ = minimapY + (dz + mapRange) * pixelsPerBlock;
+                                int pixelSize = Math.Max(1, pixelsPerBlock * step);
+                                
+                                if (pixelsPerBlock > 0)
+                                {
+                                    spriteBatch.Draw(_pixelTexture,
+                                        new Rectangle(pixelX, pixelZ, pixelSize, pixelSize),
+                                        terrainColor);
+                                }
                             }
                         }
                     }
@@ -687,23 +692,28 @@ namespace TimelessTales.UI
                         int worldX = playerX + dx;
                         int worldZ = playerZ + dz;
                         
-                        // Get top surface block (ignores caves and underground)
-                        var (surfaceY, blockType) = _worldManager.GetTopSurfaceBlock(worldX, worldZ);
+                        // Get top surface block ONLY if chunk is loaded (doesn't generate new chunks)
+                        var surfaceData = _worldManager.GetTopSurfaceBlockIfLoaded(worldX, worldZ);
                         
-                        if (surfaceY >= 0)
+                        if (surfaceData.HasValue)
                         {
-                            // Color based on block type and height for better visual distinction
-                            Color terrainColor = GetTerrainColorForMap(blockType, surfaceY);
+                            var (surfaceY, blockType) = surfaceData.Value;
                             
-                            int pixelX = mapX + (dx + mapRange) * pixelsPerBlock;
-                            int pixelZ = mapY + (dz + mapRange) * pixelsPerBlock;
-                            int pixelSize = Math.Max(2, pixelsPerBlock * step);
-                            
-                            if (pixelsPerBlock > 0)
+                            if (surfaceY >= 0)
                             {
-                                spriteBatch.Draw(_pixelTexture,
-                                    new Rectangle(pixelX, pixelZ, pixelSize, pixelSize),
-                                    terrainColor);
+                                // Color based on block type and height for better visual distinction
+                                Color terrainColor = GetTerrainColorForMap(blockType, surfaceY);
+                                
+                                int pixelX = mapX + (dx + mapRange) * pixelsPerBlock;
+                                int pixelZ = mapY + (dz + mapRange) * pixelsPerBlock;
+                                int pixelSize = Math.Max(2, pixelsPerBlock * step);
+                                
+                                if (pixelsPerBlock > 0)
+                                {
+                                    spriteBatch.Draw(_pixelTexture,
+                                        new Rectangle(pixelX, pixelZ, pixelSize, pixelSize),
+                                        terrainColor);
+                                }
                             }
                         }
                     }
