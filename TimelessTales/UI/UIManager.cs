@@ -1027,7 +1027,8 @@ namespace TimelessTales.UI
             
             // Check which slot is hovered
             _hoveredSlotIndex = -1;
-            for (int row = 0; row < INVENTORY_ROWS; row++)
+            bool found = false;
+            for (int row = 0; row < INVENTORY_ROWS && !found; row++)
             {
                 for (int col = 0; col < INVENTORY_SLOTS_PER_ROW; col++)
                 {
@@ -1040,7 +1041,8 @@ namespace TimelessTales.UI
                         mouseY >= y && mouseY < y + INVENTORY_SLOT_SIZE)
                     {
                         _hoveredSlotIndex = slotIndex;
-                        return;
+                        found = true;
+                        break;
                     }
                 }
             }
