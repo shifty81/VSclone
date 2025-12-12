@@ -83,8 +83,8 @@ namespace TimelessTales.Particles
         private void AddParticleBillboard(Camera camera, Particle particle, ref int vertexIndex)
         {
             // Billboard: quad that always faces the camera
-            // Calculate right and up vectors from camera's forward direction
-            Vector3 cameraForward = camera.ViewMatrix.Forward;
+            // Use camera's actual forward vector
+            Vector3 cameraForward = camera.GetForwardVector();
             Vector3 worldUp = Vector3.Up;
             
             // Right vector perpendicular to camera forward and world up

@@ -30,6 +30,13 @@ namespace TimelessTales.Vegetation
         /// <summary>
         /// Update all plants in the world
         /// </summary>
+        /// <remarks>
+        /// Note: This currently updates all plants every frame. For large worlds with many plants,
+        /// consider implementing:
+        /// - Spatial partitioning (only update plants near player)
+        /// - Staggered updates (update subset each frame)
+        /// - Update intervals (e.g., update every 0.1 seconds instead of every frame)
+        /// </remarks>
         public void Update(float deltaTime)
         {
             // Update all plants directly from dictionary values (no copy needed)

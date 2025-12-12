@@ -141,18 +141,20 @@ namespace TimelessTales.Audio
                 string key = kvp.Key;
                 SoundEffectInstance instance = kvp.Value;
                 
-                if (_originalVolumes.TryGetValue(key, out float originalVolume))
+                // Get original volume or use current volume as fallback
+                float originalVolume = _originalVolumes.TryGetValue(key, out float vol) 
+                    ? vol 
+                    : SoundEffectVolume * MasterVolume;
+                
+                if (_isUnderwater)
                 {
-                    if (_isUnderwater)
-                    {
-                        instance.Volume = originalVolume * UNDERWATER_VOLUME_MULTIPLIER;
-                        instance.Pitch = UNDERWATER_PITCH_SHIFT;
-                    }
-                    else
-                    {
-                        instance.Volume = originalVolume;
-                        instance.Pitch = 0.0f;
-                    }
+                    instance.Volume = originalVolume * UNDERWATER_VOLUME_MULTIPLIER;
+                    instance.Pitch = UNDERWATER_PITCH_SHIFT;
+                }
+                else
+                {
+                    instance.Volume = originalVolume;
+                    instance.Pitch = 0.0f;
                 }
             }
         }
