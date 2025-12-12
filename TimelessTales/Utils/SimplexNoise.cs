@@ -93,6 +93,7 @@ namespace TimelessTales.Utils
             // 3D Simplex noise implementation
             const float F3 = 1.0f / 3.0f;
             const float G3 = 1.0f / 6.0f;
+            const float NOISE_SCALE_3D = 32.0f; // Scaling factor to normalize output to [-1, 1]
 
             float n0, n1, n2, n3;
 
@@ -200,7 +201,7 @@ namespace TimelessTales.Utils
 
             // Add contributions from each corner to get the final noise value
             // The result is scaled to return values in the interval [-1,1]
-            return 32.0f * (n0 + n1 + n2 + n3);
+            return NOISE_SCALE_3D * (n0 + n1 + n2 + n3);
         }
 
         private static int FastFloor(float x)

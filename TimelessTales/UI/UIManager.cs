@@ -29,6 +29,9 @@ namespace TimelessTales.UI
         private const int CHAR_WIDTH = 4;  // 3 pixels + 1 spacing
         private const int CHAR_HEIGHT = 5;
         private const int PIXEL_SIZE = 1;
+        
+        // World constants (should match WorldGenerator)
+        private const int SEA_LEVEL = 64;
 
         public UIManager(SpriteBatch spriteBatch, ContentManager content)
         {
