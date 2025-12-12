@@ -25,6 +25,11 @@ namespace TimelessTales.UI
         private WorldManager? _worldManager;
         private bool _inventoryOpen;
         private bool _worldMapOpen;
+        
+        // Simple text rendering constants
+        private const int CHAR_WIDTH = 4;  // 3 pixels + 1 spacing
+        private const int CHAR_HEIGHT = 5;
+        private const int PIXEL_SIZE = 1;
 
         public UIManager(SpriteBatch spriteBatch, ContentManager content)
         {
@@ -422,46 +427,29 @@ namespace TimelessTales.UI
                 }
             }
             
-            // Draw coordinates below minimap
+            // Draw coordinates below minimap with numeric display
             int coordY = minimapY + minimapSize + 5;
-            int coordBoxHeight = 20;
+            int coordBoxHeight = 45; // Increased height for 3 rows of coordinates
             spriteBatch.Draw(_pixelTexture,
                 new Rectangle(minimapX, coordY, minimapSize, coordBoxHeight),
                 Color.Black * 0.7f);
             
-            // Draw coordinate text representation with bars (since we don't have font)
-            // Display X, Y, Z coordinates as visual bars
+            // Display X, Y, Z coordinates as numbers using simple digit rendering
             Vector3 pos = player.Position;
-            int barWidth = 3;
-            int barSpacing = 2;
-            int barStartX = minimapX + 5;
+            int textStartX = minimapX + 5;
+            int lineHeight = 13;
             
-            // X coordinate (Red bars)
-            int xBars = Math.Abs((int)pos.X) % 20;
-            for (int i = 0; i < xBars; i++)
-            {
-                spriteBatch.Draw(_pixelTexture,
-                    new Rectangle(barStartX + i * (barWidth + barSpacing), coordY + 2, barWidth, 5),
-                    Color.Red);
-            }
+            // X coordinate (Red)
+            string xText = $"X: {(int)pos.X}";
+            DrawSimpleText(spriteBatch, xText, textStartX, coordY + 3, Color.Red);
             
-            // Y coordinate (Green bars) 
-            int yBars = Math.Abs((int)pos.Y) % 20;
-            for (int i = 0; i < yBars; i++)
-            {
-                spriteBatch.Draw(_pixelTexture,
-                    new Rectangle(barStartX + i * (barWidth + barSpacing), coordY + 9, barWidth, 5),
-                    Color.Green);
-            }
+            // Y coordinate (Green) 
+            string yText = $"Y: {(int)pos.Y}";
+            DrawSimpleText(spriteBatch, yText, textStartX, coordY + 3 + lineHeight, Color.Green);
             
-            // Z coordinate (Blue bars)
-            int zBars = Math.Abs((int)pos.Z) % 20;
-            for (int i = 0; i < zBars; i++)
-            {
-                spriteBatch.Draw(_pixelTexture,
-                    new Rectangle(barStartX + i * (barWidth + barSpacing), coordY + 16, barWidth, 5),
-                    Color.Blue);
-            }
+            // Z coordinate (Blue)
+            string zText = $"Z: {(int)pos.Z}";
+            DrawSimpleText(spriteBatch, zText, textStartX, coordY + 3 + lineHeight * 2, Color.Blue);
             
             // Draw compass direction below coordinates
             int compassY = coordY + coordBoxHeight + 3;
@@ -748,6 +736,189 @@ namespace TimelessTales.UI
                     new Rectangle(x - thickness / 2, y - thickness / 2, thickness, thickness),
                     color);
             }
+        }
+        
+        /// <summary>
+        /// Helper method to draw simple text using pixel patterns (no font required)
+        /// Uses a simple 3x5 pixel pattern for each character
+        /// </summary>
+        private void DrawSimpleText(SpriteBatch spriteBatch, string text, int x, int y, Color color)
+        {
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                int charX = x + i * CHAR_WIDTH;
+                
+                // Define simple 3x5 pixel patterns for each character
+                bool[,] pattern = GetCharPattern(c);
+                
+                // Draw the character pattern
+                for (int py = 0; py < CHAR_HEIGHT; py++)
+                {
+                    for (int px = 0; px < 3; px++)
+                    {
+                        if (pattern[py, px])
+                        {
+                            spriteBatch.Draw(_pixelTexture,
+                                new Rectangle(charX + px * PIXEL_SIZE, y + py * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE),
+                                color);
+                        }
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Get 3x5 pixel pattern for a character
+        /// </summary>
+        private bool[,] GetCharPattern(char c)
+        {
+            // Default pattern (space)
+            bool[,] pattern = new bool[5, 3];
+            
+            switch (char.ToUpper(c))
+            {
+                case '0':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { true, false, true },
+                        { true, false, true },
+                        { true, false, true },
+                        { true, true, true }
+                    };
+                    break;
+                case '1':
+                    pattern = new bool[,] {
+                        { false, true, false },
+                        { true, true, false },
+                        { false, true, false },
+                        { false, true, false },
+                        { true, true, true }
+                    };
+                    break;
+                case '2':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { false, false, true },
+                        { true, true, true },
+                        { true, false, false },
+                        { true, true, true }
+                    };
+                    break;
+                case '3':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { false, false, true },
+                        { true, true, true },
+                        { false, false, true },
+                        { true, true, true }
+                    };
+                    break;
+                case '4':
+                    pattern = new bool[,] {
+                        { true, false, true },
+                        { true, false, true },
+                        { true, true, true },
+                        { false, false, true },
+                        { false, false, true }
+                    };
+                    break;
+                case '5':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { true, false, false },
+                        { true, true, true },
+                        { false, false, true },
+                        { true, true, true }
+                    };
+                    break;
+                case '6':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { true, false, false },
+                        { true, true, true },
+                        { true, false, true },
+                        { true, true, true }
+                    };
+                    break;
+                case '7':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { false, false, true },
+                        { false, false, true },
+                        { false, false, true },
+                        { false, false, true }
+                    };
+                    break;
+                case '8':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { true, false, true },
+                        { true, true, true },
+                        { true, false, true },
+                        { true, true, true }
+                    };
+                    break;
+                case '9':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { true, false, true },
+                        { true, true, true },
+                        { false, false, true },
+                        { true, true, true }
+                    };
+                    break;
+                case 'X':
+                    pattern = new bool[,] {
+                        { true, false, true },
+                        { true, false, true },
+                        { false, true, false },
+                        { true, false, true },
+                        { true, false, true }
+                    };
+                    break;
+                case 'Y':
+                    pattern = new bool[,] {
+                        { true, false, true },
+                        { true, false, true },
+                        { false, true, false },
+                        { false, true, false },
+                        { false, true, false }
+                    };
+                    break;
+                case 'Z':
+                    pattern = new bool[,] {
+                        { true, true, true },
+                        { false, false, true },
+                        { false, true, false },
+                        { true, false, false },
+                        { true, true, true }
+                    };
+                    break;
+                case ':':
+                    pattern = new bool[,] {
+                        { false, false, false },
+                        { false, true, false },
+                        { false, false, false },
+                        { false, true, false },
+                        { false, false, false }
+                    };
+                    break;
+                case '-':
+                    pattern = new bool[,] {
+                        { false, false, false },
+                        { false, false, false },
+                        { true, true, true },
+                        { false, false, false },
+                        { false, false, false }
+                    };
+                    break;
+                case ' ':
+                    // Already initialized as all false
+                    break;
+            }
+            
+            return pattern;
         }
     }
 }

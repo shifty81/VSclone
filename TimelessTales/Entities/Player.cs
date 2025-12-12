@@ -95,15 +95,17 @@ namespace TimelessTales.Entities
         {
             Vector3 moveDirection = Vector3.Zero;
             
-            // WASD movement - matches MonoGame coordinate system where Forward is (0,0,-1)
+            // WASD movement - absolute directions independent of player rotation
+            // W = forward (negative Z), S = backward (positive Z)
+            // A = left (negative X), D = right (positive X)
             if (input.IsKeyDown(Keys.W))
-                moveDirection += new Vector3(MathF.Sin(Rotation.Y), 0, -MathF.Cos(Rotation.Y));
+                moveDirection += new Vector3(0, 0, -1); // Forward
             if (input.IsKeyDown(Keys.S))
-                moveDirection -= new Vector3(MathF.Sin(Rotation.Y), 0, -MathF.Cos(Rotation.Y));
+                moveDirection += new Vector3(0, 0, 1);  // Backward
             if (input.IsKeyDown(Keys.A))
-                moveDirection -= new Vector3(MathF.Cos(Rotation.Y), 0, MathF.Sin(Rotation.Y));
+                moveDirection += new Vector3(-1, 0, 0); // Left
             if (input.IsKeyDown(Keys.D))
-                moveDirection += new Vector3(MathF.Cos(Rotation.Y), 0, MathF.Sin(Rotation.Y));
+                moveDirection += new Vector3(1, 0, 0);  // Right
             
             // Normalize diagonal movement
             if (moveDirection.LengthSquared() > 0)
