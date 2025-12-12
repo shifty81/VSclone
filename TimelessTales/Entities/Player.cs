@@ -55,6 +55,7 @@ namespace TimelessTales.Entities
         // Inventory and equipment
         public Inventory Inventory { get; private set; }
         public Equipment Equipment { get; private set; }
+        public MaterialPouch MaterialPouch { get; private set; } // New material pouch for crafting bits
         public BlockType SelectedBlock { get; set; }
         
         // Character skeleton and animation
@@ -68,6 +69,7 @@ namespace TimelessTales.Entities
             Velocity = Vector3.Zero;
             Inventory = new Inventory(40);
             Equipment = new Equipment();
+            MaterialPouch = new MaterialPouch(); // Initialize material pouch
             SelectedBlock = BlockType.Stone;
             
             // Initialize skeleton
@@ -465,8 +467,24 @@ namespace TimelessTales.Entities
                         BlockType brokenBlock = world.GetBlock(x, y, z);
                         world.SetBlock(x, y, z, BlockType.Air);
                         
-                        // Add to inventory
-                        Inventory.AddItem(brokenBlock, 1);
+                        // Drop material bits into the material pouch instead of whole blocks
+                        var drop = MaterialDropTable.GetDrop(brokenBlock);
+                        if (drop.HasValue)
+                        {
+                            float hardness = BlockRegistry.Get(brokenBlock).Hardness;
+                            float dropAmount = MaterialDropTable.CalculateDropAmount(drop.Value.amount, hardness);
+                            
+                            // Try to add to material pouch
+                            if (!MaterialPouch.AddMaterial(drop.Value.material, dropAmount))
+                            {
+                                // Pouch is full - optionally notify player
+                                Logger.Info($"Material pouch is full! Cannot collect {drop.Value.material}");
+                            }
+                            else
+                            {
+                                Logger.Info($"Collected {dropAmount:F1} {drop.Value.material} (Pouch: {MaterialPouch.GetFillPercentage() * 100:F0}% full)");
+                            }
+                        }
                         
                         _breakProgress = 0;
                     }
