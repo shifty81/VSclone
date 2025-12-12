@@ -27,6 +27,11 @@ namespace TimelessTales.Core
         private TimeManager? _timeManager;
         private SkyboxRenderer? _skyboxRenderer;
         private TitleScreen? _titleScreen;
+        private SettingsMenu? _settingsMenu;
+        private ControlsScreen? _controlsScreen;
+        private CharacterStatusDisplay? _characterStatusDisplay;
+        private PauseMenu? _pauseMenu;
+        private DebugOverlay? _debugOverlay;
         
         // Camera
         private Camera? _camera;
@@ -109,7 +114,25 @@ namespace TimelessTales.Core
                 // Initialize title screen
                 _titleScreen = new TitleScreen(GraphicsDevice);
                 _titleScreen.OnNewGame += StartNewGame;
+                _titleScreen.OnSettings += ShowSettings;
                 Logger.Info("Title screen initialized");
+                
+                // Initialize settings menu
+                _settingsMenu = new SettingsMenu(GraphicsDevice);
+                _settingsMenu.OnBack += HideSettings;
+                _settingsMenu.OnControls += ShowControls;
+                Logger.Info("Settings menu initialized");
+                
+                // Initialize controls screen
+                _controlsScreen = new ControlsScreen(GraphicsDevice);
+                _controlsScreen.OnBack += HideControls;
+                Logger.Info("Controls screen initialized");
+                
+                // Initialize pause menu
+                _pauseMenu = new PauseMenu(GraphicsDevice);
+                _pauseMenu.OnResume += ResumGame;
+                _pauseMenu.OnMainMenu += ReturnToMainMenuFromPause;
+                Logger.Info("Pause menu initialized");
                 
                 Logger.Info("Content loading completed successfully");
             }
@@ -153,7 +176,13 @@ namespace TimelessTales.Core
                 // Initialize UI
                 Logger.Info("Initializing UI manager...");
                 _uiManager = new UIManager(_spriteBatch!, Content);
-                Logger.Info("UI manager initialized");
+                
+                // Initialize character status display
+                _characterStatusDisplay = new CharacterStatusDisplay(GraphicsDevice);
+                
+                // Initialize debug overlay
+                _debugOverlay = new DebugOverlay(GraphicsDevice);
+                Logger.Info("UI manager, character status display, and debug overlay initialized");
                 
                 _currentState = GameState.Playing;
                 Logger.Info("New game started successfully");
@@ -166,6 +195,46 @@ namespace TimelessTales.Core
                 IsMouseVisible = true;
                 throw;
             }
+        }
+        
+        private void ShowSettings()
+        {
+            Logger.Info("Showing settings menu");
+            _currentState = GameState.Settings;
+        }
+        
+        private void HideSettings()
+        {
+            Logger.Info("Hiding settings menu");
+            _currentState = GameState.MainMenu;
+        }
+        
+        private void ShowControls()
+        {
+            Logger.Info("Showing controls screen");
+            _currentState = GameState.Controls;
+        }
+        
+        private void HideControls()
+        {
+            Logger.Info("Hiding controls screen");
+            _currentState = GameState.Settings;
+        }
+        
+        private void ResumGame()
+        {
+            Logger.Info("Resuming game");
+            _isPaused = false;
+            IsMouseVisible = false;
+            _inputManager!.SetMouseCaptured(true);
+        }
+        
+        private void ReturnToMainMenuFromPause()
+        {
+            Logger.Info("Returning to main menu from pause");
+            _currentState = GameState.MainMenu;
+            _isPaused = false;
+            IsMouseVisible = true;
         }
 
         protected override void Update(GameTime gameTime)
@@ -188,11 +257,27 @@ namespace TimelessTales.Core
                         Logger.Info("Exiting game");
                         Exit();
                     }
+                    else if (_currentState == GameState.Settings)
+                    {
+                        HideSettings();
+                    }
+                    else if (_currentState == GameState.Controls)
+                    {
+                        HideControls();
+                    }
                 }
 
                 if (_currentState == GameState.MainMenu)
                 {
                     _titleScreen!.Update(gameTime);
+                }
+                else if (_currentState == GameState.Settings)
+                {
+                    _settingsMenu!.Update(gameTime);
+                }
+                else if (_currentState == GameState.Controls)
+                {
+                    _controlsScreen!.Update(gameTime);
                 }
                 else if (_currentState == GameState.Playing)
                 {
@@ -201,7 +286,23 @@ namespace TimelessTales.Core
                     
                     // Toggle pause
                     if (_inputManager.IsKeyPressed(Keys.P))
+                    {
                         _isPaused = !_isPaused;
+                        IsMouseVisible = _isPaused;
+                        _inputManager.SetMouseCaptured(!_isPaused);
+                    }
+                    
+                    // Toggle debug overlay (F3)
+                    if (_inputManager.IsKeyPressed(Keys.F3))
+                    {
+                        _debugOverlay!.IsVisible = !_debugOverlay.IsVisible;
+                    }
+                    
+                    // Update pause menu if paused
+                    if (_isPaused)
+                    {
+                        _pauseMenu!.Update(gameTime);
+                    }
                     
                     // Toggle inventory
                     if (_inputManager.IsKeyPressed(Keys.I))
@@ -248,6 +349,9 @@ namespace TimelessTales.Core
                         
                         // Update water renderer (for wave animation)
                         _waterRenderer!.Update(gameTime);
+                        
+                        // Update debug overlay
+                        _debugOverlay!.Update(gameTime);
                     }
                     
                     // Always update UI (pass InputManager for mouse interaction)
@@ -271,6 +375,36 @@ namespace TimelessTales.Core
                 {
                     _titleScreen!.Draw(_spriteBatch!);
                 }
+                else if (_currentState == GameState.Settings)
+                {
+                    // Draw dark background
+                    GraphicsDevice.Clear(new Color(20, 30, 40));
+                    
+                    _spriteBatch!.Begin();
+                    try
+                    {
+                        _settingsMenu!.Draw(_spriteBatch);
+                    }
+                    finally
+                    {
+                        _spriteBatch.End();
+                    }
+                }
+                else if (_currentState == GameState.Controls)
+                {
+                    // Draw dark background
+                    GraphicsDevice.Clear(new Color(20, 30, 40));
+                    
+                    _spriteBatch!.Begin();
+                    try
+                    {
+                        _controlsScreen!.Draw(_spriteBatch);
+                    }
+                    finally
+                    {
+                        _spriteBatch.End();
+                    }
+                }
                 else if (_currentState == GameState.Playing)
                 {
                     // Use sky color from time manager instead of static color
@@ -293,6 +427,24 @@ namespace TimelessTales.Core
                     try
                     {
                         _uiManager!.Draw(_spriteBatch);
+                        
+                        // Draw character status display (health, hunger, thirst)
+                        if (!_inventoryOpen && !_worldMapOpen && !_isPaused)
+                        {
+                            _characterStatusDisplay!.Draw(_spriteBatch, _player!);
+                        }
+                        
+                        // Draw pause menu on top of everything if paused
+                        if (_isPaused)
+                        {
+                            _pauseMenu!.Draw(_spriteBatch);
+                        }
+                        
+                        // Draw debug overlay (F3) on top of everything
+                        if (_debugOverlay!.IsVisible)
+                        {
+                            _debugOverlay.Draw(_spriteBatch, _player!, _worldManager!);
+                        }
                     }
                     finally
                     {

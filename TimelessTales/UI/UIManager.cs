@@ -17,6 +17,7 @@ namespace TimelessTales.UI
     {
         private readonly SpriteBatch _spriteBatch;
         private Texture2D _pixelTexture;
+        private Tooltip _tooltip;
         
         private readonly int _screenWidth;
         private readonly int _screenHeight;
@@ -54,6 +55,9 @@ namespace TimelessTales.UI
             // Create a 1x1 white pixel texture for drawing shapes
             _pixelTexture = new Texture2D(spriteBatch.GraphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
+            
+            // Initialize tooltip
+            _tooltip = new Tooltip(spriteBatch.GraphicsDevice);
         }
 
         public void Update(GameTime gameTime, Player player, TimeManager timeManager, WorldManager worldManager, bool isPaused, bool inventoryOpen = false, bool worldMapOpen = false, InputManager? inputManager = null)
@@ -320,6 +324,32 @@ namespace TimelessTales.UI
                 spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + INVENTORY_SLOT_SIZE - borderWidth, INVENTORY_SLOT_SIZE, borderWidth), borderColor);
                 spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, INVENTORY_SLOT_SIZE), borderColor);
                 spriteBatch.Draw(_pixelTexture, new Rectangle(x + INVENTORY_SLOT_SIZE - borderWidth, y, borderWidth, INVENTORY_SLOT_SIZE), borderColor);
+            }
+            
+            // Draw tooltip for hovered item
+            if (_hoveredSlotIndex >= 0 && _inputManager != null && _player != null)
+            {
+                int tooltipIndex = 0;
+                BlockType? hoveredBlockType = null;
+                int hoveredCount = 0;
+                
+                foreach (var item in items)
+                {
+                    if (tooltipIndex == _hoveredSlotIndex)
+                    {
+                        hoveredBlockType = item.Key;
+                        hoveredCount = item.Value;
+                        break;
+                    }
+                    tooltipIndex++;
+                }
+                
+                if (hoveredBlockType.HasValue && hoveredBlockType.Value != BlockType.Air)
+                {
+                    int mouseX = _inputManager.GetMouseX();
+                    int mouseY = _inputManager.GetMouseY();
+                    _tooltip.Draw(spriteBatch, hoveredBlockType.Value, hoveredCount, mouseX, mouseY);
+                }
             }
             
             // Draw "Press I to close" message
