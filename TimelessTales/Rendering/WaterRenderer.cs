@@ -21,6 +21,9 @@ namespace TimelessTales.Rendering
         private const float WAVE_SPEED = 0.3f;
         private const float WAVE_HEIGHT = 0.05f;
         private const float MAX_DEPTH_FOR_COLOR_CALCULATION = 20.0f;
+        
+        // Cel shading parameters
+        private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands
 
         public WaterRenderer(GraphicsDevice graphicsDevice, WorldManager worldManager)
         {
@@ -181,18 +184,24 @@ namespace TimelessTales.Rendering
                 baseColor = new Color(30, 100, 200);
             }
 
-            // Darken water based on depth
+            // Calculate depth factor
             float depthFactor = MathHelper.Clamp(depthFromSurface / MAX_DEPTH_FOR_COLOR_CALCULATION, 0, 1);
+            
+            // Apply cel shading - quantize depth into discrete bands
+            float celDepthFactor = CelShadingUtility.QuantizeToNBands(depthFactor, CEL_SHADING_BANDS);
             
             // Shallow water is clearer (more transparent and lighter)
             // Deep water is darker and more opaque
-            float brightness = 1.0f - (depthFactor * 0.5f);
+            float brightness = 1.0f - (celDepthFactor * 0.5f);
+            
+            // Alpha also uses cel shading for consistent look
+            int alpha = (int)(150 + celDepthFactor * 105); // Alpha: 150 (shallow) to 255 (deep)
             
             return new Color(
                 (int)(baseColor.R * brightness),
                 (int)(baseColor.G * brightness),
                 (int)(baseColor.B * brightness),
-                (int)(150 + depthFactor * 105) // Alpha: 150 (shallow) to 255 (deep)
+                alpha
             );
         }
 
@@ -207,10 +216,14 @@ namespace TimelessTales.Rendering
         private void AddWaterFaces(List<VertexPositionColor> vertices, Vector3 pos, Color color, float waveOffset,
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
+            // Apply cel shading to edge colors to create toon-like appearance
+            Color topColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.White, 0.3f), CEL_SHADING_BANDS); // Lighter top
+            Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.2f), CEL_SHADING_BANDS);
+            Color sideColor = CelShadingUtility.ApplyCelShading(color, CEL_SHADING_BANDS);
+            
             // Top face (Y+) - with wave animation
             if (top)
             {
-                Color topColor = Color.Lerp(color, Color.White, 0.3f); // Lighter top
                 AddQuad(vertices, pos,
                     new Vector3(0, 1 + waveOffset, 0), new Vector3(1, 1 + waveOffset, 0),
                     new Vector3(1, 1 + waveOffset, 1), new Vector3(0, 1 + waveOffset, 1), topColor);
@@ -219,7 +232,6 @@ namespace TimelessTales.Rendering
             // Bottom face (Y-)
             if (bottom)
             {
-                Color bottomColor = Color.Lerp(color, Color.Black, 0.2f);
                 AddQuad(vertices, pos,
                     new Vector3(0, 0, 1), new Vector3(1, 0, 1),
                     new Vector3(1, 0, 0), new Vector3(0, 0, 0), bottomColor);
@@ -230,7 +242,7 @@ namespace TimelessTales.Rendering
             {
                 AddQuad(vertices, pos,
                     new Vector3(0, 0, 1), new Vector3(0, 1, 1),
-                    new Vector3(1, 1, 1), new Vector3(1, 0, 1), color);
+                    new Vector3(1, 1, 1), new Vector3(1, 0, 1), sideColor);
             }
 
             // South face (Z-)
@@ -238,7 +250,7 @@ namespace TimelessTales.Rendering
             {
                 AddQuad(vertices, pos,
                     new Vector3(1, 0, 0), new Vector3(1, 1, 0),
-                    new Vector3(0, 1, 0), new Vector3(0, 0, 0), color);
+                    new Vector3(0, 1, 0), new Vector3(0, 0, 0), sideColor);
             }
 
             // East face (X+)
@@ -246,7 +258,7 @@ namespace TimelessTales.Rendering
             {
                 AddQuad(vertices, pos,
                     new Vector3(1, 0, 1), new Vector3(1, 1, 1),
-                    new Vector3(1, 1, 0), new Vector3(1, 0, 0), color);
+                    new Vector3(1, 1, 0), new Vector3(1, 0, 0), sideColor);
             }
 
             // West face (X-)
@@ -254,7 +266,7 @@ namespace TimelessTales.Rendering
             {
                 AddQuad(vertices, pos,
                     new Vector3(0, 0, 0), new Vector3(0, 1, 0),
-                    new Vector3(0, 1, 1), new Vector3(0, 0, 1), color);
+                    new Vector3(0, 1, 1), new Vector3(0, 0, 1), sideColor);
             }
         }
 

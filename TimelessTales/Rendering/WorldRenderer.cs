@@ -14,6 +14,9 @@ namespace TimelessTales.Rendering
         private readonly WorldManager _worldManager;
         private readonly BasicEffect _effect;
         private readonly Dictionary<(int, int), ChunkMesh> _chunkMeshes;
+        
+        // Cel shading parameters for world blocks
+        private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands for toon shading
 
         public WorldRenderer(GraphicsDevice graphicsDevice, WorldManager worldManager)
         {
@@ -124,10 +127,14 @@ namespace TimelessTales.Rendering
         private void AddBlockFaces(List<VertexPositionColor> vertices, Vector3 pos, Color color,
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
+            // Apply cel shading to all face colors for toon-like appearance
+            Color topColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.White, 0.2f), CEL_SHADING_BANDS);
+            Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.3f), CEL_SHADING_BANDS);
+            Color sideColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.1f), CEL_SHADING_BANDS);
+            
             // Top face (Y+)
             if (top)
             {
-                Color topColor = Color.Lerp(color, Color.White, 0.2f);
                 AddQuad(vertices, pos,
                     new Vector3(0, 1, 0), new Vector3(1, 1, 0),
                     new Vector3(1, 1, 1), new Vector3(0, 1, 1), topColor);
@@ -136,7 +143,6 @@ namespace TimelessTales.Rendering
             // Bottom face (Y-)
             if (bottom)
             {
-                Color bottomColor = Color.Lerp(color, Color.Black, 0.3f);
                 AddQuad(vertices, pos,
                     new Vector3(0, 0, 1), new Vector3(1, 0, 1),
                     new Vector3(1, 0, 0), new Vector3(0, 0, 0), bottomColor);
@@ -145,7 +151,6 @@ namespace TimelessTales.Rendering
             // North face (Z+)
             if (north)
             {
-                Color sideColor = Color.Lerp(color, Color.Black, 0.1f);
                 AddQuad(vertices, pos,
                     new Vector3(0, 0, 1), new Vector3(0, 1, 1),
                     new Vector3(1, 1, 1), new Vector3(1, 0, 1), sideColor);
@@ -154,7 +159,6 @@ namespace TimelessTales.Rendering
             // South face (Z-)
             if (south)
             {
-                Color sideColor = Color.Lerp(color, Color.Black, 0.1f);
                 AddQuad(vertices, pos,
                     new Vector3(1, 0, 0), new Vector3(1, 1, 0),
                     new Vector3(0, 1, 0), new Vector3(0, 0, 0), sideColor);
@@ -165,7 +169,7 @@ namespace TimelessTales.Rendering
             {
                 AddQuad(vertices, pos,
                     new Vector3(1, 0, 1), new Vector3(1, 1, 1),
-                    new Vector3(1, 1, 0), new Vector3(1, 0, 0), color);
+                    new Vector3(1, 1, 0), new Vector3(1, 0, 0), sideColor);
             }
             
             // West face (X-)
@@ -173,7 +177,7 @@ namespace TimelessTales.Rendering
             {
                 AddQuad(vertices, pos,
                     new Vector3(0, 0, 0), new Vector3(0, 1, 0),
-                    new Vector3(0, 1, 1), new Vector3(0, 0, 1), color);
+                    new Vector3(0, 1, 1), new Vector3(0, 0, 1), sideColor);
             }
         }
 
