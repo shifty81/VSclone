@@ -30,7 +30,7 @@ namespace TimelessTales.Tests
             // When facing east (yaw = -90 degrees), W should move in +X direction
             
             Vector3 localForward = new Vector3(0, 0, -1);
-            float yaw = -MathHelper.PiOver2; // Facing east (90 degrees right)
+            float yaw = -MathHelper.PiOver2; // Facing east (turned right from north)
             Matrix yawRotation = Matrix.CreateRotationY(yaw);
             Vector3 worldDirection = Vector3.Transform(localForward, yawRotation);
             
@@ -62,7 +62,7 @@ namespace TimelessTales.Tests
             // When facing west (yaw = 90 degrees), W should move in -X direction
             
             Vector3 localForward = new Vector3(0, 0, -1);
-            float yaw = MathHelper.PiOver2; // Facing west (90 degrees left)
+            float yaw = MathHelper.PiOver2; // Facing west (turned left from north)
             Matrix yawRotation = Matrix.CreateRotationY(yaw);
             Vector3 worldDirection = Vector3.Transform(localForward, yawRotation);
             
