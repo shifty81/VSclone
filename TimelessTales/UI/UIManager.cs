@@ -15,7 +15,6 @@ namespace TimelessTales.UI
     public class UIManager
     {
         private readonly SpriteBatch _spriteBatch;
-        private SpriteFont? _font;
         private Texture2D _pixelTexture;
         
         private readonly int _screenWidth;
@@ -98,16 +97,11 @@ namespace TimelessTales.UI
         private void DrawHUD(SpriteBatch spriteBatch)
         {
             // Draw simple text HUD
-            if (_font == null)
-            {
-                // For now, just draw basic shapes
-                // Font would be loaded from Content in a real implementation
-                return;
-            }
+            // For now, just draw basic shapes
+            // Font would be loaded from Content in a real implementation
             
             // Draw controls info in the future
             // string controls = "WASD: Move | Space: Jump | Shift: Sprint | LMB: Break | RMB: Place | 1-5: Select Block | P: Pause";
-            // spriteBatch.DrawString(_font, controls, new Vector2(10, 10), Color.White);
         }
 
         private void DrawInventory(SpriteBatch spriteBatch, Player player)
