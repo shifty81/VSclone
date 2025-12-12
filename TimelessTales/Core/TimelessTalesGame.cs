@@ -38,179 +38,259 @@ namespace TimelessTales.Core
         
         public TimelessTalesGame()
         {
-            _graphics = new GraphicsDeviceManager(this);
-            Content.RootDirectory = "Content";
-            IsMouseVisible = true; // Start with mouse visible for title screen
-            
-            // Set window size
-            _graphics.PreferredBackBufferWidth = 1280;
-            _graphics.PreferredBackBufferHeight = 720;
-            _graphics.IsFullScreen = false;
-            _graphics.ApplyChanges();
-            
-            Window.Title = "Timeless Tales - Alpha 0.1";
+            try
+            {
+                Logger.Info("Initializing TimelessTalesGame constructor...");
+                
+                _graphics = new GraphicsDeviceManager(this);
+                Content.RootDirectory = "Content";
+                IsMouseVisible = true; // Start with mouse visible for title screen
+                
+                // Set window size
+                _graphics.PreferredBackBufferWidth = 1280;
+                _graphics.PreferredBackBufferHeight = 720;
+                _graphics.IsFullScreen = false;
+                _graphics.ApplyChanges();
+                
+                Window.Title = "Timeless Tales - Alpha 0.1";
+                
+                Logger.Info("TimelessTalesGame constructor completed successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger.Fatal("Error in TimelessTalesGame constructor", ex);
+                throw;
+            }
         }
 
         protected override void Initialize()
         {
-            // Initialize camera
-            _camera = new Camera(GraphicsDevice.Viewport);
-            
-            // Initialize input manager
-            _inputManager = new InputManager();
-            
-            // Set screen center for mouse capture
-            int centerX = GraphicsDevice.Viewport.Width / 2;
-            int centerY = GraphicsDevice.Viewport.Height / 2;
-            _inputManager.SetScreenCenter(centerX, centerY);
-            
-            // Initialize time manager
-            _timeManager = new TimeManager();
-            
-            base.Initialize();
+            try
+            {
+                Logger.Info("Initializing game systems...");
+                
+                // Initialize camera
+                _camera = new Camera(GraphicsDevice.Viewport);
+                Logger.Info("Camera initialized");
+                
+                // Initialize input manager
+                _inputManager = new InputManager();
+                Logger.Info("Input manager initialized");
+                
+                // Set screen center for mouse capture
+                int centerX = GraphicsDevice.Viewport.Width / 2;
+                int centerY = GraphicsDevice.Viewport.Height / 2;
+                _inputManager.SetScreenCenter(centerX, centerY);
+                
+                // Initialize time manager
+                _timeManager = new TimeManager();
+                Logger.Info("Time manager initialized");
+                
+                base.Initialize();
+                Logger.Info("Game initialization completed successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger.Fatal("Error during game initialization", ex);
+                throw;
+            }
         }
 
         protected override void LoadContent()
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-            
-            // Initialize title screen
-            _titleScreen = new TitleScreen(GraphicsDevice);
-            _titleScreen.OnNewGame += StartNewGame;
+            try
+            {
+                Logger.Info("Loading game content...");
+                
+                _spriteBatch = new SpriteBatch(GraphicsDevice);
+                Logger.Info("SpriteBatch created");
+                
+                // Initialize title screen
+                _titleScreen = new TitleScreen(GraphicsDevice);
+                _titleScreen.OnNewGame += StartNewGame;
+                Logger.Info("Title screen initialized");
+                
+                Logger.Info("Content loading completed successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger.Fatal("Error loading game content", ex);
+                throw;
+            }
         }
         
         private void StartNewGame()
         {
-            _currentState = GameState.Loading;
-            IsMouseVisible = false;
-            
-            // Initialize world manager
-            _worldManager = new WorldManager(12345); // Seed for world generation
-            _worldManager.Initialize();
-            
-            // Create player at spawn position
-            Vector3 spawnPosition = _worldManager!.GetSpawnPosition();
-            _player = new Player(spawnPosition);
-            _camera!.Position = spawnPosition;
-            
-            // Initialize renderer
-            _worldRenderer = new WorldRenderer(GraphicsDevice, _worldManager);
-            _playerRenderer = new PlayerRenderer(GraphicsDevice);
-            _skyboxRenderer = new SkyboxRenderer(GraphicsDevice);
-            
-            // Initialize UI
-            _uiManager = new UIManager(_spriteBatch!, Content);
-            
-            _currentState = GameState.Playing;
+            try
+            {
+                Logger.Info("Starting new game...");
+                
+                _currentState = GameState.Loading;
+                IsMouseVisible = false;
+                
+                // Initialize world manager
+                Logger.Info("Initializing world manager with seed 12345...");
+                _worldManager = new WorldManager(12345); // Seed for world generation
+                _worldManager.Initialize();
+                Logger.Info("World manager initialized");
+                
+                // Create player at spawn position
+                Vector3 spawnPosition = _worldManager!.GetSpawnPosition();
+                Logger.Info($"Creating player at spawn position: {spawnPosition}");
+                _player = new Player(spawnPosition);
+                _camera!.Position = spawnPosition;
+                Logger.Info("Player created");
+                
+                // Initialize renderer
+                Logger.Info("Initializing renderers...");
+                _worldRenderer = new WorldRenderer(GraphicsDevice, _worldManager);
+                _playerRenderer = new PlayerRenderer(GraphicsDevice);
+                _skyboxRenderer = new SkyboxRenderer(GraphicsDevice);
+                Logger.Info("Renderers initialized");
+                
+                // Initialize UI
+                Logger.Info("Initializing UI manager...");
+                _uiManager = new UIManager(_spriteBatch!, Content);
+                Logger.Info("UI manager initialized");
+                
+                _currentState = GameState.Playing;
+                Logger.Info("New game started successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error starting new game", ex);
+                // Return to main menu on error
+                _currentState = GameState.MainMenu;
+                IsMouseVisible = true;
+                throw;
+            }
         }
 
         protected override void Update(GameTime gameTime)
         {
-            // Handle exit
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
-                Keyboard.GetState().IsKeyDown(Keys.Escape))
+            try
             {
-                if (_currentState == GameState.Playing)
+                // Handle exit
+                if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || 
+                    Keyboard.GetState().IsKeyDown(Keys.Escape))
                 {
-                    // Return to main menu from game
-                    _currentState = GameState.MainMenu;
-                    IsMouseVisible = true;
+                    if (_currentState == GameState.Playing)
+                    {
+                        // Return to main menu from game
+                        Logger.Info("Returning to main menu");
+                        _currentState = GameState.MainMenu;
+                        IsMouseVisible = true;
+                    }
+                    else if (_currentState == GameState.MainMenu)
+                    {
+                        Logger.Info("Exiting game");
+                        Exit();
+                    }
                 }
-                else if (_currentState == GameState.MainMenu)
-                {
-                    Exit();
-                }
-            }
 
-            if (_currentState == GameState.MainMenu)
-            {
-                _titleScreen!.Update(gameTime);
-            }
-            else if (_currentState == GameState.Playing)
-            {
-                // Update input
-                _inputManager!.Update();
-                
-                // Toggle pause
-                if (_inputManager.IsKeyPressed(Keys.P))
-                    _isPaused = !_isPaused;
-                
-                // Toggle inventory
-                if (_inputManager.IsKeyPressed(Keys.I))
+                if (_currentState == GameState.MainMenu)
                 {
-                    _inventoryOpen = !_inventoryOpen;
-                    IsMouseVisible = _inventoryOpen;
+                    _titleScreen!.Update(gameTime);
                 }
-                
-                // Toggle world map
-                if (_inputManager.IsKeyPressed(Keys.M))
+                else if (_currentState == GameState.Playing)
                 {
-                    _worldMapOpen = !_worldMapOpen;
-                    IsMouseVisible = _worldMapOpen;
+                    // Update input
+                    _inputManager!.Update();
+                    
+                    // Toggle pause
+                    if (_inputManager.IsKeyPressed(Keys.P))
+                        _isPaused = !_isPaused;
+                    
+                    // Toggle inventory
+                    if (_inputManager.IsKeyPressed(Keys.I))
+                    {
+                        _inventoryOpen = !_inventoryOpen;
+                        IsMouseVisible = _inventoryOpen;
+                    }
+                    
+                    // Toggle world map
+                    if (_inputManager.IsKeyPressed(Keys.M))
+                    {
+                        _worldMapOpen = !_worldMapOpen;
+                        IsMouseVisible = _worldMapOpen;
+                    }
+                    
+                    // Toggle fullscreen
+                    if (_inputManager.IsKeyPressed(Keys.F11))
+                    {
+                        _graphics.IsFullScreen = !_graphics.IsFullScreen;
+                        _graphics.ApplyChanges();
+                        
+                        // Update screen center for mouse capture
+                        int centerX = GraphicsDevice.Viewport.Width / 2;
+                        int centerY = GraphicsDevice.Viewport.Height / 2;
+                        _inputManager.SetScreenCenter(centerX, centerY);
+                    }
+                    
+                    if (!_isPaused && !_inventoryOpen && !_worldMapOpen)
+                    {
+                        // Update time
+                        _timeManager!.Update(gameTime);
+                        
+                        // Update player
+                        _player!.Update(gameTime, _inputManager, _worldManager!);
+                        
+                        // Update camera to follow player (with eye height offset)
+                        _camera!.Position = _player.Position + new Vector3(0, 1.62f, 0); // Eye height offset from feet
+                        _camera.Rotation = _player.Rotation;
+                        
+                        // Update world
+                        _worldManager!.Update(_player.Position);
+                    }
+                    
+                    // Always update UI
+                    _uiManager!.Update(gameTime, _player!, _timeManager!, _worldManager!, _isPaused, _inventoryOpen, _worldMapOpen);
                 }
-                
-                // Toggle fullscreen
-                if (_inputManager.IsKeyPressed(Keys.F11))
-                {
-                    _graphics.IsFullScreen = !_graphics.IsFullScreen;
-                    _graphics.ApplyChanges();
-                    
-                    // Update screen center for mouse capture
-                    int centerX = GraphicsDevice.Viewport.Width / 2;
-                    int centerY = GraphicsDevice.Viewport.Height / 2;
-                    _inputManager.SetScreenCenter(centerX, centerY);
-                }
-                
-                if (!_isPaused && !_inventoryOpen && !_worldMapOpen)
-                {
-                    // Update time
-                    _timeManager!.Update(gameTime);
-                    
-                    // Update player
-                    _player!.Update(gameTime, _inputManager, _worldManager!);
-                    
-                    // Update camera to follow player (with eye height offset)
-                    _camera!.Position = _player.Position + new Vector3(0, 1.62f, 0); // Eye height offset from feet
-                    _camera.Rotation = _player.Rotation;
-                    
-                    // Update world
-                    _worldManager!.Update(_player.Position);
-                }
-                
-                // Always update UI
-                _uiManager!.Update(gameTime, _player!, _timeManager!, _worldManager!, _isPaused, _inventoryOpen, _worldMapOpen);
-            }
 
-            base.Update(gameTime);
+                base.Update(gameTime);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error in game update loop", ex);
+                // Don't crash the game, just log the error and continue
+            }
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            if (_currentState == GameState.MainMenu)
+            try
             {
-                _titleScreen!.Draw(_spriteBatch!);
+                if (_currentState == GameState.MainMenu)
+                {
+                    _titleScreen!.Draw(_spriteBatch!);
+                }
+                else if (_currentState == GameState.Playing)
+                {
+                    // Use sky color from time manager instead of static color
+                    GraphicsDevice.Clear(_timeManager!.GetSkyColor());
+
+                    // Draw skybox first (before everything else)
+                    _skyboxRenderer!.Draw(_camera!, _timeManager);
+                    
+                    // Draw 3D world
+                    _worldRenderer!.Draw(_camera!, gameTime);
+                    
+                    // Draw player arms (first-person view)
+                    _playerRenderer!.Draw(_camera!, _player!);
+                    
+                    // Draw UI (2D overlay)
+                    _spriteBatch!.Begin();
+                    _uiManager!.Draw(_spriteBatch);
+                    _spriteBatch.End();
+                }
+
+                base.Draw(gameTime);
             }
-            else if (_currentState == GameState.Playing)
+            catch (Exception ex)
             {
-                // Use sky color from time manager instead of static color
-                GraphicsDevice.Clear(_timeManager!.GetSkyColor());
-
-                // Draw skybox first (before everything else)
-                _skyboxRenderer!.Draw(_camera!, _timeManager);
-                
-                // Draw 3D world
-                _worldRenderer!.Draw(_camera!, gameTime);
-                
-                // Draw player arms (first-person view)
-                _playerRenderer!.Draw(_camera!, _player!);
-                
-                // Draw UI (2D overlay)
-                _spriteBatch!.Begin();
-                _uiManager!.Draw(_spriteBatch);
-                _spriteBatch.End();
+                Logger.Error("Error in game draw loop", ex);
+                // Don't crash the game, just log the error and continue
             }
-
-            base.Draw(gameTime);
         }
     }
 }
