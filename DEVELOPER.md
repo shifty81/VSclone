@@ -147,8 +147,27 @@ Register(new BlockDefinition(
 
 ## Testing the Game
 
+### Opening in Visual Studio
+The project now includes a Visual Studio solution file (`TimelessTales.sln`) for easier development:
+```bash
+# Open the solution in Visual Studio
+start TimelessTales.sln
+
+# Or from the command line
+devenv TimelessTales.sln
+```
+
+In Visual Studio:
+- Press **F5** to build and run with debugging
+- Press **Ctrl+F5** to run without debugging
+- Use breakpoints to debug crashes and issues
+
 ### Running in Debug Mode
 ```bash
+# Using solution file
+dotnet run --project TimelessTales/TimelessTales.csproj
+
+# Or navigate to project directory
 cd TimelessTales
 dotnet run
 ```
@@ -165,6 +184,91 @@ cd TimelessTales
 dotnet publish -c Release -r win-x64 --self-contained
 ```
 Output: `bin/Release/net8.0/win-x64/publish/`
+
+### Running Tests
+```bash
+# Run all tests
+dotnet test TimelessTales.sln
+
+# Run specific test class
+dotnet test --filter "FullyQualifiedName~LoggerTests"
+```
+
+## Error Logging and Debugging
+
+### Logging System
+The game includes a comprehensive logging system (`Core/Logger.cs`) that captures errors, warnings, and information during build and runtime.
+
+**Log File Location:**
+- Debug builds: `TimelessTales/bin/Debug/net8.0/logs/`
+- Release builds: `TimelessTales/bin/Release/net8.0/logs/`
+- File format: `timeless_tales_YYYY-MM-DD_HH-mm-ss.log`
+
+**Log Levels:**
+- `INFO`: General application flow (startup, initialization, shutdown)
+- `WARNING`: Non-critical issues that don't prevent operation
+- `ERROR`: Recoverable errors in the update/draw loop
+- `FATAL`: Critical errors that cause the application to crash
+
+**Using the Logger:**
+```csharp
+using TimelessTales.Core;
+
+// Log informational messages
+Logger.Info("Game initialized successfully");
+
+// Log warnings
+Logger.Warning("Chunk mesh rebuild took longer than expected");
+
+// Log errors
+Logger.Error("Failed to load texture");
+
+// Log errors with exceptions
+try
+{
+    // Some operation
+}
+catch (Exception ex)
+{
+    Logger.Error("Failed to perform operation", ex);
+}
+
+// Log fatal errors (before crash)
+Logger.Fatal("Critical system failure", ex);
+```
+
+**What Gets Logged:**
+- Application startup and shutdown
+- Game system initialization (Camera, Input, Time Manager, etc.)
+- World generation and loading
+- Player creation and spawning
+- Errors in update/draw loops (without crashing the game)
+- Exception details including stack traces
+
+### Debugging Crashes
+
+**Step 1: Check the Log File**
+After a crash, immediately check the latest log file in the `logs/` directory. Look for:
+- `[FATAL]` entries indicating what caused the crash
+- `[ERROR]` entries preceding the crash
+- Stack traces showing where the error occurred
+
+**Step 2: Debug in Visual Studio**
+1. Open `TimelessTales.sln` in Visual Studio 2022
+2. Set breakpoints in suspected problem areas
+3. Press F5 to run with debugging
+4. When the exception occurs, Visual Studio will show:
+   - The exact line of code that failed
+   - Variable values at the time of crash
+   - Full call stack
+   - Exception details
+
+**Step 3: Console Output**
+All log messages are also written to the console window in real-time with color coding:
+- White: INFO
+- Yellow: WARNING
+- Red: ERROR
+- Dark Red: FATAL
 
 ## Debugging Tips
 
