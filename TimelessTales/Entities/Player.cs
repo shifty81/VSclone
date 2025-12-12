@@ -101,9 +101,9 @@ namespace TimelessTales.Entities
             if (input.IsKeyDown(Keys.S))
                 moveDirection -= new Vector3(MathF.Sin(Rotation.Y), 0, -MathF.Cos(Rotation.Y));
             if (input.IsKeyDown(Keys.A))
-                moveDirection -= new Vector3(MathF.Cos(Rotation.Y), 0, -MathF.Sin(Rotation.Y));
+                moveDirection -= new Vector3(MathF.Cos(Rotation.Y), 0, MathF.Sin(Rotation.Y));
             if (input.IsKeyDown(Keys.D))
-                moveDirection += new Vector3(MathF.Cos(Rotation.Y), 0, -MathF.Sin(Rotation.Y));
+                moveDirection += new Vector3(MathF.Cos(Rotation.Y), 0, MathF.Sin(Rotation.Y));
             
             // Normalize diagonal movement
             if (moveDirection.LengthSquared() > 0)

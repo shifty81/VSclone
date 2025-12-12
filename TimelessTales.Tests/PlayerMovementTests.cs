@@ -35,15 +35,15 @@ namespace TimelessTales.Tests
         }
         
         [Theory]
-        [InlineData(0f, 1f, 0f)]             // Facing North, strafe right should move in +X direction
-        [InlineData(MathF.PI / 2, 0f, -1f)]  // Facing East, strafe right should move in -Z direction
-        [InlineData(MathF.PI, -1f, 0f)]      // Facing South, strafe right should move in -X direction
-        [InlineData(-MathF.PI / 2, 0f, 1f)]  // Facing West, strafe right should move in +Z direction
+        [InlineData(0f, 1f, 0f)]             // Facing North, strafe right should move in +X direction (East)
+        [InlineData(MathF.PI / 2, 0f, 1f)]   // Facing East, strafe right should move in +Z direction (South)
+        [InlineData(MathF.PI, -1f, 0f)]      // Facing South, strafe right should move in -X direction (West)
+        [InlineData(-MathF.PI / 2, 0f, -1f)] // Facing West, strafe right should move in -Z direction (North)
         public void Player_FacingDirection_RightStrafeMovement_MovesInCorrectDirection(float yaw, float expectedXSign, float expectedZSign)
         {
             // Calculate right direction using the same formula as UpdateMovement for D key
             float rightX = MathF.Cos(yaw);
-            float rightZ = -MathF.Sin(yaw);
+            float rightZ = MathF.Sin(yaw);
             
             // Normalize the expected direction
             Vector2 expected = new Vector2(expectedXSign, expectedZSign);
