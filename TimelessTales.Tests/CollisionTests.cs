@@ -66,6 +66,10 @@ namespace TimelessTales.Tests
                 }
             }
             
+            // Note: If terrain is below sea level (64), there will be water above it
+            // and the player will float due to buoyancy instead of landing on terrain
+            const int SEA_LEVEL = 64;
+            
             // Create player above the terrain
             var player = new Player(new Vector3(5.5f, actualTerrainHeight + 10f, 5.5f));
             var inputManager = new InputManager();
@@ -80,11 +84,21 @@ namespace TimelessTales.Tests
                 player.Update(gameTime, inputManager, worldManager);
             }
             
-            // Assert: Player should be resting on top of the terrain
-            // Player's Y position should be at terrain's top surface (actualTerrainHeight + 1)
-            float expectedY = actualTerrainHeight + 1f;
-            Assert.True(player.Position.Y >= expectedY && player.Position.Y <= expectedY + 0.1f,
-                $"Player should be at Y={expectedY} (on top of terrain at height {actualTerrainHeight}), but is at Y={player.Position.Y}");
+            // Assert: Player behavior depends on whether terrain is above or below sea level
+            if (actualTerrainHeight >= SEA_LEVEL)
+            {
+                // Dry land - player should land on terrain
+                float expectedY = actualTerrainHeight + 1f;
+                Assert.True(player.Position.Y >= expectedY && player.Position.Y <= expectedY + 0.1f,
+                    $"Player should be at Y={expectedY} (on top of terrain at height {actualTerrainHeight}), but is at Y={player.Position.Y}");
+            }
+            else
+            {
+                // Underwater terrain - player should float at or near sea level due to buoyancy
+                // Allow a wider range since buoyancy creates bobbing motion
+                Assert.True(player.Position.Y >= SEA_LEVEL - 2f && player.Position.Y <= SEA_LEVEL + 2f,
+                    $"Player should be floating near sea level (Y={SEA_LEVEL}) due to water buoyancy, but is at Y={player.Position.Y}");
+            }
             
             // Player should not be falling anymore (velocity should be zero or very small)
             Assert.True(player.Velocity.Y >= -0.5f && player.Velocity.Y <= 0.5f,
