@@ -217,15 +217,39 @@ TimelessTales/
     └── SimplexNoise.cs       # Noise generation
 ```
 
+## Documentation
+
+All project documentation has been organized in the **[Docs/](Docs/)** folder:
+
+- **[ROADMAP.md](ROADMAP.md)** - Comprehensive development roadmap with feature tracking
+- **[Docs/GDD.md](Docs/GDD.md)** - Complete Game Design Document
+- **[Docs/QUICKSTART.md](Docs/QUICKSTART.md)** - Quick start guide for developers
+- **[Docs/DEVELOPER.md](Docs/DEVELOPER.md)** - Developer documentation
+- **[Docs/CONTRIBUTING.md](Docs/CONTRIBUTING.md)** - Contribution guidelines
+- **[Docs/WATER_SYSTEM.md](Docs/WATER_SYSTEM.md)** - Water rendering and physics documentation
+- **[Docs/SKYBOX_IMPLEMENTATION.md](Docs/SKYBOX_IMPLEMENTATION.md)** - Skybox system documentation
+- **[Docs/CHANGELOG.md](Docs/CHANGELOG.md)** - Project changelog
+- **[Docs/Screenshots/](Docs/Screenshots/)** - Progress screenshots for debugging
+
 ## Roadmap
 
-See [GDD.md](../GDD.md) for the complete Game Design Document.
+See **[ROADMAP.md](ROADMAP.md)** for the complete development roadmap with detailed feature tracking.
 
-### Next Steps
-- [x] Day/night cycle
+### Recent Completions
+- [x] Day/night cycle with sun/moon transit
+- [x] Dynamic skybox with atmospheric color transitions
+- [x] Water rendering with wave animation
+- [x] Swimming physics with buoyancy
 - [x] Basic lighting system (ambient lighting)
 - [x] Improved inventory UI
 - [x] Block breaking visual feedback
+- [x] Documentation organization in Docs/ folder
+
+### Next Steps
+- [ ] Particle system for underwater bubbles
+- [ ] Audio system with underwater sound filtering
+- [ ] Vegetation growth stages (3 stages for grass/shrubs)
+- [ ] Points of interest generation
 - [ ] Temporal stability system
 - [ ] Temperature and season system
 - [ ] Hunger and nutrition mechanics
@@ -233,7 +257,6 @@ See [GDD.md](../GDD.md) for the complete Game Design Document.
 - [ ] Prospecting system for ore discovery
 - [ ] Block textures (currently using colored blocks)
 - [ ] Hostile entities (Drifters)
-- [ ] Sound effects and music
 - [ ] Save/load system
 
 ## Technologies Used
