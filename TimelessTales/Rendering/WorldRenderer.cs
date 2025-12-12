@@ -8,7 +8,7 @@ namespace TimelessTales.Rendering
     /// <summary>
     /// Renders the 3D voxel world with texture support
     /// </summary>
-    public class WorldRenderer
+    public class WorldRenderer : IDisposable
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly WorldManager _worldManager;
@@ -18,12 +18,19 @@ namespace TimelessTales.Rendering
         
         // Cel shading parameters for world blocks
         private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands for toon shading
+        
+        // Pre-calculated cel-shaded color cache for performance
+        // Key: (original color packed as int, lighting type 0=top, 1=bottom, 2=side)
+        private readonly Dictionary<(int, int), Color> _celShadedColorCache;
+        
+        private bool _disposed;
 
         public WorldRenderer(GraphicsDevice graphicsDevice, WorldManager worldManager)
         {
             _graphicsDevice = graphicsDevice;
             _worldManager = worldManager;
             _chunkMeshes = new Dictionary<(int, int), ChunkMesh>();
+            _celShadedColorCache = new Dictionary<(int, int), Color>();
             
             // Initialize texture atlas
             _textureAtlas = new TextureAtlas(graphicsDevice);
@@ -99,7 +106,9 @@ namespace TimelessTales.Rendering
 
         private ChunkMesh BuildChunkMesh(Chunk chunk)
         {
-            var vertices = new List<VertexPositionColorTexture>();
+            // Pre-allocate vertex list with estimated capacity to reduce allocations
+            // Average chunk might have ~500-1000 visible faces, each face needs 6 vertices
+            var vertices = new List<VertexPositionColorTexture>(6000);
             
             int worldX = chunk.ChunkX * Chunk.CHUNK_SIZE;
             int worldZ = chunk.ChunkZ * Chunk.CHUNK_SIZE;
@@ -152,12 +161,13 @@ namespace TimelessTales.Rendering
         private void AddBlockFaces(List<VertexPositionColorTexture> vertices, Vector3 pos, Color color, int textureIndex,
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
-            // Apply cel shading to all face colors for toon-like appearance
-            Color topColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.White, 0.2f), CEL_SHADING_BANDS);
-            Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.3f), CEL_SHADING_BANDS);
-            Color sideColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.1f), CEL_SHADING_BANDS);
+            // Get or calculate cached cel-shaded colors for performance
+            int colorKey = color.PackedValue;
+            Color topColor = GetCachedCelShadedColor(colorKey, 0, color);
+            Color bottomColor = GetCachedCelShadedColor(colorKey, 1, color);
+            Color sideColor = GetCachedCelShadedColor(colorKey, 2, color);
             
-            // Get texture coordinates for this block
+            // Get texture coordinates for this block (uses cached array lookup)
             TextureCoordinates texCoords = _textureAtlas.GetTextureCoordinates(textureIndex);
             
             // Top face (Y+)
@@ -221,6 +231,48 @@ namespace TimelessTales.Rendering
             vertices.Add(new VertexPositionColorTexture(basePos + v3, color, texCoords.TopRight));
             vertices.Add(new VertexPositionColorTexture(basePos + v4, color, texCoords.BottomRight));
             vertices.Add(new VertexPositionColorTexture(basePos + v1, color, texCoords.BottomLeft));
+        }
+        
+        /// <summary>
+        /// Get or calculate cached cel-shaded color for performance optimization
+        /// </summary>
+        private Color GetCachedCelShadedColor(int colorKey, int lightingType, Color originalColor)
+        {
+            var cacheKey = (colorKey, lightingType);
+            if (_celShadedColorCache.TryGetValue(cacheKey, out var cachedColor))
+            {
+                return cachedColor;
+            }
+            
+            // Calculate the cel-shaded color based on lighting type
+            Color resultColor;
+            switch (lightingType)
+            {
+                case 0: // Top face - brightest
+                    resultColor = CelShadingUtility.ApplyCelShading(Color.Lerp(originalColor, Color.White, 0.2f), CEL_SHADING_BANDS);
+                    break;
+                case 1: // Bottom face - darkest
+                    resultColor = CelShadingUtility.ApplyCelShading(Color.Lerp(originalColor, Color.Black, 0.3f), CEL_SHADING_BANDS);
+                    break;
+                case 2: // Side faces - medium
+                default:
+                    resultColor = CelShadingUtility.ApplyCelShading(Color.Lerp(originalColor, Color.Black, 0.1f), CEL_SHADING_BANDS);
+                    break;
+            }
+            
+            // Cache the result for future use
+            _celShadedColorCache[cacheKey] = resultColor;
+            return resultColor;
+        }
+        
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _effect?.Dispose();
+                _textureAtlas?.Dispose();
+                _disposed = true;
+            }
         }
     }
 

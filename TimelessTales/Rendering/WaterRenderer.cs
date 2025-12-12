@@ -113,7 +113,9 @@ namespace TimelessTales.Rendering
 
         private WaterMesh BuildWaterMesh(Chunk chunk)
         {
-            var vertices = new List<VertexPositionColor>();
+            // Pre-allocate vertex list with estimated capacity to reduce allocations
+            // Water chunks typically have fewer visible faces than regular blocks
+            var vertices = new List<VertexPositionColor>(3000);
 
             int worldX = chunk.ChunkX * Chunk.CHUNK_SIZE;
             int worldZ = chunk.ChunkZ * Chunk.CHUNK_SIZE;

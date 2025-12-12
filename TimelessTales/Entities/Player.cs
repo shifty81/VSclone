@@ -193,7 +193,15 @@ namespace TimelessTales.Entities
             
             // Calculate submersion depth (0 = not in water, 1 = fully submerged)
             _submersionDepth = waterSamples / (float)samples;
-            _isInWater = _submersionDepth > 0;
+            
+            // Only consider player "underwater" when head/camera is submerged
+            // Check if the player's eye position (camera) is in water
+            Vector3 eyePos = Position + new Vector3(0, PLAYER_EYE_HEIGHT, 0);
+            int eyeX = (int)MathF.Floor(eyePos.X);
+            int eyeY = (int)MathF.Floor(eyePos.Y);
+            int eyeZ = (int)MathF.Floor(eyePos.Z);
+            BlockType eyeBlock = world.GetBlock(eyeX, eyeY, eyeZ);
+            _isInWater = (eyeBlock == BlockType.Water || eyeBlock == BlockType.Saltwater);
         }
 
         private void UpdateMovement(InputManager input, float deltaTime)
