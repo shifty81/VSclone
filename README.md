@@ -126,9 +126,20 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
 - .NET 8.0 SDK or later
 - Windows 10/11 (64-bit)
 - DirectX 11 compatible GPU
+- **Visual Studio 2022** (recommended for debugging and development)
 
-### Build Instructions
+### Opening in Visual Studio
+1. Open `TimelessTales.sln` in Visual Studio 2022
+2. Set `TimelessTales` as the startup project (right-click → Set as Startup Project)
+3. Press F5 to build and run with debugging
+4. Or press Ctrl+F5 to run without debugging
+
+### Build Instructions (Command Line)
 ```bash
+# Using the solution file
+dotnet build TimelessTales.sln
+
+# Or build just the game project
 cd TimelessTales
 dotnet build
 dotnet run
@@ -136,11 +147,52 @@ dotnet run
 
 ### Build for Release
 ```bash
+# Using the solution file (recommended)
+dotnet build TimelessTales.sln -c Release
+
+# Or build just the game project
 cd TimelessTales
 dotnet build -c Release
 ```
 
 The executable will be in `bin/Release/net8.0/`
+
+### Running Tests
+```bash
+# Run all tests
+dotnet test TimelessTales.sln
+
+# Run specific test class
+dotnet test --filter "FullyQualifiedName~LoggerTests"
+```
+
+## Error Logging and Debugging
+
+The game includes a comprehensive logging system to help diagnose crashes and errors.
+
+### Log Files
+- **Location**: `TimelessTales/bin/Debug/net8.0/logs/` (or `bin/Release/net8.0/logs/`)
+- **Format**: `timeless_tales_YYYY-MM-DD_HH-mm-ss.log`
+- **Content**: Timestamped entries with severity levels (INFO, WARNING, ERROR, FATAL)
+
+### Log Levels
+- **INFO**: General application flow (startup, initialization, shutdown)
+- **WARNING**: Non-critical issues that don't prevent operation
+- **ERROR**: Recoverable errors in the update/draw loop
+- **FATAL**: Critical errors that cause the application to crash
+
+### Debugging Tips
+1. **Visual Studio Debugging**: Open `TimelessTales.sln` and use breakpoints
+2. **Check Log Files**: After a crash, review the latest log file for error details
+3. **Console Output**: All logs are also written to the console window
+4. **Stack Traces**: Exception logs include full stack traces for debugging
+
+### Common Issues
+If the game crashes on launch:
+1. Check the latest log file in the `logs/` directory
+2. Look for FATAL or ERROR entries
+3. Verify all prerequisites are installed (.NET 8.0, DirectX 11)
+4. Try running from Visual Studio with debugging enabled (F5)
 
 ## Project Structure
 ```
