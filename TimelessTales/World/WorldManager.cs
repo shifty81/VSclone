@@ -105,6 +105,17 @@ namespace TimelessTales.World
             return chunk;
         }
 
+        /// <summary>
+        /// Gets a chunk if it's already loaded, returns null if not loaded.
+        /// This method does NOT generate new chunks.
+        /// </summary>
+        public Chunk? GetChunkIfLoaded(int chunkX, int chunkZ)
+        {
+            var key = (chunkX, chunkZ);
+            _chunks.TryGetValue(key, out var chunk);
+            return chunk;
+        }
+
         private (int chunkX, int chunkZ, int localX, int localZ) WorldToChunkCoordinates(int worldX, int worldZ)
         {
             int chunkX = (int)MathF.Floor((float)worldX / Chunk.CHUNK_SIZE);
@@ -159,6 +170,31 @@ namespace TimelessTales.World
             for (int y = Chunk.CHUNK_HEIGHT - 1; y >= 0; y--)
             {
                 BlockType block = GetBlock(worldX, y, worldZ);
+                if (block != BlockType.Air)
+                {
+                    return (y, block);
+                }
+            }
+            return (-1, BlockType.Air);
+        }
+
+        /// <summary>
+        /// Gets the top surface block position and type at the given world coordinates,
+        /// but ONLY if the chunk is already loaded. Returns null if chunk is not loaded.
+        /// This method does NOT generate new chunks and is safe for map rendering.
+        /// </summary>
+        public (int y, BlockType blockType)? GetTopSurfaceBlockIfLoaded(int worldX, int worldZ)
+        {
+            var coords = WorldToChunkCoordinates(worldX, worldZ);
+            var chunk = GetChunkIfLoaded(coords.chunkX, coords.chunkZ);
+            
+            if (chunk == null)
+                return null;
+            
+            // Search from top down for first non-air block
+            for (int y = Chunk.CHUNK_HEIGHT - 1; y >= 0; y--)
+            {
+                BlockType block = chunk.GetBlock(coords.localX, y, coords.localZ);
                 if (block != BlockType.Air)
                 {
                     return (y, block);

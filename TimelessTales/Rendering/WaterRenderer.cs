@@ -60,8 +60,24 @@ namespace TimelessTales.Rendering
             _graphicsDevice.DepthStencilState = DepthStencilState.Default;
             _graphicsDevice.RasterizerState = RasterizerState.CullNone; // Render both sides of water
 
+            // Get currently loaded chunks
+            var loadedChunks = _worldManager.GetLoadedChunks().ToList();
+            var loadedChunkKeys = new HashSet<(int, int)>(
+                loadedChunks.Select(c => (c.ChunkX, c.ChunkZ))
+            );
+            
+            // Remove meshes for unloaded chunks to free memory
+            var meshKeysToRemove = _waterMeshes.Keys
+                .Where(key => !loadedChunkKeys.Contains(key))
+                .ToList();
+            
+            foreach (var key in meshKeysToRemove)
+            {
+                _waterMeshes.Remove(key);
+            }
+
             // Build/update water meshes
-            foreach (var chunk in _worldManager.GetLoadedChunks())
+            foreach (var chunk in loadedChunks)
             {
                 var key = (chunk.ChunkX, chunk.ChunkZ);
 

@@ -50,8 +50,24 @@ namespace TimelessTales.Rendering
             _graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
             _graphicsDevice.SamplerStates[0] = SamplerState.PointClamp; // Pixelated texture look
             
+            // Get currently loaded chunks
+            var loadedChunks = _worldManager.GetLoadedChunks().ToList();
+            var loadedChunkKeys = new HashSet<(int, int)>(
+                loadedChunks.Select(c => (c.ChunkX, c.ChunkZ))
+            );
+            
+            // Remove meshes for unloaded chunks to free memory
+            var meshKeysToRemove = _chunkMeshes.Keys
+                .Where(key => !loadedChunkKeys.Contains(key))
+                .ToList();
+            
+            foreach (var key in meshKeysToRemove)
+            {
+                _chunkMeshes.Remove(key);
+            }
+            
             // Build/update chunk meshes
-            foreach (var chunk in _worldManager.GetLoadedChunks())
+            foreach (var chunk in loadedChunks)
             {
                 var key = (chunk.ChunkX, chunk.ChunkZ);
                 
