@@ -48,6 +48,10 @@ namespace TimelessTales.Entities
         private bool _isInWater;
         private float _submersionDepth; // 0 = not in water, 1 = fully submerged
         
+        // Public water state property for other systems (audio, particles, etc.)
+        public bool IsUnderwater => _isInWater;
+        public float SubmersionDepth => _submersionDepth;
+        
         // Inventory and equipment
         public Inventory Inventory { get; private set; }
         public Equipment Equipment { get; private set; }
