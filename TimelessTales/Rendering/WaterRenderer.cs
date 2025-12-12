@@ -20,6 +20,7 @@ namespace TimelessTales.Rendering
         private const int SEA_LEVEL = 64;
         private const float WAVE_SPEED = 0.3f;
         private const float WAVE_HEIGHT = 0.05f;
+        private const float MAX_DEPTH_FOR_COLOR_CALCULATION = 20.0f;
 
         public WaterRenderer(GraphicsDevice graphicsDevice, WorldManager worldManager)
         {
@@ -51,7 +52,9 @@ namespace TimelessTales.Rendering
 
             // Set render states for transparent water
             _graphicsDevice.BlendState = BlendState.AlphaBlend;
-            _graphicsDevice.DepthStencilState = DepthStencilState.DepthRead; // Read depth but don't write to prevent sorting issues
+            // Use default depth stencil for proper depth testing with transparency
+            // This allows water to correctly occlude objects behind it while still being transparent
+            _graphicsDevice.DepthStencilState = DepthStencilState.Default;
             _graphicsDevice.RasterizerState = RasterizerState.CullNone; // Render both sides of water
 
             // Build/update water meshes
@@ -167,7 +170,7 @@ namespace TimelessTales.Rendering
             }
 
             // Darken water based on depth
-            float depthFactor = MathHelper.Clamp(depthFromSurface / 20.0f, 0, 1);
+            float depthFactor = MathHelper.Clamp(depthFromSurface / MAX_DEPTH_FOR_COLOR_CALCULATION, 0, 1);
             
             // Shallow water is clearer (more transparent and lighter)
             // Deep water is darker and more opaque

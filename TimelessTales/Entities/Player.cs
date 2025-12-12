@@ -32,6 +32,9 @@ namespace TimelessTales.Entities
         private const float WATER_DRAG = 0.9f; // Resistance in water (0-1, lower = more drag)
         private const float WATER_GRAVITY_MULTIPLIER = 0.3f; // Reduced gravity in water
         private const int SEA_LEVEL = 64;
+        private const float BUOYANCY_THRESHOLD = 0.5f; // Minimum submersion depth to apply buoyancy
+        private const float MIN_WATER_SPEED_FACTOR = 0.5f; // Minimum speed multiplier in water (50%)
+        private const float WATER_SPEED_RANGE = 0.5f; // Range of speed reduction (50% to 100%)
         
         // Block interaction
         private const float REACH_DISTANCE = 5.0f;
@@ -211,7 +214,7 @@ namespace TimelessTales.Entities
             
             // Reduce speed in water
             if (_isInWater)
-                speed *= (0.5f + 0.5f * (1.0f - _submersionDepth)); // 50-100% speed based on submersion
+                speed *= (MIN_WATER_SPEED_FACTOR + WATER_SPEED_RANGE * (1.0f - _submersionDepth));
             
             // Apply horizontal movement (maintain Y velocity for jumping)
             Velocity = new Vector3(
@@ -254,7 +257,7 @@ namespace TimelessTales.Entities
             }
             
             // Apply buoyancy force when in water (keeps player floating at surface)
-            if (_isInWater && _submersionDepth > 0.5f) // Only apply when mostly submerged
+            if (_isInWater && _submersionDepth > BUOYANCY_THRESHOLD) // Only apply when mostly submerged
             {
                 // Buoyancy force proportional to submersion depth
                 // This creates a natural floating effect - player bobs at water surface
