@@ -97,6 +97,10 @@ namespace TimelessTales.Entities
             Inventory.AddItem(BlockType.Sand, 32);
             Inventory.AddItem(BlockType.Gravel, 32);
             Inventory.AddItem(BlockType.Clay, 32);
+            // New items - light sources and materials
+            Inventory.AddItem(BlockType.Torch, 16);
+            Inventory.AddItem(BlockType.Lantern, 8);
+            Inventory.AddItem(BlockType.Stick, 10);
         }
         
         private void InitializeSkeleton()

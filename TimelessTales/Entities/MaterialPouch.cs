@@ -154,6 +154,9 @@ namespace TimelessTales.Entities
             _dropTable[Blocks.BlockType.Sand] = (MaterialType.SandBits, 8f);
             _dropTable[Blocks.BlockType.Gravel] = (MaterialType.GravelBits, 8f);
             _dropTable[Blocks.BlockType.Clay] = (MaterialType.ClayBits, 10f);
+            _dropTable[Blocks.BlockType.RedClay] = (MaterialType.ClayBits, 10f);
+            _dropTable[Blocks.BlockType.BlueClay] = (MaterialType.ClayBits, 10f);
+            _dropTable[Blocks.BlockType.FireClay] = (MaterialType.ClayBits, 11f); // Slightly more valuable
             
             // Geological rocks
             _dropTable[Blocks.BlockType.Granite] = (MaterialType.GraniteChunks, 12f);
