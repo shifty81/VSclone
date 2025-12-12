@@ -295,11 +295,13 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Player coordinates display
 - ✅ World map (M key, 200 block radius)
 - ✅ Title screen
+- ✅ Character status display (health, hunger, thirst bars)
+- ✅ Settings/options menu
+- ✅ Controls help screen
+- ✅ Pause menu (P key)
+- ✅ Debug overlay (F3 key with FPS, position, chunk info)
 - 📋 Inventory screen polish
 - 📋 Crafting interface
-- 📋 Character status display (health, hunger, etc.)
-- 📋 Settings/options menu
-- 📋 Controls help screen
 
 ---
 
@@ -420,10 +422,12 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 ### 10.2 Debug Tools
 - ✅ Screenshots folder for progress tracking
 - ✅ Documentation organization (Docs/)
-- 📋 Debug overlay (F3 style):
-  - 📋 FPS counter
-  - 📋 Chunk loading info
-  - 📋 Player position (precise)
+- ✅ Debug overlay (F3 style):
+  - ✅ FPS counter
+  - ✅ Chunk loading info
+  - ✅ Player position (precise)
+  - ✅ Player rotation (yaw/pitch)
+  - ✅ Water submersion depth
   - 📋 Block looking at
   - 📋 Memory usage
   - 📋 Render statistics

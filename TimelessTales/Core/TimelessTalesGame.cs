@@ -31,6 +31,7 @@ namespace TimelessTales.Core
         private ControlsScreen? _controlsScreen;
         private CharacterStatusDisplay? _characterStatusDisplay;
         private PauseMenu? _pauseMenu;
+        private DebugOverlay? _debugOverlay;
         
         // Camera
         private Camera? _camera;
@@ -178,7 +179,10 @@ namespace TimelessTales.Core
                 
                 // Initialize character status display
                 _characterStatusDisplay = new CharacterStatusDisplay(GraphicsDevice);
-                Logger.Info("UI manager and character status display initialized");
+                
+                // Initialize debug overlay
+                _debugOverlay = new DebugOverlay(GraphicsDevice);
+                Logger.Info("UI manager, character status display, and debug overlay initialized");
                 
                 _currentState = GameState.Playing;
                 Logger.Info("New game started successfully");
@@ -288,6 +292,12 @@ namespace TimelessTales.Core
                         _inputManager.SetMouseCaptured(!_isPaused);
                     }
                     
+                    // Toggle debug overlay (F3)
+                    if (_inputManager.IsKeyPressed(Keys.F3))
+                    {
+                        _debugOverlay!.IsVisible = !_debugOverlay.IsVisible;
+                    }
+                    
                     // Update pause menu if paused
                     if (_isPaused)
                     {
@@ -339,6 +349,9 @@ namespace TimelessTales.Core
                         
                         // Update water renderer (for wave animation)
                         _waterRenderer!.Update(gameTime);
+                        
+                        // Update debug overlay
+                        _debugOverlay!.Update(gameTime);
                     }
                     
                     // Always update UI (pass InputManager for mouse interaction)
@@ -425,6 +438,12 @@ namespace TimelessTales.Core
                         if (_isPaused)
                         {
                             _pauseMenu!.Draw(_spriteBatch);
+                        }
+                        
+                        // Draw debug overlay (F3) on top of everything
+                        if (_debugOverlay!.IsVisible)
+                        {
+                            _debugOverlay.Draw(_spriteBatch, _player!, _worldManager!);
                         }
                     }
                     finally

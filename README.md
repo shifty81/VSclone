@@ -67,6 +67,7 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
 | **1-9** | Select block type from hotbar |
 | **I** | Toggle inventory |
 | **M** | Toggle world map |
+| **F3** | Toggle debug overlay (FPS, position, chunk info) |
 | **F11** | Toggle fullscreen |
 | **P** | Pause |
 | **Escape** | Exit game |
