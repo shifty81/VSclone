@@ -280,8 +280,14 @@ namespace TimelessTales.Core
                     
                     // Draw UI (2D overlay)
                     _spriteBatch!.Begin();
-                    _uiManager!.Draw(_spriteBatch);
-                    _spriteBatch.End();
+                    try
+                    {
+                        _uiManager!.Draw(_spriteBatch);
+                    }
+                    finally
+                    {
+                        _spriteBatch.End();
+                    }
                 }
 
                 base.Draw(gameTime);

@@ -103,38 +103,42 @@ namespace TimelessTales.UI
             _graphicsDevice.Clear(new Color(20, 30, 40));
             
             spriteBatch.Begin();
-            
-            // Draw title
-            string title = "TIMELESS TALES";
-            int titleScale = 3;
-            int titleWidth = title.Length * 4 * titleScale;
-            int titleX = (_screenWidth - titleWidth) / 2;
-            int titleY = _screenHeight / 4;
-            
-            DrawLargeText(spriteBatch, title, titleX, titleY, titleScale, new Color(220, 180, 100));
-            
-            // Draw subtitle
-            string subtitle = "A VINTAGE STORY CLONE";
-            int subtitleX = (_screenWidth - subtitle.Length * 4) / 2;
-            int subtitleY = titleY + 60;
-            DrawPixelText(spriteBatch, subtitle, subtitleX, subtitleY, new Color(150, 150, 150));
-            
-            // Draw buttons
-            _newGameButton.Draw(spriteBatch, _pixelTexture);
-            _loadGameButton.Draw(spriteBatch, _pixelTexture);
-            _joinButton.Draw(spriteBatch, _pixelTexture);
-            _settingsButton.Draw(spriteBatch, _pixelTexture);
-            
-            _newGameButton.DrawText(spriteBatch, _pixelTexture);
-            _loadGameButton.DrawText(spriteBatch, _pixelTexture);
-            _joinButton.DrawText(spriteBatch, _pixelTexture);
-            _settingsButton.DrawText(spriteBatch, _pixelTexture);
-            
-            // Draw version info
-            string version = "ALPHA 0.1";
-            DrawPixelText(spriteBatch, version, _screenWidth - version.Length * 4 - 10, _screenHeight - 15, Color.Gray);
-            
-            spriteBatch.End();
+            try
+            {
+                // Draw title
+                string title = "TIMELESS TALES";
+                int titleScale = 3;
+                int titleWidth = title.Length * 4 * titleScale;
+                int titleX = (_screenWidth - titleWidth) / 2;
+                int titleY = _screenHeight / 4;
+                
+                DrawLargeText(spriteBatch, title, titleX, titleY, titleScale, new Color(220, 180, 100));
+                
+                // Draw subtitle
+                string subtitle = "A VINTAGE STORY CLONE";
+                int subtitleX = (_screenWidth - subtitle.Length * 4) / 2;
+                int subtitleY = titleY + 60;
+                DrawPixelText(spriteBatch, subtitle, subtitleX, subtitleY, new Color(150, 150, 150));
+                
+                // Draw buttons
+                _newGameButton.Draw(spriteBatch, _pixelTexture);
+                _loadGameButton.Draw(spriteBatch, _pixelTexture);
+                _joinButton.Draw(spriteBatch, _pixelTexture);
+                _settingsButton.Draw(spriteBatch, _pixelTexture);
+                
+                _newGameButton.DrawText(spriteBatch, _pixelTexture);
+                _loadGameButton.DrawText(spriteBatch, _pixelTexture);
+                _joinButton.DrawText(spriteBatch, _pixelTexture);
+                _settingsButton.DrawText(spriteBatch, _pixelTexture);
+                
+                // Draw version info
+                string version = "ALPHA 0.1";
+                DrawPixelText(spriteBatch, version, _screenWidth - version.Length * 4 - 10, _screenHeight - 15, Color.Gray);
+            }
+            finally
+            {
+                spriteBatch.End();
+            }
         }
         
         private void DrawLargeText(SpriteBatch spriteBatch, string text, int x, int y, int scale, Color color)
@@ -155,7 +159,7 @@ namespace TimelessTales.UI
             {
                 for (int px = 0; px < 3; px++)
                 {
-                    if (pixels[px, py])
+                    if (pixels[py, px])
                     {
                         spriteBatch.Draw(_pixelTexture, 
                             new Rectangle(x + px * scale, y + py * scale, scale, scale), 
@@ -183,7 +187,7 @@ namespace TimelessTales.UI
             {
                 for (int px = 0; px < 3; px++)
                 {
-                    if (pixels[px, py])
+                    if (pixels[py, px])
                     {
                         spriteBatch.Draw(_pixelTexture, new Rectangle(x + px, y + py, 1, 1), color);
                     }
