@@ -128,9 +128,9 @@ namespace TimelessTales.Rendering
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
             // Apply cel shading to all face colors for toon-like appearance
-            Color topColor = ApplyCelShading(Color.Lerp(color, Color.White, 0.2f));
-            Color bottomColor = ApplyCelShading(Color.Lerp(color, Color.Black, 0.3f));
-            Color sideColor = ApplyCelShading(Color.Lerp(color, Color.Black, 0.1f));
+            Color topColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.White, 0.2f), CEL_SHADING_BANDS);
+            Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.3f), CEL_SHADING_BANDS);
+            Color sideColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.1f), CEL_SHADING_BANDS);
             
             // Top face (Y+)
             if (top)
@@ -179,33 +179,6 @@ namespace TimelessTales.Rendering
                     new Vector3(0, 0, 0), new Vector3(0, 1, 0),
                     new Vector3(0, 1, 1), new Vector3(0, 0, 1), color);
             }
-        }
-        
-        /// <summary>
-        /// Applies cel shading to a color by quantizing the RGB values into discrete bands
-        /// </summary>
-        private Color ApplyCelShading(Color color)
-        {
-            // Quantize each color channel to create cel shading effect
-            int r = QuantizeColorChannel(color.R, CEL_SHADING_BANDS);
-            int g = QuantizeColorChannel(color.G, CEL_SHADING_BANDS);
-            int b = QuantizeColorChannel(color.B, CEL_SHADING_BANDS);
-            
-            return new Color(r, g, b, color.A);
-        }
-        
-        /// <summary>
-        /// Quantizes a color channel (0-255) into discrete bands for cel shading
-        /// </summary>
-        private int QuantizeColorChannel(int value, int bands)
-        {
-            float normalized = value / 255.0f;
-            float bandSize = 1.0f / bands;
-            float bandIndex = MathF.Floor(normalized / bandSize);
-            
-            // Return the center of the band
-            float quantized = (bandIndex + 0.5f) * bandSize;
-            return (int)MathHelper.Clamp(quantized * 255, 0, 255);
         }
 
         private void AddQuad(List<VertexPositionColor> vertices, Vector3 basePos,

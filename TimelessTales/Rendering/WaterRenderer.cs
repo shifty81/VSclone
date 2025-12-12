@@ -24,7 +24,6 @@ namespace TimelessTales.Rendering
         
         // Cel shading parameters
         private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands
-        private const float EDGE_SMOOTHING = 0.15f; // Smoothing factor for water edges
 
         public WaterRenderer(GraphicsDevice graphicsDevice, WorldManager worldManager)
         {
@@ -189,7 +188,7 @@ namespace TimelessTales.Rendering
             float depthFactor = MathHelper.Clamp(depthFromSurface / MAX_DEPTH_FOR_COLOR_CALCULATION, 0, 1);
             
             // Apply cel shading - quantize depth into discrete bands
-            float celDepthFactor = QuantizeToNBands(depthFactor, CEL_SHADING_BANDS);
+            float celDepthFactor = CelShadingUtility.QuantizeToNBands(depthFactor, CEL_SHADING_BANDS);
             
             // Shallow water is clearer (more transparent and lighter)
             // Deep water is darker and more opaque
@@ -205,22 +204,6 @@ namespace TimelessTales.Rendering
                 alpha
             );
         }
-        
-        /// <summary>
-        /// Quantizes a value (0-1) into N discrete bands for cel shading effect
-        /// </summary>
-        private float QuantizeToNBands(float value, int bands)
-        {
-            // Clamp input to 0-1 range
-            value = MathHelper.Clamp(value, 0, 1);
-            
-            // Quantize to discrete bands
-            float bandSize = 1.0f / bands;
-            float bandIndex = MathF.Floor(value / bandSize);
-            
-            // Return the center of the band for smoother appearance
-            return (bandIndex + 0.5f) * bandSize;
-        }
 
         private float CalculateWaveOffset(int worldX, int worldZ)
         {
@@ -234,9 +217,9 @@ namespace TimelessTales.Rendering
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
             // Apply cel shading to edge colors to create toon-like appearance
-            Color topColor = ApplyCelShading(Color.Lerp(color, Color.White, 0.3f)); // Lighter top
-            Color bottomColor = ApplyCelShading(Color.Lerp(color, Color.Black, 0.2f));
-            Color sideColor = ApplyCelShading(color);
+            Color topColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.White, 0.3f), CEL_SHADING_BANDS); // Lighter top
+            Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.2f), CEL_SHADING_BANDS);
+            Color sideColor = CelShadingUtility.ApplyCelShading(color, CEL_SHADING_BANDS);
             
             // Top face (Y+) - with wave animation
             if (top)
@@ -285,33 +268,6 @@ namespace TimelessTales.Rendering
                     new Vector3(0, 0, 0), new Vector3(0, 1, 0),
                     new Vector3(0, 1, 1), new Vector3(0, 0, 1), sideColor);
             }
-        }
-        
-        /// <summary>
-        /// Applies cel shading to a color by quantizing the RGB values
-        /// </summary>
-        private Color ApplyCelShading(Color color)
-        {
-            // Quantize each color channel to create cel shading effect
-            int r = QuantizeColorChannel(color.R, CEL_SHADING_BANDS);
-            int g = QuantizeColorChannel(color.G, CEL_SHADING_BANDS);
-            int b = QuantizeColorChannel(color.B, CEL_SHADING_BANDS);
-            
-            return new Color(r, g, b, color.A);
-        }
-        
-        /// <summary>
-        /// Quantizes a color channel (0-255) into discrete bands
-        /// </summary>
-        private int QuantizeColorChannel(int value, int bands)
-        {
-            float normalized = value / 255.0f;
-            float bandSize = 1.0f / bands;
-            float bandIndex = MathF.Floor(normalized / bandSize);
-            
-            // Return the center of the band
-            float quantized = (bandIndex + 0.5f) * bandSize;
-            return (int)MathHelper.Clamp(quantized * 255, 0, 255);
         }
 
         private void AddQuad(List<VertexPositionColor> vertices, Vector3 basePos,
