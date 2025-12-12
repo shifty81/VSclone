@@ -53,6 +53,8 @@ namespace TimelessTales.Core
         // Water state tracking
         private bool _wasUnderwaterLastFrame = false;
         private bool _wasInWaterLastFrame = false;
+        private float _splashEmitterTimer = 0f;
+        private const float SPLASH_EMISSION_DURATION = 0.1f; // 100ms burst
         
         public TimelessTalesGame()
         {
@@ -445,12 +447,7 @@ namespace TimelessTales.Core
                 Vector3 splashPosition = _player.Position + new Vector3(0, 1.0f, 0);
                 _splashEmitter.Position = splashPosition;
                 _splashEmitter.IsActive = true;
-                // Emit burst of particles then stop
-                System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => 
-                {
-                    if (_splashEmitter != null)
-                        _splashEmitter.IsActive = false;
-                });
+                _splashEmitterTimer = SPLASH_EMISSION_DURATION; // Start burst timer
                 // TODO: Play splash sound when sound files are available
                 // _audioManager.PlaySound("water_splash", volume: 1.0f);
             }
@@ -463,14 +460,19 @@ namespace TimelessTales.Core
                 Vector3 splashPosition = _player.Position + new Vector3(0, 0.5f, 0);
                 _splashEmitter.Position = splashPosition;
                 _splashEmitter.IsActive = true;
-                // Emit burst of particles then stop
-                System.Threading.Tasks.Task.Delay(100).ContinueWith(_ => 
-                {
-                    if (_splashEmitter != null)
-                        _splashEmitter.IsActive = false;
-                });
+                _splashEmitterTimer = SPLASH_EMISSION_DURATION; // Start burst timer
                 // TODO: Play splash sound when sound files are available
                 // _audioManager.PlaySound("water_splash", volume: 0.8f);
+            }
+            
+            // Update splash emitter timer for burst effect
+            if (_splashEmitterTimer > 0)
+            {
+                _splashEmitterTimer -= deltaTime;
+                if (_splashEmitterTimer <= 0)
+                {
+                    _splashEmitter.IsActive = false;
+                }
             }
             
             // Handle going underwater

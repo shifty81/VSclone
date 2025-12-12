@@ -161,7 +161,7 @@ State changes trigger appropriate particle bursts and audio effects.
 
 ### Manual Testing Checklist
 - [x] Build succeeds without errors
-- [x] All 59 unit tests pass
+- [x] All 67 unit tests pass (59 existing + 8 new particle tests)
 - [x] Water surface no longer shows grid lines
 - [x] Water waves are more visible and natural
 - [x] Bubble particles appear when underwater
