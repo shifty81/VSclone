@@ -749,22 +749,39 @@ namespace TimelessTales.Entities
     /// </summary>
     public class CharacterAppearance
     {
+        // Default appearance colors
+        public static readonly Color DEFAULT_SKIN_TONE = new Color(210, 180, 140); // Light tan
+        public static readonly Color DEFAULT_HAIR_COLOR = new Color(101, 67, 33); // Brown
+        public static readonly Color DEFAULT_EYE_COLOR = new Color(70, 130, 180); // Blue
+        public static readonly Color DEFAULT_SHIRT_COLOR = new Color(60, 100, 180); // Blue
+        public static readonly Color DEFAULT_PANTS_COLOR = new Color(50, 50, 120); // Dark blue
+        
+        // Body scale constraints
+        public const float MIN_BODY_SCALE = 0.8f;
+        public const float MAX_BODY_SCALE = 1.2f;
+        
+        private float _bodyScale = 1.0f;
+        
         // Skin tone (using realistic human skin color values)
-        public Color SkinTone { get; set; } = new Color(210, 180, 140); // Default: light tan
+        public Color SkinTone { get; set; } = DEFAULT_SKIN_TONE;
         
         // Hair
-        public Color HairColor { get; set; } = new Color(101, 67, 33); // Default: brown
+        public Color HairColor { get; set; } = DEFAULT_HAIR_COLOR;
         public HairStyle HairStyle { get; set; } = HairStyle.Short;
         
         // Eyes
-        public Color EyeColor { get; set; } = new Color(70, 130, 180); // Default: blue
+        public Color EyeColor { get; set; } = DEFAULT_EYE_COLOR;
         
-        // Body type
-        public float BodyScale { get; set; } = 1.0f; // Height/width multiplier (0.8 - 1.2)
+        // Body type with validation
+        public float BodyScale 
+        { 
+            get => _bodyScale;
+            set => _bodyScale = MathHelper.Clamp(value, MIN_BODY_SCALE, MAX_BODY_SCALE);
+        }
         
         // Clothing colors (default if no equipment)
-        public Color ShirtColor { get; set; } = new Color(60, 100, 180); // Blue
-        public Color PantsColor { get; set; } = new Color(50, 50, 120); // Dark blue
+        public Color ShirtColor { get; set; } = DEFAULT_SHIRT_COLOR;
+        public Color PantsColor { get; set; } = DEFAULT_PANTS_COLOR;
         
         // Gender presentation (affects body proportions slightly)
         public Gender Gender { get; set; } = Gender.Neutral;

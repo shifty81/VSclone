@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TimelessTales.Entities;
 using TimelessTales.Core;
+using TimelessTales.Blocks;
 using System.Collections.Generic;
 
 namespace TimelessTales.UI
@@ -44,6 +45,10 @@ namespace TimelessTales.UI
         private const int INVENTORY_SLOT_SIZE = 45;
         private const int INVENTORY_SPACING = 8;
         private const int INVENTORY_SLOTS_PER_ROW = 8;
+        
+        // Text rendering constants
+        private const int CHAR_WIDTH = 4;  // 3 pixels + 1 spacing
+        private const int TEXT_PADDING = 2;
         
         // Mouse interaction
         private int _hoveredEquipmentSlot = -1;
@@ -155,7 +160,7 @@ namespace TimelessTales.UI
                 
                 // Draw tab text
                 DrawText(spriteBatch, tabNames[i], 
-                    tabX + TAB_WIDTH / 2 - tabNames[i].Length * 4 / 2, 
+                    tabX + TAB_WIDTH / 2 - tabNames[i].Length * CHAR_WIDTH / 2, 
                     tabY + TAB_HEIGHT / 2 - 5, 
                     textColor);
                 
@@ -293,7 +298,7 @@ namespace TimelessTales.UI
             
             // Draw inventory grid
             var items = player.Inventory.GetAllItems();
-            int slotIndex = 0;
+            BlockType selectedBlock = player.SelectedBlock; // Cache for performance
             int slotsDrawn = 0;
             
             foreach (var kvp in items)
@@ -309,7 +314,7 @@ namespace TimelessTales.UI
                     break;
                 
                 // Draw slot background
-                bool isSelected = kvp.Key == player.SelectedBlock;
+                bool isSelected = kvp.Key == selectedBlock;
                 Color slotColor = isSelected ? new Color(60, 60, 40) : new Color(30, 30, 30);
                 
                 spriteBatch.Draw(_pixelTexture,
@@ -322,7 +327,7 @@ namespace TimelessTales.UI
                 
                 // Draw item count
                 DrawText(spriteBatch, kvp.Value.ToString(), 
-                    slotX + INVENTORY_SLOT_SIZE - kvp.Value.ToString().Length * 4 - 2, 
+                    slotX + INVENTORY_SLOT_SIZE - kvp.Value.ToString().Length * CHAR_WIDTH - TEXT_PADDING, 
                     slotY + INVENTORY_SLOT_SIZE - 7, 
                     Color.White);
                 
@@ -330,7 +335,7 @@ namespace TimelessTales.UI
                 string itemName = kvp.Key.ToString();
                 if (itemName.Length > 8)
                     itemName = itemName.Substring(0, 8);
-                DrawText(spriteBatch, itemName, slotX + 2, slotY + 2, Color.LightGray);
+                DrawText(spriteBatch, itemName, slotX + TEXT_PADDING, slotY + TEXT_PADDING, Color.LightGray);
                 
                 slotsDrawn++;
             }
@@ -422,7 +427,7 @@ namespace TimelessTales.UI
             for (int i = 0; i < text.Length; i++)
             {
                 char c = text[i];
-                int charX = x + i * 4 * scale;
+                int charX = x + i * CHAR_WIDTH * scale;
                 
                 bool[,] pattern = GetCharPattern(c);
                 
