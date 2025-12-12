@@ -159,7 +159,7 @@ namespace TimelessTales.UI
             {
                 for (int px = 0; px < 3; px++)
                 {
-                    if (pixels[px, py])
+                    if (pixels[py, px])
                     {
                         spriteBatch.Draw(_pixelTexture, 
                             new Rectangle(x + px * scale, y + py * scale, scale, scale), 
@@ -187,7 +187,7 @@ namespace TimelessTales.UI
             {
                 for (int px = 0; px < 3; px++)
                 {
-                    if (pixels[px, py])
+                    if (pixels[py, px])
                     {
                         spriteBatch.Draw(_pixelTexture, new Rectangle(x + px, y + py, 1, 1), color);
                     }
