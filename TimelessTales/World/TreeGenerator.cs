@@ -49,18 +49,30 @@ namespace TimelessTales.World
 
         private static void GenerateOakTree(Chunk chunk, int x, int baseY, int z, Random random)
         {
-            // Oak tree: 4-6 blocks tall trunk with wide canopy
-            int trunkHeight = 4 + random.Next(3);
+            // Oak tree: 5-7 blocks tall trunk with wide, rounded canopy
+            int trunkHeight = 5 + random.Next(3);
             
-            // Generate trunk
+            // Generate trunk with slight variations for more organic look
             for (int y = 0; y < trunkHeight; y++)
             {
                 if (baseY + y < Chunk.CHUNK_HEIGHT)
+                {
                     SetBlockSafe(chunk, x, baseY + y, z, BlockType.OakLog);
+                    
+                    // Add occasional trunk thickness at base for more rounded appearance
+                    if (y < 2 && random.NextDouble() < 0.3)
+                    {
+                        int offset = random.Next(2) == 0 ? 1 : -1;
+                        if (random.Next(2) == 0)
+                            SetBlockSafe(chunk, x + offset, baseY + y, z, BlockType.OakLog);
+                        else
+                            SetBlockSafe(chunk, x, baseY + y, z + offset, BlockType.OakLog);
+                    }
+                }
             }
             
-            // Generate canopy (spherical shape)
-            int canopyY = baseY + trunkHeight;
+            // Generate canopy (more rounded, organic shape)
+            int canopyY = baseY + trunkHeight - 1; // Start canopy slightly lower
             int canopyRadius = 2 + random.Next(2);
             
             for (int dy = -canopyRadius; dy <= canopyRadius + 1; dy++)
@@ -69,17 +81,21 @@ namespace TimelessTales.World
                 {
                     for (int dz = -canopyRadius; dz <= canopyRadius; dz++)
                     {
-                        // Create spherical canopy
-                        if (dx * dx + dy * dy + dz * dz <= canopyRadius * canopyRadius)
+                        // Create more organic spherical canopy with distance calculation
+                        float distance = MathF.Sqrt(dx * dx + dy * dy + dz * dz);
+                        float adjustedRadius = canopyRadius + (float)(random.NextDouble() - 0.5);
+                        
+                        if (distance <= adjustedRadius)
                         {
-                            // Don't replace trunk
-                            if (!(dx == 0 && dz == 0 && dy <= 0))
+                            // Don't replace trunk center
+                            if (!(dx == 0 && dz == 0 && dy <= 1))
                             {
                                 int leafY = canopyY + dy;
                                 if (leafY >= 0 && leafY < Chunk.CHUNK_HEIGHT)
                                 {
-                                    // 80% chance to place leaf (create some gaps)
-                                    if (random.NextDouble() < 0.8)
+                                    // Vary leaf density - denser in center, sparser at edges
+                                    float densityChance = 0.9f - (distance / adjustedRadius) * 0.3f;
+                                    if (random.NextDouble() < densityChance)
                                     {
                                         SetBlockSafe(chunk, x + dx, leafY, z + dz, BlockType.OakLeaves);
                                     }
@@ -93,39 +109,58 @@ namespace TimelessTales.World
 
         private static void GeneratePineTree(Chunk chunk, int x, int baseY, int z, Random random)
         {
-            // Pine tree: 6-10 blocks tall with conical shape
-            int trunkHeight = 6 + random.Next(5);
+            // Pine tree: 7-12 blocks tall with natural conical shape
+            int trunkHeight = 7 + random.Next(6);
             
-            // Generate trunk
+            // Generate trunk with slight base widening
             for (int y = 0; y < trunkHeight; y++)
             {
                 if (baseY + y < Chunk.CHUNK_HEIGHT)
+                {
                     SetBlockSafe(chunk, x, baseY + y, z, BlockType.PineLog);
+                    
+                    // Widen trunk at base for stability
+                    if (y == 0 && random.NextDouble() < 0.4)
+                    {
+                        SetBlockSafe(chunk, x + 1, baseY + y, z, BlockType.PineLog);
+                        SetBlockSafe(chunk, x - 1, baseY + y, z, BlockType.PineLog);
+                        SetBlockSafe(chunk, x, baseY + y, z + 1, BlockType.PineLog);
+                        SetBlockSafe(chunk, x, baseY + y, z - 1, BlockType.PineLog);
+                    }
+                }
             }
             
-            // Generate conical canopy
+            // Generate natural conical canopy with layered appearance
             int canopyStart = baseY + 2;
             int canopyLevels = trunkHeight - 2;
             
             for (int level = 0; level < canopyLevels; level++)
             {
                 int y = canopyStart + level;
-                // Radius decreases as we go up (conical shape)
-                int radius = Math.Max(1, canopyLevels / 2 - level / 2);
+                // Create stepped conical shape - larger steps at top for natural look
+                float radiusFloat = (canopyLevels - level) * 0.4f + 1.0f;
+                int radius = (int)MathF.Ceiling(radiusFloat);
                 
                 for (int dx = -radius; dx <= radius; dx++)
                 {
                     for (int dz = -radius; dz <= radius; dz++)
                     {
-                        // Create circular layers
-                        if (dx * dx + dz * dz <= radius * radius)
+                        // Create slightly irregular circular layers
+                        float distance = MathF.Sqrt(dx * dx + dz * dz);
+                        float variance = (float)(random.NextDouble() * 0.5);
+                        
+                        if (distance <= radius + variance)
                         {
                             // Don't replace trunk
                             if (!(dx == 0 && dz == 0))
                             {
                                 if (y >= 0 && y < Chunk.CHUNK_HEIGHT)
                                 {
-                                    SetBlockSafe(chunk, x + dx, y, z + dz, BlockType.PineLeaves);
+                                    // Slightly sparse at edges for natural look
+                                    if (distance < radius || random.NextDouble() < 0.7)
+                                    {
+                                        SetBlockSafe(chunk, x + dx, y, z + dz, BlockType.PineLeaves);
+                                    }
                                 }
                             }
                         }
@@ -133,37 +168,53 @@ namespace TimelessTales.World
                 }
             }
             
-            // Add a point at the top
+            // Add pointed top (1-2 blocks)
             if (baseY + trunkHeight < Chunk.CHUNK_HEIGHT)
             {
                 SetBlockSafe(chunk, x, baseY + trunkHeight, z, BlockType.PineLeaves);
+                if (random.NextDouble() < 0.5 && baseY + trunkHeight + 1 < Chunk.CHUNK_HEIGHT)
+                {
+                    SetBlockSafe(chunk, x, baseY + trunkHeight + 1, z, BlockType.PineLeaves);
+                }
             }
         }
 
         private static void GenerateBirchTree(Chunk chunk, int x, int baseY, int z, Random random)
         {
-            // Birch tree: 5-7 blocks tall, similar to oak but slightly taller and narrower
-            int trunkHeight = 5 + random.Next(3);
+            // Birch tree: 6-8 blocks tall, slender with narrow canopy
+            int trunkHeight = 6 + random.Next(3);
             
-            // Generate trunk
+            // Generate slender trunk (birch are typically narrow and tall)
             for (int y = 0; y < trunkHeight; y++)
             {
                 if (baseY + y < Chunk.CHUNK_HEIGHT)
                     SetBlockSafe(chunk, x, baseY + y, z, BlockType.BirchLog);
             }
             
-            // Generate canopy (slightly smaller than oak)
+            // Generate canopy (narrower and taller than oak - characteristic birch shape)
             int canopyY = baseY + trunkHeight - 1;
             int canopyRadius = 2;
             
-            for (int dy = -1; dy <= 2; dy++)
+            // Birch has a more vertical, narrow crown
+            for (int dy = -1; dy <= 3; dy++)
             {
-                for (int dx = -canopyRadius; dx <= canopyRadius; dx++)
+                // Radius varies with height - narrow at bottom, widest in middle, narrow at top
+                int layerRadius = canopyRadius;
+                if (dy == -1 || dy == 3)
+                    layerRadius = 1;
+                else if (dy == 0 || dy == 2)
+                    layerRadius = 2;
+                else if (dy == 1)
+                    layerRadius = 2; // Widest in middle
+                
+                for (int dx = -layerRadius; dx <= layerRadius; dx++)
                 {
-                    for (int dz = -canopyRadius; dz <= canopyRadius; dz++)
+                    for (int dz = -layerRadius; dz <= layerRadius; dz++)
                     {
-                        // Create rounded canopy
-                        if (dx * dx + dz * dz + dy * dy <= canopyRadius * canopyRadius + 1)
+                        float distance = MathF.Sqrt(dx * dx + dz * dz);
+                        
+                        // Create slightly irregular rounded canopy
+                        if (distance <= layerRadius)
                         {
                             // Don't replace trunk
                             if (!(dx == 0 && dz == 0 && dy <= 0))
@@ -171,7 +222,9 @@ namespace TimelessTales.World
                                 int leafY = canopyY + dy;
                                 if (leafY >= 0 && leafY < Chunk.CHUNK_HEIGHT)
                                 {
-                                    if (random.NextDouble() < 0.85)
+                                    // Dense foliage with slight variation
+                                    float densityChance = 0.9f - (distance / layerRadius) * 0.2f;
+                                    if (random.NextDouble() < densityChance)
                                     {
                                         SetBlockSafe(chunk, x + dx, leafY, z + dz, BlockType.BirchLeaves);
                                     }

@@ -153,35 +153,57 @@ namespace TimelessTales.Core
         
         /// <summary>
         /// Gets the ambient light level (0.0 = full darkness, 1.0 = full brightness)
+        /// Now includes moon lighting at night
         /// </summary>
         public float GetAmbientLight()
         {
             float time = _timeOfDay;
+            float baseLight;
             
-            // Night: dim
+            // Night: base dim light
             if (time < 0.2f || time > 0.8f)
             {
-                return 0.3f;
+                baseLight = 0.2f; // Slightly darker base to make moon more noticeable
             }
             // Dawn
             else if (time >= 0.2f && time < 0.3f)
             {
                 float t = (time - 0.2f) / 0.1f;
-                return MathHelper.Lerp(0.3f, 1.0f, t);
+                baseLight = MathHelper.Lerp(0.2f, 1.0f, t);
             }
             // Day
             else if (time >= 0.3f && time < 0.7f)
             {
-                return 1.0f;
+                baseLight = 1.0f;
             }
             // Dusk
             else if (time >= 0.7f && time < 0.8f)
             {
                 float t = (time - 0.7f) / 0.1f;
-                return MathHelper.Lerp(1.0f, 0.3f, t);
+                baseLight = MathHelper.Lerp(1.0f, 0.2f, t);
+            }
+            else
+            {
+                baseLight = 1.0f;
             }
             
-            return 1.0f;
+            // Add moon lighting during nighttime
+            if (time < 0.2f || time > 0.8f)
+            {
+                float moonAngle = GetMoonAngle();
+                float moonHeight = MathF.Sin(moonAngle);
+                
+                if (moonHeight > 0)
+                {
+                    // Moon provides additional light when above horizon
+                    // Maximum contribution is 0.3 when moon is directly overhead
+                    // Total nighttime light is capped at 0.8 (so effective moon contribution varies with base light)
+                    float moonLight = moonHeight * 0.3f;
+                    baseLight = Math.Min(baseLight + moonLight, 0.8f); // Cap at 0.8 for nighttime
+                }
+            }
+            
+            return baseLight;
         }
     }
 }

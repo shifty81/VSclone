@@ -87,6 +87,58 @@ namespace TimelessTales.Rendering
             _graphicsDevice.DepthStencilState = oldDepthState;
         }
         
+        /// <summary>
+        /// Gets the directional light vector from the sun (normalized)
+        /// </summary>
+        public Vector3 GetSunDirection(TimeManager timeManager)
+        {
+            float sunAngle = timeManager.GetSunAngle();
+            float arcHeight = 0.7f;
+            
+            Vector3 sunDirection = new Vector3(
+                MathF.Cos(sunAngle),
+                MathF.Sin(sunAngle) * arcHeight,
+                0f
+            );
+            
+            return Vector3.Normalize(sunDirection);
+        }
+        
+        /// <summary>
+        /// Gets the directional light vector from the moon (normalized)
+        /// </summary>
+        public Vector3 GetMoonDirection(TimeManager timeManager)
+        {
+            float moonAngle = timeManager.GetMoonAngle();
+            float arcHeight = 0.7f;
+            
+            Vector3 moonDirection = new Vector3(
+                MathF.Cos(moonAngle),
+                MathF.Sin(moonAngle) * arcHeight,
+                0f
+            );
+            
+            return Vector3.Normalize(moonDirection);
+        }
+        
+        /// <summary>
+        /// Gets the moon light intensity (0.0 to 1.0)
+        /// Full moon provides decent light at night
+        /// Note: TimeManager caps total nighttime light at 0.8, so effective moon contribution is ~30%
+        /// </summary>
+        public float GetMoonLightIntensity(TimeManager timeManager)
+        {
+            // Only provide light when moon is above horizon
+            float moonAngle = timeManager.GetMoonAngle();
+            float moonY = MathF.Sin(moonAngle);
+            
+            if (moonY < 0) return 0f; // Moon below horizon
+            
+            // Moon provides up to 30% additional ambient light when directly overhead
+            // This gives decent visibility at night (actual value is capped in TimeManager)
+            return moonY * 0.3f;
+        }
+        
         private void DrawSkyDome(Camera camera, TimeManager timeManager)
         {
             // Create sky dome vertices
@@ -202,15 +254,20 @@ namespace TimelessTales.Rendering
             float sunAngle = timeManager.GetSunAngle();
             float sunSize = 8f;
             
-            // Calculate sun position on the sky dome
+            // Calculate sun position with proper arc traversal
+            // The sun now travels in a higher arc across the sky
+            // Distance from camera increased for better sky positioning
+            float arcRadius = 120f; // Increased from 100f
+            float arcHeight = 0.7f; // Multiplier to make the arc reach higher in the sky
+            
             Vector3 sunPosition = new Vector3(
-                MathF.Cos(sunAngle) * 100f,
-                MathF.Sin(sunAngle) * 100f,
+                MathF.Cos(sunAngle) * arcRadius,
+                MathF.Sin(sunAngle) * arcRadius * arcHeight + 30f, // Raised baseline + higher arc
                 0f
             );
             
             // Only draw if sun is above horizon
-            if (sunPosition.Y > -10f)
+            if (sunPosition.Y > -5f)
             {
                 Color sunColor = Color.Yellow;
                 
@@ -230,15 +287,18 @@ namespace TimelessTales.Rendering
             float moonAngle = timeManager.GetMoonAngle();
             float moonSize = 6f;
             
-            // Calculate moon position on the sky dome
+            // Calculate moon position with proper arc traversal (mirrors sun path)
+            float arcRadius = 120f; // Increased from 100f  
+            float arcHeight = 0.7f; // Same arc height as sun
+            
             Vector3 moonPosition = new Vector3(
-                MathF.Cos(moonAngle) * 100f,
-                MathF.Sin(moonAngle) * 100f,
+                MathF.Cos(moonAngle) * arcRadius,
+                MathF.Sin(moonAngle) * arcRadius * arcHeight + 30f, // Raised baseline + higher arc
                 0f
             );
             
             // Only draw if moon is above horizon
-            if (moonPosition.Y > -10f)
+            if (moonPosition.Y > -5f)
             {
                 Color moonColor = new Color(220, 220, 240);
                 DrawCelestialBody(moonPosition, moonSize, moonColor);

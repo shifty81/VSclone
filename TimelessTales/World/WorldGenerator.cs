@@ -30,8 +30,9 @@ namespace TimelessTales.World
         private const float TERRAIN_SCALE = 0.008f; // Reduced for smoother terrain
         private const float DETAIL_SCALE = 0.02f;
         private const float EROSION_SCALE = 0.015f;
-        private const float MOISTURE_SCALE = 0.005f;
-        private const float TEMPERATURE_SCALE = 0.004f;
+        // Biome scales reduced for larger, more realistic biomes on continent-sized landmasses
+        private const float MOISTURE_SCALE = 0.002f; // Reduced from 0.005f for larger moisture zones
+        private const float TEMPERATURE_SCALE = 0.0015f; // Reduced from 0.004f for larger climate zones
         private const float STONE_LAYER_SCALE = 0.05f;
 
         public WorldGenerator(int seed)
@@ -275,7 +276,7 @@ namespace TimelessTales.World
                 // Underwater surface
                 if (surfaceHeight < SEA_LEVEL)
                 {
-                    return biome == BiomeType.Ocean ? BlockType.Sand : BlockType.Clay; // Ocean floor
+                    return biome == BiomeType.Ocean ? BlockType.Sand : GetClayType(worldX, worldZ, biome); // Ocean floor with varied clay
                 }
                 return GetSurfaceBlock(biome);
             }
@@ -283,6 +284,15 @@ namespace TimelessTales.World
             // Subsurface layers (0-4 blocks deep)
             if (y > surfaceHeight - 4 && y < surfaceHeight)
             {
+                // Add clay layers at certain depths
+                if (y == surfaceHeight - 2 || y == surfaceHeight - 3)
+                {
+                    float clayNoise = _stoneLayerNoise.Evaluate(worldX * 0.02f, worldZ * 0.02f);
+                    if (clayNoise > 0.3f)
+                    {
+                        return GetClayType(worldX, worldZ, biome);
+                    }
+                }
                 return BlockType.Dirt;
             }
 
@@ -357,6 +367,38 @@ namespace TimelessTales.World
                 BiomeType.Tropical => BlockType.Grass,
                 BiomeType.Ocean => BlockType.Sand,
                 _ => BlockType.Grass
+            };
+        }
+        
+        /// <summary>
+        /// Get clay type based on biome and location
+        /// Different clay types have different uses in pottery and construction
+        /// </summary>
+        private BlockType GetClayType(int worldX, int worldZ, BiomeType biome)
+        {
+            float clayNoise = _stoneLayerNoise.Evaluate(worldX * 0.015f, worldZ * 0.015f);
+            
+            // Biome influences clay type distribution
+            return biome switch
+            {
+                // Tundra/Boreal - Blue clay (glacial deposits)
+                BiomeType.Tundra => BlockType.BlueClay,
+                BiomeType.Boreal => clayNoise > 0.3f ? BlockType.BlueClay : BlockType.Clay,
+                
+                // Temperate - Mix of all types
+                BiomeType.Temperate => clayNoise > 0.5f ? BlockType.RedClay : 
+                                        clayNoise > 0.0f ? BlockType.Clay : BlockType.FireClay,
+                
+                // Desert - Fire clay and red clay (iron-rich)
+                BiomeType.Desert => clayNoise > 0.3f ? BlockType.FireClay : BlockType.RedClay,
+                
+                // Tropical - Red clay (laterite, iron-rich tropical soils)
+                BiomeType.Tropical => clayNoise > 0.4f ? BlockType.RedClay : BlockType.Clay,
+                
+                // Ocean - Blue clay (marine deposits)
+                BiomeType.Ocean => BlockType.BlueClay,
+                
+                _ => BlockType.Clay
             };
         }
 

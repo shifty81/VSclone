@@ -97,6 +97,10 @@ namespace TimelessTales.Entities
             Inventory.AddItem(BlockType.Sand, 32);
             Inventory.AddItem(BlockType.Gravel, 32);
             Inventory.AddItem(BlockType.Clay, 32);
+            // New items - light sources and materials
+            Inventory.AddItem(BlockType.Torch, 16);
+            Inventory.AddItem(BlockType.Lantern, 8);
+            Inventory.AddItem(BlockType.Stick, 10);
         }
         
         private void InitializeSkeleton()
@@ -489,6 +493,30 @@ namespace TimelessTales.Entities
                         
                         BlockType brokenBlock = world.GetBlock(x, y, z);
                         world.SetBlock(x, y, z, BlockType.Air);
+                        
+                        // Special handling for tree logs - drop sticks, logs, and seeds
+                        if (brokenBlock == BlockType.OakLog || brokenBlock == BlockType.PineLog || brokenBlock == BlockType.BirchLog)
+                        {
+                            // Always drop 1-2 sticks when breaking tree logs
+                            Random random = new Random();
+                            int stickCount = random.Next(1, 3);
+                            Inventory.AddItem(BlockType.Stick, stickCount);
+                            Logger.Info($"Tree log broken! Collected {stickCount} stick(s)");
+                            
+                            // 20% chance to drop the log itself
+                            if (random.NextDouble() < 0.2)
+                            {
+                                Inventory.AddItem(brokenBlock, 1);
+                                Logger.Info($"Collected 1 {BlockRegistry.Get(brokenBlock).Name}");
+                            }
+                            
+                            // 10% chance to drop a seed (for replanting)
+                            // Seed system planned for future update - will add OakSeed, PineSeed, BirchSeed block types
+                            if (random.NextDouble() < 0.1)
+                            {
+                                Logger.Info($"Found a {BlockRegistry.Get(brokenBlock).Name} seed! (Seed planting system coming in future update)");
+                            }
+                        }
                         
                         // Drop material bits into the material pouch instead of whole blocks
                         var drop = MaterialDropTable.GetDrop(brokenBlock);
