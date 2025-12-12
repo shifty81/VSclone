@@ -136,5 +136,23 @@ namespace TimelessTales.World
         {
             return BlockRegistry.IsSolid(GetBlock(worldX, worldY, worldZ));
         }
+
+        /// <summary>
+        /// Gets the top surface block position and type at the given world coordinates.
+        /// Returns the first non-air block from the top down.
+        /// </summary>
+        public (int y, BlockType blockType) GetTopSurfaceBlock(int worldX, int worldZ)
+        {
+            // Search from top down for first non-air block
+            for (int y = Chunk.CHUNK_HEIGHT - 1; y >= 0; y--)
+            {
+                BlockType block = GetBlock(worldX, y, worldZ);
+                if (block != BlockType.Air)
+                {
+                    return (y, block);
+                }
+            }
+            return (-1, BlockType.Air);
+        }
     }
 }
