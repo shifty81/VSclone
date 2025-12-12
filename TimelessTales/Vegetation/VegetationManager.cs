@@ -154,6 +154,12 @@ namespace TimelessTales.Vegetation
             // Calculate water depth (distance from sea level)
             int waterDepth = SEA_LEVEL - y;
             
+            // Safety check: only place vegetation if underwater (positive depth)
+            if (waterDepth <= 0)
+            {
+                return;
+            }
+            
             // Different vegetation based on depth
             if (waterDepth > 10) // Deep water
             {

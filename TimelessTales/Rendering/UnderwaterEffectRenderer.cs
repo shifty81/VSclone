@@ -80,7 +80,10 @@ namespace TimelessTales.Rendering
             }
             
             // Update quad colors with calculated alpha
-            Color underwaterColor = new Color(UNDERWATER_TINT.R, UNDERWATER_TINT.G, UNDERWATER_TINT.B, (int)(tintAlpha * 255));
+            // Clamp alpha to valid range [0, 1] to prevent overflow
+            tintAlpha = MathHelper.Clamp(tintAlpha, 0.0f, 1.0f);
+            int alphaValue = (int)MathHelper.Clamp(tintAlpha * 255, 0, 255);
+            Color underwaterColor = new Color(UNDERWATER_TINT.R, UNDERWATER_TINT.G, UNDERWATER_TINT.B, alphaValue);
             for (int i = 0; i < _screenQuad.Length; i++)
             {
                 _screenQuad[i].Color = underwaterColor;
