@@ -54,7 +54,12 @@ namespace TimelessTales.Core
         private bool _wasUnderwaterLastFrame = false;
         private bool _wasInWaterLastFrame = false;
         private float _splashEmitterTimer = 0f;
+        
+        // Water effect constants
         private const float SPLASH_EMISSION_DURATION = 0.1f; // 100ms burst
+        private const float WATER_ENTRY_SPLASH_HEIGHT = 1.0f;
+        private const float WATER_EXIT_SPLASH_HEIGHT = 0.5f;
+        private const float PLAYER_HEAD_HEIGHT = 1.6f; // Should match PLAYER_EYE_HEIGHT in Player class
         
         public TimelessTalesGame()
         {
@@ -444,7 +449,7 @@ namespace TimelessTales.Core
             {
                 Logger.Info("Player entered water - creating splash particles");
                 // Create splash particles at water entry point
-                Vector3 splashPosition = _player.Position + new Vector3(0, 1.0f, 0);
+                Vector3 splashPosition = _player.Position + new Vector3(0, WATER_ENTRY_SPLASH_HEIGHT, 0);
                 _splashEmitter.Position = splashPosition;
                 _splashEmitter.IsActive = true;
                 _splashEmitterTimer = SPLASH_EMISSION_DURATION; // Start burst timer
@@ -457,7 +462,7 @@ namespace TimelessTales.Core
             {
                 Logger.Info("Player exited water - creating splash particles");
                 // Create splash particles at water exit point
-                Vector3 splashPosition = _player.Position + new Vector3(0, 0.5f, 0);
+                Vector3 splashPosition = _player.Position + new Vector3(0, WATER_EXIT_SPLASH_HEIGHT, 0);
                 _splashEmitter.Position = splashPosition;
                 _splashEmitter.IsActive = true;
                 _splashEmitterTimer = SPLASH_EMISSION_DURATION; // Start burst timer
@@ -499,7 +504,7 @@ namespace TimelessTales.Core
             // Update bubble emitter position to player's head
             if (isUnderwater)
             {
-                Vector3 headPosition = _player.Position + new Vector3(0, 1.6f, 0);
+                Vector3 headPosition = _player.Position + new Vector3(0, PLAYER_HEAD_HEIGHT, 0);
                 _bubbleEmitter.Position = headPosition;
             }
             
@@ -571,9 +576,9 @@ namespace TimelessTales.Core
                     _playerRenderer!.Draw(_camera!, _player!);
                     
                     // Draw particles (bubbles, splashes, etc.) after 3D world but before underwater effects
-                    if (_particleRenderer != null && _allEmitters != null)
+                    if (_particleRenderer != null && _allEmitters != null && _camera != null)
                     {
-                        _particleRenderer.Draw(_camera!, _allEmitters);
+                        _particleRenderer.Draw(_camera, _allEmitters);
                     }
                     
                     // Draw underwater effects overlay (after 3D rendering and particles, before UI)
