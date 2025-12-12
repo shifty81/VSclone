@@ -2,32 +2,56 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 
 namespace TimelessTales.UI
 {
     /// <summary>
-    /// Title screen with main menu options
+    /// Controls help screen showing key bindings
     /// </summary>
-    public class TitleScreen
+    public class ControlsScreen
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Texture2D _pixelTexture;
         private readonly int _screenWidth;
         private readonly int _screenHeight;
         
-        private Button _newGameButton;
-        private Button _loadGameButton;
-        private Button _joinButton;
-        private Button _settingsButton;
-        
+        private Button _backButton;
         private MouseState _previousMouseState;
         
-        public event Action? OnNewGame;
-        public event Action? OnLoadGame;
-        public event Action? OnJoin;
-        public event Action? OnSettings;
+        public event Action? OnBack;
         
-        public TitleScreen(GraphicsDevice graphicsDevice)
+        // Control mapping data
+        private readonly List<(string action, string key)> _controls = new List<(string, string)>
+        {
+            ("MOVEMENT", ""),
+            ("Move Forward", "W"),
+            ("Move Left", "A"),
+            ("Move Backward", "S"),
+            ("Move Right", "D"),
+            ("Sprint", "Left Shift"),
+            ("Jump", "Space"),
+            ("Swim Up", "Space"),
+            ("Dive Down", "Left Ctrl"),
+            ("", ""),
+            ("ACTIONS", ""),
+            ("Break Block", "Left Click"),
+            ("Place Block", "Right Click"),
+            ("", ""),
+            ("INTERFACE", ""),
+            ("Inventory", "I"),
+            ("World Map", "M"),
+            ("Pause", "P"),
+            ("", ""),
+            ("HOTBAR", ""),
+            ("Select Slot 1-9", "1-9 Keys"),
+            ("", ""),
+            ("SYSTEM", ""),
+            ("Fullscreen", "F11"),
+            ("Exit Game", "Escape")
+        };
+        
+        public ControlsScreen(GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice;
             _screenWidth = graphicsDevice.Viewport.Width;
@@ -37,33 +61,15 @@ namespace TimelessTales.UI
             _pixelTexture = new Texture2D(graphicsDevice, 1, 1);
             _pixelTexture.SetData(new[] { Color.White });
             
-            // Create buttons
-            int buttonWidth = 200;
-            int buttonHeight = 50;
-            int buttonSpacing = 20;
-            int startY = _screenHeight / 2;
+            // Create back button
+            int buttonWidth = 150;
+            int buttonHeight = 40;
             int centerX = (_screenWidth - buttonWidth) / 2;
+            int buttonY = _screenHeight - 80;
             
-            _newGameButton = new Button(
-                new Rectangle(centerX, startY, buttonWidth, buttonHeight),
-                "NEW GAME"
-            );
-            
-            _loadGameButton = new Button(
-                new Rectangle(centerX, startY + buttonHeight + buttonSpacing, buttonWidth, buttonHeight),
-                "LOAD GAME"
-            );
-            _loadGameButton.IsEnabled = false; // Not implemented yet
-            
-            _joinButton = new Button(
-                new Rectangle(centerX, startY + (buttonHeight + buttonSpacing) * 2, buttonWidth, buttonHeight),
-                "JOIN"
-            );
-            _joinButton.IsEnabled = false; // Not implemented yet
-            
-            _settingsButton = new Button(
-                new Rectangle(centerX, startY + (buttonHeight + buttonSpacing) * 3, buttonWidth, buttonHeight),
-                "SETTINGS"
+            _backButton = new Button(
+                new Rectangle(centerX, buttonY, buttonWidth, buttonHeight),
+                "BACK"
             );
             
             _previousMouseState = Mouse.GetState();
@@ -73,25 +79,9 @@ namespace TimelessTales.UI
         {
             MouseState mouseState = Mouse.GetState();
             
-            // Update buttons
-            if (_newGameButton.Update(mouseState, _previousMouseState))
+            if (_backButton.Update(mouseState, _previousMouseState))
             {
-                OnNewGame?.Invoke();
-            }
-            
-            if (_loadGameButton.Update(mouseState, _previousMouseState))
-            {
-                OnLoadGame?.Invoke();
-            }
-            
-            if (_joinButton.Update(mouseState, _previousMouseState))
-            {
-                OnJoin?.Invoke();
-            }
-            
-            if (_settingsButton.Update(mouseState, _previousMouseState))
-            {
-                OnSettings?.Invoke();
+                OnBack?.Invoke();
             }
             
             _previousMouseState = mouseState;
@@ -99,45 +89,71 @@ namespace TimelessTales.UI
         
         public void Draw(SpriteBatch spriteBatch)
         {
-            _graphicsDevice.Clear(new Color(20, 30, 40));
+            // Draw semi-transparent background
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(0, 0, _screenWidth, _screenHeight),
+                Color.Black * 0.85f);
             
-            spriteBatch.Begin();
-            try
+            // Draw title
+            string title = "CONTROLS";
+            int titleScale = 2;
+            int titleWidth = title.Length * 4 * titleScale;
+            int titleX = (_screenWidth - titleWidth) / 2;
+            int titleY = 40;
+            
+            DrawLargeText(spriteBatch, title, titleX, titleY, titleScale, new Color(220, 180, 100));
+            
+            // Draw controls panel
+            int panelWidth = 600;
+            int panelHeight = 420;
+            int panelX = (_screenWidth - panelWidth) / 2;
+            int panelY = 110;
+            
+            // Panel background
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(panelX, panelY, panelWidth, panelHeight),
+                Color.DarkGray * 0.5f);
+            
+            // Panel border
+            int borderWidth = 2;
+            spriteBatch.Draw(_pixelTexture, new Rectangle(panelX, panelY, panelWidth, borderWidth), Color.White);
+            spriteBatch.Draw(_pixelTexture, new Rectangle(panelX, panelY + panelHeight - borderWidth, panelWidth, borderWidth), Color.White);
+            spriteBatch.Draw(_pixelTexture, new Rectangle(panelX, panelY, borderWidth, panelHeight), Color.White);
+            spriteBatch.Draw(_pixelTexture, new Rectangle(panelX + panelWidth - borderWidth, panelY, borderWidth, panelHeight), Color.White);
+            
+            // Draw controls list
+            int textY = panelY + 15;
+            int lineHeight = 13;
+            int leftColumnX = panelX + 30;
+            int rightColumnX = panelX + panelWidth - 150;
+            
+            foreach (var (action, key) in _controls)
             {
-                // Draw title
-                string title = "TIMELESS TALES";
-                int titleScale = 3;
-                int titleWidth = title.Length * 4 * titleScale;
-                int titleX = (_screenWidth - titleWidth) / 2;
-                int titleY = _screenHeight / 4;
+                if (string.IsNullOrEmpty(action))
+                {
+                    // Empty line for spacing
+                    textY += lineHeight;
+                    continue;
+                }
                 
-                DrawLargeText(spriteBatch, title, titleX, titleY, titleScale, new Color(220, 180, 100));
-                
-                // Draw subtitle
-                string subtitle = "A VINTAGE STORY CLONE";
-                int subtitleX = (_screenWidth - subtitle.Length * 4) / 2;
-                int subtitleY = titleY + 60;
-                DrawPixelText(spriteBatch, subtitle, subtitleX, subtitleY, new Color(150, 150, 150));
-                
-                // Draw buttons
-                _newGameButton.Draw(spriteBatch, _pixelTexture);
-                _loadGameButton.Draw(spriteBatch, _pixelTexture);
-                _joinButton.Draw(spriteBatch, _pixelTexture);
-                _settingsButton.Draw(spriteBatch, _pixelTexture);
-                
-                _newGameButton.DrawText(spriteBatch, _pixelTexture);
-                _loadGameButton.DrawText(spriteBatch, _pixelTexture);
-                _joinButton.DrawText(spriteBatch, _pixelTexture);
-                _settingsButton.DrawText(spriteBatch, _pixelTexture);
-                
-                // Draw version info
-                string version = "ALPHA 0.1";
-                DrawPixelText(spriteBatch, version, _screenWidth - version.Length * 4 - 10, _screenHeight - 15, Color.Gray);
+                if (string.IsNullOrEmpty(key))
+                {
+                    // Section header
+                    DrawPixelText(spriteBatch, action, leftColumnX, textY, new Color(255, 200, 100));
+                    textY += lineHeight + 3; // Extra spacing after headers
+                }
+                else
+                {
+                    // Control binding
+                    DrawPixelText(spriteBatch, action, leftColumnX + 15, textY, Color.LightGray);
+                    DrawPixelText(spriteBatch, key, rightColumnX, textY, Color.White);
+                    textY += lineHeight;
+                }
             }
-            finally
-            {
-                spriteBatch.End();
-            }
+            
+            // Draw back button
+            _backButton.Draw(spriteBatch, _pixelTexture);
+            _backButton.DrawText(spriteBatch, _pixelTexture);
         }
         
         private void DrawLargeText(SpriteBatch spriteBatch, string text, int x, int y, int scale, Color color)
@@ -224,7 +240,6 @@ namespace TimelessTales.UI
                 'X' => new bool[,] { { true, false, true }, { true, false, true }, { false, true, false }, { true, false, true }, { true, false, true } },
                 'Y' => new bool[,] { { true, false, true }, { true, false, true }, { false, true, false }, { false, true, false }, { false, true, false } },
                 'Z' => new bool[,] { { true, true, true }, { false, false, true }, { false, true, false }, { true, false, false }, { true, true, true } },
-                ' ' => new bool[,] { { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false } },
                 '0' => new bool[,] { { false, true, false }, { true, false, true }, { true, false, true }, { true, false, true }, { false, true, false } },
                 '1' => new bool[,] { { false, true, false }, { true, true, false }, { false, true, false }, { false, true, false }, { true, true, true } },
                 '2' => new bool[,] { { true, true, false }, { false, false, true }, { false, true, false }, { true, false, false }, { true, true, true } },
@@ -235,7 +250,8 @@ namespace TimelessTales.UI
                 '7' => new bool[,] { { true, true, true }, { false, false, true }, { false, true, false }, { false, true, false }, { false, true, false } },
                 '8' => new bool[,] { { true, true, true }, { true, false, true }, { true, true, true }, { true, false, true }, { true, true, true } },
                 '9' => new bool[,] { { true, true, true }, { true, false, true }, { true, true, true }, { false, false, true }, { true, true, false } },
-                '.' => new bool[,] { { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false }, { false, true, false } },
+                ' ' => new bool[,] { { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false } },
+                '-' => new bool[,] { { false, false, false }, { false, false, false }, { true, true, true }, { false, false, false }, { false, false, false } },
                 _ => new bool[,] { { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false } }
             };
         }

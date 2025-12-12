@@ -8,6 +8,8 @@ namespace TimelessTales.Core
         MainMenu,
         Playing,
         Paused,
-        Loading
+        Loading,
+        Settings,
+        Controls
     }
 }

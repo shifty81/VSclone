@@ -6,28 +6,28 @@ using System;
 namespace TimelessTales.UI
 {
     /// <summary>
-    /// Title screen with main menu options
+    /// Settings and options menu
     /// </summary>
-    public class TitleScreen
+    public class SettingsMenu
     {
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Texture2D _pixelTexture;
         private readonly int _screenWidth;
         private readonly int _screenHeight;
         
-        private Button _newGameButton;
-        private Button _loadGameButton;
-        private Button _joinButton;
-        private Button _settingsButton;
+        private Button _graphicsButton;
+        private Button _audioButton;
+        private Button _controlsButton;
+        private Button _backButton;
         
         private MouseState _previousMouseState;
         
-        public event Action? OnNewGame;
-        public event Action? OnLoadGame;
-        public event Action? OnJoin;
-        public event Action? OnSettings;
+        public event Action? OnGraphics;
+        public event Action? OnAudio;
+        public event Action? OnControls;
+        public event Action? OnBack;
         
-        public TitleScreen(GraphicsDevice graphicsDevice)
+        public SettingsMenu(GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice;
             _screenWidth = graphicsDevice.Viewport.Width;
@@ -41,29 +41,29 @@ namespace TimelessTales.UI
             int buttonWidth = 200;
             int buttonHeight = 50;
             int buttonSpacing = 20;
-            int startY = _screenHeight / 2;
+            int startY = _screenHeight / 2 - 50;
             int centerX = (_screenWidth - buttonWidth) / 2;
             
-            _newGameButton = new Button(
+            _graphicsButton = new Button(
                 new Rectangle(centerX, startY, buttonWidth, buttonHeight),
-                "NEW GAME"
+                "GRAPHICS"
             );
+            _graphicsButton.IsEnabled = false; // Not implemented yet
             
-            _loadGameButton = new Button(
+            _audioButton = new Button(
                 new Rectangle(centerX, startY + buttonHeight + buttonSpacing, buttonWidth, buttonHeight),
-                "LOAD GAME"
+                "AUDIO"
             );
-            _loadGameButton.IsEnabled = false; // Not implemented yet
+            _audioButton.IsEnabled = false; // Not implemented yet
             
-            _joinButton = new Button(
+            _controlsButton = new Button(
                 new Rectangle(centerX, startY + (buttonHeight + buttonSpacing) * 2, buttonWidth, buttonHeight),
-                "JOIN"
+                "CONTROLS"
             );
-            _joinButton.IsEnabled = false; // Not implemented yet
             
-            _settingsButton = new Button(
+            _backButton = new Button(
                 new Rectangle(centerX, startY + (buttonHeight + buttonSpacing) * 3, buttonWidth, buttonHeight),
-                "SETTINGS"
+                "BACK"
             );
             
             _previousMouseState = Mouse.GetState();
@@ -74,24 +74,24 @@ namespace TimelessTales.UI
             MouseState mouseState = Mouse.GetState();
             
             // Update buttons
-            if (_newGameButton.Update(mouseState, _previousMouseState))
+            if (_graphicsButton.Update(mouseState, _previousMouseState))
             {
-                OnNewGame?.Invoke();
+                OnGraphics?.Invoke();
             }
             
-            if (_loadGameButton.Update(mouseState, _previousMouseState))
+            if (_audioButton.Update(mouseState, _previousMouseState))
             {
-                OnLoadGame?.Invoke();
+                OnAudio?.Invoke();
             }
             
-            if (_joinButton.Update(mouseState, _previousMouseState))
+            if (_controlsButton.Update(mouseState, _previousMouseState))
             {
-                OnJoin?.Invoke();
+                OnControls?.Invoke();
             }
             
-            if (_settingsButton.Update(mouseState, _previousMouseState))
+            if (_backButton.Update(mouseState, _previousMouseState))
             {
-                OnSettings?.Invoke();
+                OnBack?.Invoke();
             }
             
             _previousMouseState = mouseState;
@@ -99,45 +99,30 @@ namespace TimelessTales.UI
         
         public void Draw(SpriteBatch spriteBatch)
         {
-            _graphicsDevice.Clear(new Color(20, 30, 40));
+            // Draw semi-transparent overlay
+            spriteBatch.Draw(_pixelTexture,
+                new Rectangle(0, 0, _screenWidth, _screenHeight),
+                Color.Black * 0.8f);
             
-            spriteBatch.Begin();
-            try
-            {
-                // Draw title
-                string title = "TIMELESS TALES";
-                int titleScale = 3;
-                int titleWidth = title.Length * 4 * titleScale;
-                int titleX = (_screenWidth - titleWidth) / 2;
-                int titleY = _screenHeight / 4;
-                
-                DrawLargeText(spriteBatch, title, titleX, titleY, titleScale, new Color(220, 180, 100));
-                
-                // Draw subtitle
-                string subtitle = "A VINTAGE STORY CLONE";
-                int subtitleX = (_screenWidth - subtitle.Length * 4) / 2;
-                int subtitleY = titleY + 60;
-                DrawPixelText(spriteBatch, subtitle, subtitleX, subtitleY, new Color(150, 150, 150));
-                
-                // Draw buttons
-                _newGameButton.Draw(spriteBatch, _pixelTexture);
-                _loadGameButton.Draw(spriteBatch, _pixelTexture);
-                _joinButton.Draw(spriteBatch, _pixelTexture);
-                _settingsButton.Draw(spriteBatch, _pixelTexture);
-                
-                _newGameButton.DrawText(spriteBatch, _pixelTexture);
-                _loadGameButton.DrawText(spriteBatch, _pixelTexture);
-                _joinButton.DrawText(spriteBatch, _pixelTexture);
-                _settingsButton.DrawText(spriteBatch, _pixelTexture);
-                
-                // Draw version info
-                string version = "ALPHA 0.1";
-                DrawPixelText(spriteBatch, version, _screenWidth - version.Length * 4 - 10, _screenHeight - 15, Color.Gray);
-            }
-            finally
-            {
-                spriteBatch.End();
-            }
+            // Draw title
+            string title = "SETTINGS";
+            int titleScale = 2;
+            int titleWidth = title.Length * 4 * titleScale;
+            int titleX = (_screenWidth - titleWidth) / 2;
+            int titleY = _screenHeight / 4;
+            
+            DrawLargeText(spriteBatch, title, titleX, titleY, titleScale, new Color(220, 180, 100));
+            
+            // Draw buttons
+            _graphicsButton.Draw(spriteBatch, _pixelTexture);
+            _audioButton.Draw(spriteBatch, _pixelTexture);
+            _controlsButton.Draw(spriteBatch, _pixelTexture);
+            _backButton.Draw(spriteBatch, _pixelTexture);
+            
+            _graphicsButton.DrawText(spriteBatch, _pixelTexture);
+            _audioButton.DrawText(spriteBatch, _pixelTexture);
+            _controlsButton.DrawText(spriteBatch, _pixelTexture);
+            _backButton.DrawText(spriteBatch, _pixelTexture);
         }
         
         private void DrawLargeText(SpriteBatch spriteBatch, string text, int x, int y, int scale, Color color)
@@ -163,32 +148,6 @@ namespace TimelessTales.UI
                         spriteBatch.Draw(_pixelTexture, 
                             new Rectangle(x + px * scale, y + py * scale, scale, scale), 
                             color);
-                    }
-                }
-            }
-        }
-        
-        private void DrawPixelText(SpriteBatch spriteBatch, string text, int x, int y, Color color)
-        {
-            int currentX = x;
-            foreach (char c in text.ToUpper())
-            {
-                DrawChar(spriteBatch, c, currentX, y, color);
-                currentX += 4;
-            }
-        }
-        
-        private void DrawChar(SpriteBatch spriteBatch, char c, int x, int y, Color color)
-        {
-            bool[,] pixels = GetCharPixels(c);
-            
-            for (int py = 0; py < 5; py++)
-            {
-                for (int px = 0; px < 3; px++)
-                {
-                    if (pixels[py, px])
-                    {
-                        spriteBatch.Draw(_pixelTexture, new Rectangle(x + px, y + py, 1, 1), color);
                     }
                 }
             }
@@ -225,17 +184,6 @@ namespace TimelessTales.UI
                 'Y' => new bool[,] { { true, false, true }, { true, false, true }, { false, true, false }, { false, true, false }, { false, true, false } },
                 'Z' => new bool[,] { { true, true, true }, { false, false, true }, { false, true, false }, { true, false, false }, { true, true, true } },
                 ' ' => new bool[,] { { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false } },
-                '0' => new bool[,] { { false, true, false }, { true, false, true }, { true, false, true }, { true, false, true }, { false, true, false } },
-                '1' => new bool[,] { { false, true, false }, { true, true, false }, { false, true, false }, { false, true, false }, { true, true, true } },
-                '2' => new bool[,] { { true, true, false }, { false, false, true }, { false, true, false }, { true, false, false }, { true, true, true } },
-                '3' => new bool[,] { { true, true, true }, { false, false, true }, { false, true, true }, { false, false, true }, { true, true, true } },
-                '4' => new bool[,] { { true, false, true }, { true, false, true }, { true, true, true }, { false, false, true }, { false, false, true } },
-                '5' => new bool[,] { { true, true, true }, { true, false, false }, { true, true, true }, { false, false, true }, { true, true, false } },
-                '6' => new bool[,] { { false, true, true }, { true, false, false }, { true, true, true }, { true, false, true }, { true, true, true } },
-                '7' => new bool[,] { { true, true, true }, { false, false, true }, { false, true, false }, { false, true, false }, { false, true, false } },
-                '8' => new bool[,] { { true, true, true }, { true, false, true }, { true, true, true }, { true, false, true }, { true, true, true } },
-                '9' => new bool[,] { { true, true, true }, { true, false, true }, { true, true, true }, { false, false, true }, { true, true, false } },
-                '.' => new bool[,] { { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false }, { false, true, false } },
                 _ => new bool[,] { { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false }, { false, false, false } }
             };
         }

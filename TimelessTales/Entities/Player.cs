@@ -52,6 +52,14 @@ namespace TimelessTales.Entities
         public bool IsUnderwater => _isInWater;
         public float SubmersionDepth => _submersionDepth;
         
+        // Character stats
+        public float Health { get; set; } = 100f;
+        public float MaxHealth { get; } = 100f;
+        public float Hunger { get; set; } = 100f;
+        public float MaxHunger { get; } = 100f;
+        public float Thirst { get; set; } = 100f;
+        public float MaxThirst { get; } = 100f;
+        
         // Inventory and equipment
         public Inventory Inventory { get; private set; }
         public Equipment Equipment { get; private set; }
