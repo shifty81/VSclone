@@ -143,12 +143,24 @@ namespace TimelessTales.Rendering
 
         private bool IsWaterBlock(Chunk chunk, int x, int y, int z)
         {
-            // Check bounds
+            // Check vertical bounds
             if (y < 0 || y >= Chunk.CHUNK_HEIGHT) return false;
-            if (x < 0 || x >= Chunk.CHUNK_SIZE || z < 0 || z >= Chunk.CHUNK_SIZE) return false;
-
-            BlockType block = chunk.GetBlock(x, y, z);
-            return block == BlockType.Water || block == BlockType.Saltwater;
+            
+            // Check if within current chunk bounds
+            if (x >= 0 && x < Chunk.CHUNK_SIZE && z >= 0 && z < Chunk.CHUNK_SIZE)
+            {
+                BlockType block = chunk.GetBlock(x, y, z);
+                return block == BlockType.Water || block == BlockType.Saltwater;
+            }
+            
+            // Handle cross-chunk boundaries
+            // Calculate world coordinates
+            int worldX = chunk.ChunkX * Chunk.CHUNK_SIZE + x;
+            int worldZ = chunk.ChunkZ * Chunk.CHUNK_SIZE + z;
+            
+            // Get block from world manager (which handles chunk boundaries)
+            BlockType neighborBlock = _worldManager.GetBlock(worldX, y, worldZ);
+            return neighborBlock == BlockType.Water || neighborBlock == BlockType.Saltwater;
         }
 
         private Color GetDepthBasedWaterColor(int y, BlockType waterType)
