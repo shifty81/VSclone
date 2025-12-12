@@ -84,12 +84,19 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
 - **Features**:
   - Terrain height visualization (green lowlands to gray highlands)
   - Red player position indicator at center
+  - **Cardinal direction markers**: White bars at North/East, Gray bars at South/West
+  - **Yellow direction arrow**: Shows player's current facing direction
   - Player coordinates displayed as colored bars below minimap:
     - Red bars = X coordinate
     - Green bars = Y coordinate (height)
     - Blue bars = Z coordinate
+  - **Compass direction indicator**: Visual display showing current cardinal direction
+    - North: Two tall cyan bars
+    - East: Three medium yellow bars
+    - South: One wide orange bar
+    - West: Two wide magenta bars stacked
 
-### Clock Gauge (Below Minimap)
+### Clock Gauge (Below Minimap and Compass)
 - **Display**: Time of day progression gauge
 - **Features**:
   - Yellow gauge fill during daytime
