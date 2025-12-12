@@ -544,7 +544,8 @@ namespace TimelessTales.UI
             int minimapSize = 150;
             int padding = 10;
             int clockX = _screenWidth - minimapSize - padding;
-            int clockY = padding + minimapSize + 30 + 18 + 3; // Below coordinates and compass (20 for coords, 18 for compass, 3*3 for spacing)
+            // Calculate position: minimap (150) + spacing (5) + coords (20) + spacing (3) + compass (18) + spacing (3)
+            int clockY = padding + minimapSize + 5 + 20 + 3 + 18 + 3;
             int clockWidth = minimapSize;
             int clockHeight = 40;
             
@@ -735,14 +736,9 @@ namespace TimelessTales.UI
             
             if (length < 1) return; // Line too short to draw
             
-            float angle = MathF.Atan2(dy, dx);
-            
-            // Draw rotated rectangle to form a line
-            Rectangle rect = new Rectangle(x1, y1 - thickness / 2, (int)length, thickness);
-            
             // For simplicity, we'll approximate with multiple small rectangles for angled lines
-            // This is not perfect but works for short lines
-            int steps = (int)length;
+            // Clamp steps to prevent excessive draw calls for long lines
+            int steps = Math.Min((int)length, 50);
             for (int i = 0; i <= steps; i++)
             {
                 float t = steps > 0 ? i / (float)steps : 0;
