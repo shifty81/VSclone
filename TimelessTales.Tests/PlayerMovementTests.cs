@@ -7,56 +7,117 @@ namespace TimelessTales.Tests
     public class PlayerMovementTests
     {
         [Fact]
-        public void Player_ForwardKey_AlwaysMovesInNegativeZ_RegardlessOfFacingDirection()
+        public void Player_ForwardKey_MovesInFacingDirection_WhenFacingNorth()
         {
-            // Movement is now absolute - W always moves forward (-Z) regardless of facing direction
-            // This is the new expected behavior: direction keys are not affected by camera rotation
+            // Movement is now relative to player's facing direction (yaw)
+            // When facing north (yaw = 0), W should move in -Z direction
             
-            // W key movement direction (from UpdateMovement in Player.cs)
-            Vector3 forwardDirection = new Vector3(0, 0, -1);
+            // Simulate the transformation with yaw = 0
+            Vector3 localForward = new Vector3(0, 0, -1);
+            float yaw = 0f; // Facing north
+            Matrix yawRotation = Matrix.CreateRotationY(yaw);
+            Vector3 worldDirection = Vector3.Transform(localForward, yawRotation);
             
-            // Assert - W key should always move in -Z direction (forward/north) no matter where player is looking
-            Assert.Equal(0f, forwardDirection.X);
-            Assert.Equal(0f, forwardDirection.Y);
-            Assert.Equal(-1f, forwardDirection.Z);
+            // Assert - When facing north, W moves in -Z (forward/north)
+            Assert.Equal(0f, worldDirection.X, 5); // precision 5 decimal places
+            Assert.Equal(0f, worldDirection.Y, 5);
+            Assert.Equal(-1f, worldDirection.Z, 5);
         }
         
         [Fact]
-        public void Player_RightKey_AlwaysMovesInPositiveX_RegardlessOfFacingDirection()
+        public void Player_ForwardKey_MovesInFacingDirection_WhenFacingEast()
         {
-            // Movement is now absolute - D always moves right (+X) regardless of facing direction
+            // When facing east (yaw = -90 degrees), W should move in +X direction
             
-            // D key movement direction (from UpdateMovement in Player.cs)
-            Vector3 rightDirection = new Vector3(1, 0, 0);
+            Vector3 localForward = new Vector3(0, 0, -1);
+            float yaw = -MathHelper.PiOver2; // Facing east (90 degrees right)
+            Matrix yawRotation = Matrix.CreateRotationY(yaw);
+            Vector3 worldDirection = Vector3.Transform(localForward, yawRotation);
             
-            // Assert - D key should always move in +X direction (right/east) no matter where player is looking
-            Assert.Equal(1f, rightDirection.X);
-            Assert.Equal(0f, rightDirection.Y);
-            Assert.Equal(0f, rightDirection.Z);
+            // Assert - When facing east, W moves in +X (east)
+            Assert.Equal(1f, worldDirection.X, 5);
+            Assert.Equal(0f, worldDirection.Y, 5);
+            Assert.Equal(0f, worldDirection.Z, 5);
         }
         
         [Fact]
-        public void Player_BackwardKey_AlwaysMovesInPositiveZ()
+        public void Player_ForwardKey_MovesInFacingDirection_WhenFacingSouth()
         {
-            // S key movement direction (from UpdateMovement in Player.cs)
-            Vector3 backwardDirection = new Vector3(0, 0, 1);
+            // When facing south (yaw = 180 degrees), W should move in +Z direction
             
-            // Assert - S key should always move in +Z direction (backward/south)
-            Assert.Equal(0f, backwardDirection.X);
-            Assert.Equal(0f, backwardDirection.Y);
-            Assert.Equal(1f, backwardDirection.Z);
+            Vector3 localForward = new Vector3(0, 0, -1);
+            float yaw = MathHelper.Pi; // Facing south (180 degrees)
+            Matrix yawRotation = Matrix.CreateRotationY(yaw);
+            Vector3 worldDirection = Vector3.Transform(localForward, yawRotation);
+            
+            // Assert - When facing south, W moves in +Z (south)
+            Assert.Equal(0f, worldDirection.X, 5);
+            Assert.Equal(0f, worldDirection.Y, 5);
+            Assert.Equal(1f, worldDirection.Z, 5);
         }
         
         [Fact]
-        public void Player_LeftKey_AlwaysMovesInNegativeX()
+        public void Player_ForwardKey_MovesInFacingDirection_WhenFacingWest()
         {
-            // A key movement direction (from UpdateMovement in Player.cs)
-            Vector3 leftDirection = new Vector3(-1, 0, 0);
+            // When facing west (yaw = 90 degrees), W should move in -X direction
             
-            // Assert - A key should always move in -X direction (left/west)
-            Assert.Equal(-1f, leftDirection.X);
-            Assert.Equal(0f, leftDirection.Y);
-            Assert.Equal(0f, leftDirection.Z);
+            Vector3 localForward = new Vector3(0, 0, -1);
+            float yaw = MathHelper.PiOver2; // Facing west (90 degrees left)
+            Matrix yawRotation = Matrix.CreateRotationY(yaw);
+            Vector3 worldDirection = Vector3.Transform(localForward, yawRotation);
+            
+            // Assert - When facing west, W moves in -X (west)
+            Assert.Equal(-1f, worldDirection.X, 5);
+            Assert.Equal(0f, worldDirection.Y, 5);
+            Assert.Equal(0f, worldDirection.Z, 5);
+        }
+        
+        [Fact]
+        public void Player_RightKey_MovesRightRelativeToFacing_WhenFacingNorth()
+        {
+            // When facing north (yaw = 0), D should move in +X direction (right)
+            
+            Vector3 localRight = new Vector3(1, 0, 0);
+            float yaw = 0f; // Facing north
+            Matrix yawRotation = Matrix.CreateRotationY(yaw);
+            Vector3 worldDirection = Vector3.Transform(localRight, yawRotation);
+            
+            // Assert - When facing north, D moves in +X (east/right)
+            Assert.Equal(1f, worldDirection.X, 5);
+            Assert.Equal(0f, worldDirection.Y, 5);
+            Assert.Equal(0f, worldDirection.Z, 5);
+        }
+        
+        [Fact]
+        public void Player_LeftKey_MovesLeftRelativeToFacing_WhenFacingNorth()
+        {
+            // When facing north (yaw = 0), A should move in -X direction (left)
+            
+            Vector3 localLeft = new Vector3(-1, 0, 0);
+            float yaw = 0f; // Facing north
+            Matrix yawRotation = Matrix.CreateRotationY(yaw);
+            Vector3 worldDirection = Vector3.Transform(localLeft, yawRotation);
+            
+            // Assert - When facing north, A moves in -X (west/left)
+            Assert.Equal(-1f, worldDirection.X, 5);
+            Assert.Equal(0f, worldDirection.Y, 5);
+            Assert.Equal(0f, worldDirection.Z, 5);
+        }
+        
+        [Fact]
+        public void Player_BackwardKey_MovesBackwardRelativeToFacing_WhenFacingNorth()
+        {
+            // When facing north (yaw = 0), S should move in +Z direction (backward)
+            
+            Vector3 localBackward = new Vector3(0, 0, 1);
+            float yaw = 0f; // Facing north
+            Matrix yawRotation = Matrix.CreateRotationY(yaw);
+            Vector3 worldDirection = Vector3.Transform(localBackward, yawRotation);
+            
+            // Assert - When facing north, S moves in +Z (south/backward)
+            Assert.Equal(0f, worldDirection.X, 5);
+            Assert.Equal(0f, worldDirection.Y, 5);
+            Assert.Equal(1f, worldDirection.Z, 5);
         }
         
         [Fact]

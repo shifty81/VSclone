@@ -95,21 +95,26 @@ namespace TimelessTales.Entities
         {
             Vector3 moveDirection = Vector3.Zero;
             
-            // WASD movement - absolute directions independent of player rotation
-            // W = forward (negative Z), S = backward (positive Z)
-            // A = left (negative X), D = right (positive X)
+            // WASD movement - relative to player's facing direction (yaw only, not pitch)
+            // W = forward in facing direction, S = backward from facing direction
+            // A = left relative to facing direction, D = right relative to facing direction
             if (input.IsKeyDown(Keys.W))
-                moveDirection += new Vector3(0, 0, -1); // Forward
+                moveDirection += new Vector3(0, 0, -1); // Forward in local space
             if (input.IsKeyDown(Keys.S))
-                moveDirection += new Vector3(0, 0, 1);  // Backward
+                moveDirection += new Vector3(0, 0, 1);  // Backward in local space
             if (input.IsKeyDown(Keys.A))
-                moveDirection += new Vector3(-1, 0, 0); // Left
+                moveDirection += new Vector3(-1, 0, 0); // Left in local space
             if (input.IsKeyDown(Keys.D))
-                moveDirection += new Vector3(1, 0, 0);  // Right
+                moveDirection += new Vector3(1, 0, 0);  // Right in local space
             
-            // Normalize diagonal movement
+            // Normalize diagonal movement before rotation
             if (moveDirection.LengthSquared() > 0)
                 moveDirection.Normalize();
+            
+            // Transform movement direction by player's yaw rotation (horizontal rotation only)
+            // This makes WASD movement relative to where the player is looking
+            Matrix yawRotation = Matrix.CreateRotationY(Rotation.Y);
+            moveDirection = Vector3.Transform(moveDirection, yawRotation);
             
             // Sprint
             float speed = MOVE_SPEED;
