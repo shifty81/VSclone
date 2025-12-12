@@ -33,13 +33,18 @@ namespace TimelessTales.Rendering
     /// <summary>
     /// Manages a texture atlas for efficient block rendering
     /// </summary>
-    public class TextureAtlas
+    public class TextureAtlas : IDisposable
     {
         private readonly Texture2D _texture;
         private readonly int _textureSize;
         private readonly int _tileSize;
         private readonly int _tilesPerRow;
         private readonly Dictionary<string, TextureCoordinates> _textureMap;
+        
+        // Cache for texture coordinates by index to avoid dictionary lookups
+        private readonly TextureCoordinates[] _coordinateCache;
+        private const int MAX_TEXTURE_INDEX = 64; // Support up to 64 different textures
+        private bool _disposed;
 
         public Texture2D Texture => _texture;
         public int TileSize => _tileSize;
@@ -50,6 +55,7 @@ namespace TimelessTales.Rendering
             _tileSize = tileSize;
             _tilesPerRow = textureSize / tileSize;
             _textureMap = new Dictionary<string, TextureCoordinates>();
+            _coordinateCache = new TextureCoordinates[MAX_TEXTURE_INDEX];
             
             // Create the texture atlas
             _texture = new Texture2D(graphicsDevice, textureSize, textureSize);
@@ -487,7 +493,14 @@ namespace TimelessTales.Rendering
             float width = 1.0f / _tilesPerRow;
             float height = 1.0f / _tilesPerRow;
             
-            _textureMap[name] = new TextureCoordinates(u, v, width, height);
+            var coords = new TextureCoordinates(u, v, width, height);
+            _textureMap[name] = coords;
+            
+            // Cache coordinates by index for fast lookups
+            if (tileIndex < MAX_TEXTURE_INDEX)
+            {
+                _coordinateCache[tileIndex] = coords;
+            }
         }
 
         public TextureCoordinates GetTextureCoordinates(string textureName)
@@ -510,7 +523,29 @@ namespace TimelessTales.Rendering
 
         public TextureCoordinates GetTextureCoordinates(int tileIndex)
         {
+            // Use cached coordinates for fast lookup without dictionary access
+            if (tileIndex >= 0 && tileIndex < MAX_TEXTURE_INDEX)
+            {
+                TextureCoordinates cached = _coordinateCache[tileIndex];
+                // Verify the cache entry was initialized (TopLeft won't be Vector2.Zero for valid entries)
+                if (cached.TopLeft != Vector2.Zero || tileIndex == 0)
+                {
+                    return cached;
+                }
+            }
+            
+            // Fallback to dictionary lookup for out-of-range or uninitialized indices
             return GetTextureCoordinates($"tile_{tileIndex}");
+        }
+        
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _texture?.Dispose();
+                _disposed = true;
+                GC.SuppressFinalize(this);
+            }
         }
     }
 }
