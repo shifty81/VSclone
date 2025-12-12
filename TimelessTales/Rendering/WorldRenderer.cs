@@ -272,6 +272,7 @@ namespace TimelessTales.Rendering
                 _effect?.Dispose();
                 _textureAtlas?.Dispose();
                 _disposed = true;
+                GC.SuppressFinalize(this);
             }
         }
     }

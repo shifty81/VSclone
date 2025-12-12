@@ -82,7 +82,7 @@ public bool IsUnderwater
     {
         if (_isUnderwater != value)
         {
-            _isInderwater = value;
+            _isUnderwater = value;
             ApplyUnderwaterEffect();  // Muffles sound, reduces volume
         }
     }

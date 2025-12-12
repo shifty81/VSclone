@@ -526,10 +526,15 @@ namespace TimelessTales.Rendering
             // Use cached coordinates for fast lookup without dictionary access
             if (tileIndex >= 0 && tileIndex < MAX_TEXTURE_INDEX)
             {
-                return _coordinateCache[tileIndex];
+                TextureCoordinates cached = _coordinateCache[tileIndex];
+                // Verify the cache entry was initialized (TopLeft won't be Vector2.Zero for valid entries)
+                if (cached.TopLeft != Vector2.Zero || tileIndex == 0)
+                {
+                    return cached;
+                }
             }
             
-            // Fallback to dictionary lookup for out-of-range indices
+            // Fallback to dictionary lookup for out-of-range or uninitialized indices
             return GetTextureCoordinates($"tile_{tileIndex}");
         }
         
@@ -539,6 +544,7 @@ namespace TimelessTales.Rendering
             {
                 _texture?.Dispose();
                 _disposed = true;
+                GC.SuppressFinalize(this);
             }
         }
     }
