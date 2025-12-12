@@ -34,6 +34,11 @@ namespace TimelessTales.Core
         private PauseMenu? _pauseMenu;
         private DebugOverlay? _debugOverlay;
         
+        // Particle and audio systems
+        private Particles.ParticleRenderer? _particleRenderer;
+        private Particles.ParticleEmitter? _bubbleEmitter;
+        private Audio.AudioManager? _audioManager;
+        
         // Camera
         private Camera? _camera;
         
@@ -42,6 +47,10 @@ namespace TimelessTales.Core
         private bool _isPaused = false;
         private bool _inventoryOpen = false;
         private bool _worldMapOpen = false;
+        
+        // Water state tracking
+        private bool _wasUnderwaterLastFrame = false;
+        private bool _wasInWaterLastFrame = false;
         
         public TimelessTalesGame()
         {
@@ -185,6 +194,26 @@ namespace TimelessTales.Core
                 // Initialize debug overlay
                 _debugOverlay = new DebugOverlay(GraphicsDevice);
                 Logger.Info("UI manager, character status display, and debug overlay initialized");
+                
+                // Initialize particle system
+                Logger.Info("Initializing particle system...");
+                _particleRenderer = new Particles.ParticleRenderer(GraphicsDevice);
+                _bubbleEmitter = new Particles.ParticleEmitter(Vector3.Zero)
+                {
+                    EmissionRate = 3.0f,
+                    ParticleLifetime = 2.5f,
+                    ParticleSize = 0.08f,
+                    ParticleColor = new Color(200, 220, 255, 180),
+                    VelocityBase = new Vector3(0, 0.5f, 0),
+                    VelocityVariation = new Vector3(0.1f, 0.2f, 0.1f),
+                    IsActive = false // Start disabled
+                };
+                Logger.Info("Particle system initialized");
+                
+                // Initialize audio system
+                Logger.Info("Initializing audio system...");
+                _audioManager = new Audio.AudioManager();
+                Logger.Info("Audio system initialized (sound files not loaded yet)");
                 
                 _currentState = GameState.Playing;
                 Logger.Info("New game started successfully");
@@ -358,6 +387,9 @@ namespace TimelessTales.Core
                         
                         // Update debug overlay
                         _debugOverlay!.Update(gameTime);
+                        
+                        // Update water-related audio and particles
+                        UpdateWaterEffects(deltaTime);
                     }
                     
                     // Always update UI (pass InputManager for mouse interaction)
@@ -371,6 +403,73 @@ namespace TimelessTales.Core
                 Logger.Error("Error in game update loop", ex);
                 // Don't crash the game, just log the error and continue
             }
+        }
+        
+        private void UpdateWaterEffects(float deltaTime)
+        {
+            if (_player == null || _audioManager == null || _bubbleEmitter == null || _particleRenderer == null)
+                return;
+            
+            bool isUnderwater = _player.IsUnderwater;
+            float submersionDepth = _player.SubmersionDepth;
+            bool isInWater = submersionDepth > 0;
+            
+            // Update audio underwater state
+            _audioManager.IsUnderwater = isUnderwater;
+            
+            // Handle entering water
+            if (isInWater && !_wasInWaterLastFrame)
+            {
+                Logger.Info("Player entered water");
+                // TODO: Play splash sound when sound files are available
+                // _audioManager.PlaySound("water_splash", volume: 1.0f);
+            }
+            
+            // Handle exiting water
+            if (!isInWater && _wasInWaterLastFrame)
+            {
+                Logger.Info("Player exited water");
+                // TODO: Play splash sound when sound files are available
+                // _audioManager.PlaySound("water_splash", volume: 0.8f);
+            }
+            
+            // Handle going underwater
+            if (isUnderwater && !_wasUnderwaterLastFrame)
+            {
+                Logger.Info("Player went underwater");
+                // Start bubble particles
+                _bubbleEmitter.IsActive = true;
+                // TODO: Start underwater ambient sound when sound files are available
+                // _audioManager.PlayLoopingSound("underwater_ambience", volume: 0.3f);
+            }
+            
+            // Handle surfacing
+            if (!isUnderwater && _wasUnderwaterLastFrame)
+            {
+                Logger.Info("Player surfaced");
+                // Stop bubble particles
+                _bubbleEmitter.IsActive = false;
+                _bubbleEmitter.Clear();
+                // TODO: Stop underwater ambient sound when sound files are available
+                // _audioManager.StopLoopingSound("underwater_ambience");
+            }
+            
+            // Update bubble emitter position to player's head
+            if (isUnderwater)
+            {
+                Vector3 headPosition = _player.Position + new Vector3(0, 1.6f, 0);
+                _bubbleEmitter.Position = headPosition;
+            }
+            
+            // Update particles
+            _bubbleEmitter.Update(deltaTime);
+            
+            // Update audio manager
+            _audioManager.Update();
+            
+            // Store state for next frame
+            _wasUnderwaterLastFrame = isUnderwater;
+            _wasInWaterLastFrame = isInWater;
         }
 
         protected override void Draw(GameTime gameTime)
@@ -428,7 +527,13 @@ namespace TimelessTales.Core
                     // Draw player arms (first-person view)
                     _playerRenderer!.Draw(_camera!, _player!);
                     
-                    // Draw underwater effects overlay (after 3D rendering, before UI)
+                    // Draw particles (bubbles, etc.) after 3D world but before underwater effects
+                    if (_particleRenderer != null && _bubbleEmitter != null)
+                    {
+                        _particleRenderer.Draw(_camera!, new System.Collections.Generic.List<Particles.ParticleEmitter> { _bubbleEmitter });
+                    }
+                    
+                    // Draw underwater effects overlay (after 3D rendering and particles, before UI)
                     _underwaterEffectRenderer!.Draw(_player!);
                     
                     // Draw UI (2D overlay)
