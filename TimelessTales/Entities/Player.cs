@@ -490,6 +490,30 @@ namespace TimelessTales.Entities
                         BlockType brokenBlock = world.GetBlock(x, y, z);
                         world.SetBlock(x, y, z, BlockType.Air);
                         
+                        // Special handling for tree logs - drop sticks, logs, and seeds
+                        if (brokenBlock == BlockType.OakLog || brokenBlock == BlockType.PineLog || brokenBlock == BlockType.BirchLog)
+                        {
+                            // Always drop 1-2 sticks when breaking tree logs
+                            Random random = new Random();
+                            int stickCount = random.Next(1, 3);
+                            Inventory.AddItem(BlockType.Stick, stickCount);
+                            Logger.Info($"Tree log broken! Collected {stickCount} stick(s)");
+                            
+                            // 20% chance to drop the log itself
+                            if (random.NextDouble() < 0.2)
+                            {
+                                Inventory.AddItem(brokenBlock, 1);
+                                Logger.Info($"Collected 1 {BlockRegistry.Get(brokenBlock).Name}");
+                            }
+                            
+                            // 10% chance to drop a seed (for replanting)
+                            if (random.NextDouble() < 0.1)
+                            {
+                                // TODO: Add seed block types in future
+                                Logger.Info($"Found a seed! (Seed system coming soon)");
+                            }
+                        }
+                        
                         // Drop material bits into the material pouch instead of whole blocks
                         var drop = MaterialDropTable.GetDrop(brokenBlock);
                         if (drop.HasValue)

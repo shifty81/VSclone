@@ -40,7 +40,15 @@ namespace TimelessTales.Blocks
         BirchLeaves,
         // Water
         Water,
-        Saltwater
+        Saltwater,
+        // Clay types
+        RedClay,
+        BlueClay,
+        FireClay,
+        // Light sources
+        Torch,
+        Lantern,
+        Stick
     }
 
     /// <summary>
@@ -130,6 +138,23 @@ namespace TimelessTales.Blocks
             // Water
             Register(new BlockDefinition(BlockType.Water, "Water", 0.0f, new Color(30, 80, 200, 180), true, false, false, 25));
             Register(new BlockDefinition(BlockType.Saltwater, "Saltwater", 0.0f, new Color(20, 60, 160, 180), true, false, false, 26));
+            
+            // Clay types - different compositions for pottery and construction
+            Register(new BlockDefinition(BlockType.RedClay, "Red Clay", 0.6f, new Color(165, 85, 70), false, false, false, 27));
+            Register(new BlockDefinition(BlockType.BlueClay, "Blue Clay", 0.6f, new Color(100, 120, 140), false, false, false, 28));
+            Register(new BlockDefinition(BlockType.FireClay, "Fire Clay", 0.7f, new Color(200, 180, 150), false, false, false, 29));
+            
+            // Light sources for illumination
+            var torchDef = new BlockDefinition(BlockType.Torch, "Torch", 0.1f, new Color(255, 200, 100), true, false, false, 30);
+            torchDef.LightEmission = 14; // Bright light source
+            Register(torchDef);
+            
+            var lanternDef = new BlockDefinition(BlockType.Lantern, "Lantern", 0.3f, new Color(255, 230, 150), true, false, false, 31);
+            lanternDef.LightEmission = 15; // Maximum light level
+            Register(lanternDef);
+            
+            // Stick - crafting material and drops from trees
+            Register(new BlockDefinition(BlockType.Stick, "Stick", 0.1f, new Color(120, 80, 40), false, false, false, 32));
         }
 
         public static void Register(BlockDefinition block)

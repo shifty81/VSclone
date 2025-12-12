@@ -16,8 +16,8 @@ namespace TimelessTales.Rendering
         private readonly Dictionary<(int, int), ChunkMesh> _chunkMeshes;
         private readonly TextureAtlas _textureAtlas;
         
-        // Cel shading parameters for world blocks
-        private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands for toon shading
+        // Cel shading parameters for world blocks (Wind Waker style)
+        private const int CEL_SHADING_BANDS = 3; // Reduced to 3 for more distinct Wind Waker-like shading
         
         // Pre-calculated cel-shaded color cache for performance
         // Key: (original color packed as int, lighting type 0=top, 1=bottom, 2=side)
@@ -245,18 +245,24 @@ namespace TimelessTales.Rendering
             }
             
             // Calculate the cel-shaded color based on lighting type
+            // Wind Waker style uses more dramatic lighting differences
             Color resultColor;
             switch (lightingType)
             {
-                case 0: // Top face - brightest
-                    resultColor = CelShadingUtility.ApplyCelShading(Color.Lerp(originalColor, Color.White, 0.2f), CEL_SHADING_BANDS);
+                case 0: // Top face - brightest (direct sunlight)
+                    // Add slight warm tint for sunlight
+                    Color brightColor = Color.Lerp(originalColor, new Color(255, 250, 240), 0.25f);
+                    resultColor = CelShadingUtility.ApplyCelShading(brightColor, CEL_SHADING_BANDS);
                     break;
-                case 1: // Bottom face - darkest
-                    resultColor = CelShadingUtility.ApplyCelShading(Color.Lerp(originalColor, Color.Black, 0.3f), CEL_SHADING_BANDS);
+                case 1: // Bottom face - darkest (shadow)
+                    // Add slight blue tint to shadows (Wind Waker style)
+                    Color shadowColor = Color.Lerp(originalColor, new Color(100, 110, 140), 0.4f);
+                    resultColor = CelShadingUtility.ApplyCelShading(shadowColor, CEL_SHADING_BANDS);
                     break;
-                case 2: // Side faces - medium
+                case 2: // Side faces - medium (indirect light)
                 default:
-                    resultColor = CelShadingUtility.ApplyCelShading(Color.Lerp(originalColor, Color.Black, 0.1f), CEL_SHADING_BANDS);
+                    Color midColor = Color.Lerp(originalColor, Color.Black, 0.15f);
+                    resultColor = CelShadingUtility.ApplyCelShading(midColor, CEL_SHADING_BANDS);
                     break;
             }
             
