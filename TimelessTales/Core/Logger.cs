@@ -42,6 +42,7 @@ namespace TimelessTales.Core
                     File.WriteAllText(_logFilePath, $"=== Timeless Tales Log - {DateTime.Now:yyyy-MM-dd HH:mm:ss} ==={Environment.NewLine}{Environment.NewLine}");
                 }
 
+                // Set initialized flag after all setup is complete
                 _isInitialized = true;
                 Info("Logger initialized successfully");
             }
@@ -135,23 +136,24 @@ namespace TimelessTales.Core
                 string levelStr = level.ToString().ToUpper().PadRight(7);
                 string logEntry = $"[{timestamp}] [{levelStr}] {message}{Environment.NewLine}";
 
-                // Always write to console
-                ConsoleColor originalColor = Console.ForegroundColor;
-                Console.ForegroundColor = level switch
+                // Lock for both console and file operations to ensure thread safety
+                lock (_lockObject)
                 {
-                    LogLevel.Info => ConsoleColor.White,
-                    LogLevel.Warning => ConsoleColor.Yellow,
-                    LogLevel.Error => ConsoleColor.Red,
-                    LogLevel.Fatal => ConsoleColor.DarkRed,
-                    _ => ConsoleColor.White
-                };
-                Console.Write(logEntry);
-                Console.ForegroundColor = originalColor;
+                    // Write to console with color coding
+                    ConsoleColor originalColor = Console.ForegroundColor;
+                    Console.ForegroundColor = level switch
+                    {
+                        LogLevel.Info => ConsoleColor.White,
+                        LogLevel.Warning => ConsoleColor.Yellow,
+                        LogLevel.Error => ConsoleColor.Red,
+                        LogLevel.Fatal => ConsoleColor.DarkRed,
+                        _ => ConsoleColor.White
+                    };
+                    Console.Write(logEntry);
+                    Console.ForegroundColor = originalColor;
 
-                // Write to file if initialized
-                if (_isInitialized && _logFilePath != null)
-                {
-                    lock (_lockObject)
+                    // Write to file if initialized
+                    if (_isInitialized && _logFilePath != null)
                     {
                         File.AppendAllText(_logFilePath, logEntry);
                     }

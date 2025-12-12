@@ -31,8 +31,7 @@ namespace TimelessTales.Tests
             // Act
             Logger.Info(testMessage);
 
-            // Assert - give it a moment to write
-            System.Threading.Thread.Sleep(100);
+            // Assert
             string? logFilePath = Logger.GetLogFilePath();
             Assert.NotNull(logFilePath);
             string logContent = File.ReadAllText(logFilePath);
@@ -49,8 +48,7 @@ namespace TimelessTales.Tests
             // Act
             Logger.Warning(testMessage);
 
-            // Assert - give it a moment to write
-            System.Threading.Thread.Sleep(100);
+            // Assert
             string? logFilePath = Logger.GetLogFilePath();
             Assert.NotNull(logFilePath);
             string logContent = File.ReadAllText(logFilePath);
@@ -67,8 +65,7 @@ namespace TimelessTales.Tests
             // Act
             Logger.Error(testMessage);
 
-            // Assert - give it a moment to write
-            System.Threading.Thread.Sleep(100);
+            // Assert
             string? logFilePath = Logger.GetLogFilePath();
             Assert.NotNull(logFilePath);
             string logContent = File.ReadAllText(logFilePath);
@@ -86,8 +83,7 @@ namespace TimelessTales.Tests
             // Act
             Logger.Error(testMessage, exception);
 
-            // Assert - give it a moment to write
-            System.Threading.Thread.Sleep(100);
+            // Assert
             string? logFilePath = Logger.GetLogFilePath();
             Assert.NotNull(logFilePath);
             string logContent = File.ReadAllText(logFilePath);
@@ -106,8 +102,7 @@ namespace TimelessTales.Tests
             // Act
             Logger.Fatal(testMessage);
 
-            // Assert - give it a moment to write
-            System.Threading.Thread.Sleep(100);
+            // Assert
             string? logFilePath = Logger.GetLogFilePath();
             Assert.NotNull(logFilePath);
             string logContent = File.ReadAllText(logFilePath);
@@ -125,8 +120,7 @@ namespace TimelessTales.Tests
             // Act
             Logger.Fatal(testMessage, exception);
 
-            // Assert - give it a moment to write
-            System.Threading.Thread.Sleep(100);
+            // Assert
             string? logFilePath = Logger.GetLogFilePath();
             Assert.NotNull(logFilePath);
             string logContent = File.ReadAllText(logFilePath);
