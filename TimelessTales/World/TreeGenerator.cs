@@ -18,11 +18,11 @@ namespace TimelessTales.World
     /// </summary>
     public static class TreeGenerator
     {
-        private static Random _random = new Random();
+        private static int _seed = 0;
 
         public static void SetSeed(int seed)
         {
-            _random = new Random(seed);
+            _seed = seed;
         }
 
         /// <summary>
@@ -30,24 +30,27 @@ namespace TimelessTales.World
         /// </summary>
         public static void GenerateTree(Chunk chunk, int localX, int baseY, int localZ, TreeType treeType)
         {
+            // Create a deterministic Random based on position and seed for thread safety
+            Random random = new Random(localX * 73856093 ^ baseY * 19349663 ^ localZ * 83492791 ^ _seed);
+            
             switch (treeType)
             {
                 case TreeType.Oak:
-                    GenerateOakTree(chunk, localX, baseY, localZ);
+                    GenerateOakTree(chunk, localX, baseY, localZ, random);
                     break;
                 case TreeType.Pine:
-                    GeneratePineTree(chunk, localX, baseY, localZ);
+                    GeneratePineTree(chunk, localX, baseY, localZ, random);
                     break;
                 case TreeType.Birch:
-                    GenerateBirchTree(chunk, localX, baseY, localZ);
+                    GenerateBirchTree(chunk, localX, baseY, localZ, random);
                     break;
             }
         }
 
-        private static void GenerateOakTree(Chunk chunk, int x, int baseY, int z)
+        private static void GenerateOakTree(Chunk chunk, int x, int baseY, int z, Random random)
         {
             // Oak tree: 4-6 blocks tall trunk with wide canopy
-            int trunkHeight = 4 + _random.Next(3);
+            int trunkHeight = 4 + random.Next(3);
             
             // Generate trunk
             for (int y = 0; y < trunkHeight; y++)
@@ -58,7 +61,7 @@ namespace TimelessTales.World
             
             // Generate canopy (spherical shape)
             int canopyY = baseY + trunkHeight;
-            int canopyRadius = 2 + _random.Next(2);
+            int canopyRadius = 2 + random.Next(2);
             
             for (int dy = -canopyRadius; dy <= canopyRadius + 1; dy++)
             {
@@ -76,7 +79,7 @@ namespace TimelessTales.World
                                 if (leafY >= 0 && leafY < Chunk.CHUNK_HEIGHT)
                                 {
                                     // 80% chance to place leaf (create some gaps)
-                                    if (_random.NextDouble() < 0.8)
+                                    if (random.NextDouble() < 0.8)
                                     {
                                         SetBlockSafe(chunk, x + dx, leafY, z + dz, BlockType.OakLeaves);
                                     }
@@ -88,10 +91,10 @@ namespace TimelessTales.World
             }
         }
 
-        private static void GeneratePineTree(Chunk chunk, int x, int baseY, int z)
+        private static void GeneratePineTree(Chunk chunk, int x, int baseY, int z, Random random)
         {
             // Pine tree: 6-10 blocks tall with conical shape
-            int trunkHeight = 6 + _random.Next(5);
+            int trunkHeight = 6 + random.Next(5);
             
             // Generate trunk
             for (int y = 0; y < trunkHeight; y++)
@@ -137,10 +140,10 @@ namespace TimelessTales.World
             }
         }
 
-        private static void GenerateBirchTree(Chunk chunk, int x, int baseY, int z)
+        private static void GenerateBirchTree(Chunk chunk, int x, int baseY, int z, Random random)
         {
             // Birch tree: 5-7 blocks tall, similar to oak but slightly taller and narrower
-            int trunkHeight = 5 + _random.Next(3);
+            int trunkHeight = 5 + random.Next(3);
             
             // Generate trunk
             for (int y = 0; y < trunkHeight; y++)
@@ -168,7 +171,7 @@ namespace TimelessTales.World
                                 int leafY = canopyY + dy;
                                 if (leafY >= 0 && leafY < Chunk.CHUNK_HEIGHT)
                                 {
-                                    if (_random.NextDouble() < 0.85)
+                                    if (random.NextDouble() < 0.85)
                                     {
                                         SetBlockSafe(chunk, x + dx, leafY, z + dz, BlockType.BirchLeaves);
                                     }
@@ -203,11 +206,12 @@ namespace TimelessTales.World
         /// </summary>
         public static TreeType GetTreeTypeForBiome(BiomeType biome)
         {
+            // Use deterministic selection based on biome
             return biome switch
             {
                 BiomeType.Tundra => TreeType.Pine,
                 BiomeType.Boreal => TreeType.Pine,
-                BiomeType.Temperate => _random.NextDouble() < 0.5 ? TreeType.Oak : TreeType.Birch,
+                BiomeType.Temperate => TreeType.Oak, // Could vary with sub-biomes
                 BiomeType.Desert => TreeType.Oak, // Rare trees in desert
                 BiomeType.Tropical => TreeType.Oak,
                 _ => TreeType.Oak
