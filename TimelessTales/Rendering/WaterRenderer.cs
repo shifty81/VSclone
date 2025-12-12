@@ -222,11 +222,15 @@ namespace TimelessTales.Rendering
             Color sideColor = CelShadingUtility.ApplyCelShading(color, CEL_SHADING_BANDS);
             
             // Top face (Y+) - with wave animation
+            // Extend slightly beyond block boundary to hide seams
+            const float OVERLAP = 0.001f;
             if (top)
             {
                 AddQuad(vertices, pos,
-                    new Vector3(0, 1 + waveOffset, 0), new Vector3(1, 1 + waveOffset, 0),
-                    new Vector3(1, 1 + waveOffset, 1), new Vector3(0, 1 + waveOffset, 1), topColor);
+                    new Vector3(-OVERLAP, 1 + waveOffset, -OVERLAP), 
+                    new Vector3(1 + OVERLAP, 1 + waveOffset, -OVERLAP),
+                    new Vector3(1 + OVERLAP, 1 + waveOffset, 1 + OVERLAP), 
+                    new Vector3(-OVERLAP, 1 + waveOffset, 1 + OVERLAP), topColor);
             }
 
             // Bottom face (Y-)

@@ -6,7 +6,7 @@ using TimelessTales.Blocks;
 namespace TimelessTales.Rendering
 {
     /// <summary>
-    /// Renders the 3D voxel world
+    /// Renders the 3D voxel world with texture support
     /// </summary>
     public class WorldRenderer
     {
@@ -14,6 +14,7 @@ namespace TimelessTales.Rendering
         private readonly WorldManager _worldManager;
         private readonly BasicEffect _effect;
         private readonly Dictionary<(int, int), ChunkMesh> _chunkMeshes;
+        private readonly TextureAtlas _textureAtlas;
         
         // Cel shading parameters for world blocks
         private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands for toon shading
@@ -24,11 +25,16 @@ namespace TimelessTales.Rendering
             _worldManager = worldManager;
             _chunkMeshes = new Dictionary<(int, int), ChunkMesh>();
             
-            // Initialize basic effect for rendering
+            // Initialize texture atlas
+            _textureAtlas = new TextureAtlas(graphicsDevice);
+            
+            // Initialize basic effect for rendering with textures
             _effect = new BasicEffect(graphicsDevice)
             {
                 VertexColorEnabled = true,
-                LightingEnabled = false
+                LightingEnabled = false,
+                TextureEnabled = true,
+                Texture = _textureAtlas.Texture
             };
         }
 
@@ -42,6 +48,7 @@ namespace TimelessTales.Rendering
             // Set render states
             _graphicsDevice.DepthStencilState = DepthStencilState.Default;
             _graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+            _graphicsDevice.SamplerStates[0] = SamplerState.PointClamp; // Pixelated texture look
             
             // Build/update chunk meshes
             foreach (var chunk in _worldManager.GetLoadedChunks())
@@ -76,7 +83,7 @@ namespace TimelessTales.Rendering
 
         private ChunkMesh BuildChunkMesh(Chunk chunk)
         {
-            var vertices = new List<VertexPositionColor>();
+            var vertices = new List<VertexPositionColorTexture>();
             
             int worldX = chunk.ChunkX * Chunk.CHUNK_SIZE;
             int worldZ = chunk.ChunkZ * Chunk.CHUNK_SIZE;
@@ -103,9 +110,11 @@ namespace TimelessTales.Rendering
                         bool renderWest = !IsBlockOpaque(chunk, x - 1, y, z);
                         
                         Vector3 blockPos = new Vector3(worldX + x, y, worldZ + z);
-                        Color blockColor = BlockRegistry.Get(block).Color;
+                        BlockDefinition blockDef = BlockRegistry.Get(block);
+                        Color blockColor = blockDef.Color;
+                        int textureIndex = blockDef.TextureIndex;
                         
-                        AddBlockFaces(vertices, blockPos, blockColor,
+                        AddBlockFaces(vertices, blockPos, blockColor, textureIndex,
                                     renderTop, renderBottom, renderNorth, renderSouth, renderEast, renderWest);
                     }
                 }
@@ -124,7 +133,7 @@ namespace TimelessTales.Rendering
             return !BlockRegistry.IsTransparent(block);
         }
 
-        private void AddBlockFaces(List<VertexPositionColor> vertices, Vector3 pos, Color color,
+        private void AddBlockFaces(List<VertexPositionColorTexture> vertices, Vector3 pos, Color color, int textureIndex,
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
             // Apply cel shading to all face colors for toon-like appearance
@@ -132,67 +141,70 @@ namespace TimelessTales.Rendering
             Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.3f), CEL_SHADING_BANDS);
             Color sideColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.1f), CEL_SHADING_BANDS);
             
+            // Get texture coordinates for this block
+            TextureCoordinates texCoords = _textureAtlas.GetTextureCoordinates(textureIndex);
+            
             // Top face (Y+)
             if (top)
             {
-                AddQuad(vertices, pos,
+                AddQuadWithTexture(vertices, pos,
                     new Vector3(0, 1, 0), new Vector3(1, 1, 0),
-                    new Vector3(1, 1, 1), new Vector3(0, 1, 1), topColor);
+                    new Vector3(1, 1, 1), new Vector3(0, 1, 1), topColor, texCoords);
             }
             
             // Bottom face (Y-)
             if (bottom)
             {
-                AddQuad(vertices, pos,
+                AddQuadWithTexture(vertices, pos,
                     new Vector3(0, 0, 1), new Vector3(1, 0, 1),
-                    new Vector3(1, 0, 0), new Vector3(0, 0, 0), bottomColor);
+                    new Vector3(1, 0, 0), new Vector3(0, 0, 0), bottomColor, texCoords);
             }
             
             // North face (Z+)
             if (north)
             {
-                AddQuad(vertices, pos,
+                AddQuadWithTexture(vertices, pos,
                     new Vector3(0, 0, 1), new Vector3(0, 1, 1),
-                    new Vector3(1, 1, 1), new Vector3(1, 0, 1), sideColor);
+                    new Vector3(1, 1, 1), new Vector3(1, 0, 1), sideColor, texCoords);
             }
             
             // South face (Z-)
             if (south)
             {
-                AddQuad(vertices, pos,
+                AddQuadWithTexture(vertices, pos,
                     new Vector3(1, 0, 0), new Vector3(1, 1, 0),
-                    new Vector3(0, 1, 0), new Vector3(0, 0, 0), sideColor);
+                    new Vector3(0, 1, 0), new Vector3(0, 0, 0), sideColor, texCoords);
             }
             
             // East face (X+)
             if (east)
             {
-                AddQuad(vertices, pos,
+                AddQuadWithTexture(vertices, pos,
                     new Vector3(1, 0, 1), new Vector3(1, 1, 1),
-                    new Vector3(1, 1, 0), new Vector3(1, 0, 0), sideColor);
+                    new Vector3(1, 1, 0), new Vector3(1, 0, 0), sideColor, texCoords);
             }
             
             // West face (X-)
             if (west)
             {
-                AddQuad(vertices, pos,
+                AddQuadWithTexture(vertices, pos,
                     new Vector3(0, 0, 0), new Vector3(0, 1, 0),
-                    new Vector3(0, 1, 1), new Vector3(0, 0, 1), sideColor);
+                    new Vector3(0, 1, 1), new Vector3(0, 0, 1), sideColor, texCoords);
             }
         }
 
-        private void AddQuad(List<VertexPositionColor> vertices, Vector3 basePos,
-                            Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Color color)
+        private void AddQuadWithTexture(List<VertexPositionColorTexture> vertices, Vector3 basePos,
+                            Vector3 v1, Vector3 v2, Vector3 v3, Vector3 v4, Color color, TextureCoordinates texCoords)
         {
             // First triangle
-            vertices.Add(new VertexPositionColor(basePos + v1, color));
-            vertices.Add(new VertexPositionColor(basePos + v2, color));
-            vertices.Add(new VertexPositionColor(basePos + v3, color));
+            vertices.Add(new VertexPositionColorTexture(basePos + v1, color, texCoords.BottomLeft));
+            vertices.Add(new VertexPositionColorTexture(basePos + v2, color, texCoords.TopLeft));
+            vertices.Add(new VertexPositionColorTexture(basePos + v3, color, texCoords.TopRight));
             
             // Second triangle
-            vertices.Add(new VertexPositionColor(basePos + v3, color));
-            vertices.Add(new VertexPositionColor(basePos + v4, color));
-            vertices.Add(new VertexPositionColor(basePos + v1, color));
+            vertices.Add(new VertexPositionColorTexture(basePos + v3, color, texCoords.TopRight));
+            vertices.Add(new VertexPositionColorTexture(basePos + v4, color, texCoords.BottomRight));
+            vertices.Add(new VertexPositionColorTexture(basePos + v1, color, texCoords.BottomLeft));
         }
     }
 
@@ -201,10 +213,10 @@ namespace TimelessTales.Rendering
     /// </summary>
     public class ChunkMesh
     {
-        public VertexPositionColor[] Vertices { get; }
+        public VertexPositionColorTexture[] Vertices { get; }
         public int VertexCount => Vertices.Length;
 
-        public ChunkMesh(VertexPositionColor[] vertices)
+        public ChunkMesh(VertexPositionColorTexture[] vertices)
         {
             Vertices = vertices;
         }

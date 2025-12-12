@@ -57,9 +57,10 @@ namespace TimelessTales.Blocks
         public Color Color { get; set; } // Temporary color until textures are added
         public bool IsOre { get; set; }
         public int LightEmission { get; set; } // 0-15
+        public int TextureIndex { get; set; } // Index in the texture atlas
 
         public BlockDefinition(BlockType type, string name, float hardness, Color color, 
-                              bool isTransparent = false, bool affectedByGravity = false, bool isOre = false)
+                              bool isTransparent = false, bool affectedByGravity = false, bool isOre = false, int textureIndex = -1)
         {
             Type = type;
             Name = name;
@@ -70,6 +71,7 @@ namespace TimelessTales.Blocks
             AffectedByGravity = affectedByGravity;
             IsOre = isOre;
             LightEmission = 0;
+            TextureIndex = textureIndex >= 0 ? textureIndex : (int)type; // Default to enum value if not specified
         }
     }
 
@@ -87,46 +89,47 @@ namespace TimelessTales.Blocks
 
         private static void RegisterDefaultBlocks()
         {
-            Register(new BlockDefinition(BlockType.Air, "Air", 0, Color.Transparent, true, false));
-            Register(new BlockDefinition(BlockType.Stone, "Stone", 1.5f, Color.Gray));
-            Register(new BlockDefinition(BlockType.Dirt, "Dirt", 0.5f, new Color(139, 69, 19)));
-            Register(new BlockDefinition(BlockType.Grass, "Grass", 0.6f, Color.Green));
-            Register(new BlockDefinition(BlockType.Sand, "Sand", 0.5f, Color.SandyBrown, false, true));
-            Register(new BlockDefinition(BlockType.Gravel, "Gravel", 0.6f, Color.DarkGray, false, true));
-            Register(new BlockDefinition(BlockType.Clay, "Clay", 0.6f, new Color(178, 140, 110)));
+            // Texture indices match the order in TextureAtlas generation
+            Register(new BlockDefinition(BlockType.Air, "Air", 0, Color.Transparent, true, false, false, -1));
+            Register(new BlockDefinition(BlockType.Stone, "Stone", 1.5f, Color.Gray, false, false, false, 0));
+            Register(new BlockDefinition(BlockType.Dirt, "Dirt", 0.5f, new Color(139, 69, 19), false, false, false, 1));
+            Register(new BlockDefinition(BlockType.Grass, "Grass", 0.6f, Color.Green, false, false, false, 2));
+            Register(new BlockDefinition(BlockType.Sand, "Sand", 0.5f, Color.SandyBrown, false, true, false, 3));
+            Register(new BlockDefinition(BlockType.Gravel, "Gravel", 0.6f, Color.DarkGray, false, true, false, 4));
+            Register(new BlockDefinition(BlockType.Clay, "Clay", 0.6f, new Color(178, 140, 110), false, false, false, 5));
             
             // Geological rock layers
-            Register(new BlockDefinition(BlockType.Granite, "Granite", 2.0f, new Color(100, 100, 100)));
-            Register(new BlockDefinition(BlockType.Limestone, "Limestone", 1.2f, new Color(200, 200, 180)));
-            Register(new BlockDefinition(BlockType.Basalt, "Basalt", 1.8f, new Color(60, 60, 70)));
-            Register(new BlockDefinition(BlockType.Sandstone, "Sandstone", 1.0f, new Color(210, 180, 140)));
-            Register(new BlockDefinition(BlockType.Slate, "Slate", 1.5f, new Color(70, 80, 90)));
+            Register(new BlockDefinition(BlockType.Granite, "Granite", 2.0f, new Color(100, 100, 100), false, false, false, 6));
+            Register(new BlockDefinition(BlockType.Limestone, "Limestone", 1.2f, new Color(200, 200, 180), false, false, false, 7));
+            Register(new BlockDefinition(BlockType.Basalt, "Basalt", 1.8f, new Color(60, 60, 70), false, false, false, 8));
+            Register(new BlockDefinition(BlockType.Sandstone, "Sandstone", 1.0f, new Color(210, 180, 140), false, false, false, 9));
+            Register(new BlockDefinition(BlockType.Slate, "Slate", 1.5f, new Color(70, 80, 90), false, false, false, 10));
             
             // Ores
-            Register(new BlockDefinition(BlockType.CopperOre, "Copper Ore", 2.5f, new Color(184, 115, 51), false, false, true));
-            Register(new BlockDefinition(BlockType.TinOre, "Tin Ore", 2.5f, new Color(150, 150, 150), false, false, true));
-            Register(new BlockDefinition(BlockType.IronOre, "Iron Ore", 3.0f, new Color(139, 90, 90), false, false, true));
-            Register(new BlockDefinition(BlockType.Coal, "Coal", 2.0f, new Color(30, 30, 30), false, false, true));
+            Register(new BlockDefinition(BlockType.CopperOre, "Copper Ore", 2.5f, new Color(184, 115, 51), false, false, true, 11));
+            Register(new BlockDefinition(BlockType.TinOre, "Tin Ore", 2.5f, new Color(150, 150, 150), false, false, true, 12));
+            Register(new BlockDefinition(BlockType.IronOre, "Iron Ore", 3.0f, new Color(139, 90, 90), false, false, true, 13));
+            Register(new BlockDefinition(BlockType.Coal, "Coal", 2.0f, new Color(30, 30, 30), false, false, true, 14));
             
             // Wood
-            Register(new BlockDefinition(BlockType.Wood, "Wood", 1.0f, new Color(139, 90, 43)));
-            Register(new BlockDefinition(BlockType.Leaves, "Leaves", 0.2f, Color.DarkGreen, true));
+            Register(new BlockDefinition(BlockType.Wood, "Wood", 1.0f, new Color(139, 90, 43), false, false, false, 15));
+            Register(new BlockDefinition(BlockType.Leaves, "Leaves", 0.2f, Color.DarkGreen, true, false, false, 16));
             
             // Tree types
-            Register(new BlockDefinition(BlockType.OakLog, "Oak Log", 1.2f, new Color(101, 67, 33)));
-            Register(new BlockDefinition(BlockType.OakLeaves, "Oak Leaves", 0.2f, new Color(34, 139, 34), true));
-            Register(new BlockDefinition(BlockType.PineLog, "Pine Log", 1.1f, new Color(85, 53, 24)));
-            Register(new BlockDefinition(BlockType.PineLeaves, "Pine Leaves", 0.2f, new Color(28, 95, 28), true));
-            Register(new BlockDefinition(BlockType.BirchLog, "Birch Log", 1.0f, new Color(220, 220, 200)));
-            Register(new BlockDefinition(BlockType.BirchLeaves, "Birch Leaves", 0.2f, new Color(50, 150, 50), true));
-            
-            // Water
-            Register(new BlockDefinition(BlockType.Water, "Water", 0.0f, new Color(30, 80, 200, 180), true));
-            Register(new BlockDefinition(BlockType.Saltwater, "Saltwater", 0.0f, new Color(20, 60, 160, 180), true));
+            Register(new BlockDefinition(BlockType.OakLog, "Oak Log", 1.2f, new Color(101, 67, 33), false, false, false, 17));
+            Register(new BlockDefinition(BlockType.OakLeaves, "Oak Leaves", 0.2f, new Color(34, 139, 34), true, false, false, 18));
+            Register(new BlockDefinition(BlockType.PineLog, "Pine Log", 1.1f, new Color(85, 53, 24), false, false, false, 19));
+            Register(new BlockDefinition(BlockType.PineLeaves, "Pine Leaves", 0.2f, new Color(28, 95, 28), true, false, false, 20));
+            Register(new BlockDefinition(BlockType.BirchLog, "Birch Log", 1.0f, new Color(220, 220, 200), false, false, false, 21));
+            Register(new BlockDefinition(BlockType.BirchLeaves, "Birch Leaves", 0.2f, new Color(50, 150, 50), true, false, false, 22));
             
             // Crafted
-            Register(new BlockDefinition(BlockType.Planks, "Planks", 1.0f, new Color(160, 110, 60)));
-            Register(new BlockDefinition(BlockType.Cobblestone, "Cobblestone", 1.5f, new Color(120, 120, 120)));
+            Register(new BlockDefinition(BlockType.Planks, "Planks", 1.0f, new Color(160, 110, 60), false, false, false, 23));
+            Register(new BlockDefinition(BlockType.Cobblestone, "Cobblestone", 1.5f, new Color(120, 120, 120), false, false, false, 24));
+            
+            // Water
+            Register(new BlockDefinition(BlockType.Water, "Water", 0.0f, new Color(30, 80, 200, 180), true, false, false, 25));
+            Register(new BlockDefinition(BlockType.Saltwater, "Saltwater", 0.0f, new Color(20, 60, 160, 180), true, false, false, 26));
         }
 
         public static void Register(BlockDefinition block)
