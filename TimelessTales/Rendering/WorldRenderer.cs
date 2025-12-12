@@ -14,6 +14,9 @@ namespace TimelessTales.Rendering
         private readonly WorldManager _worldManager;
         private readonly BasicEffect _effect;
         private readonly Dictionary<(int, int), ChunkMesh> _chunkMeshes;
+        
+        // Cel shading parameters for world blocks
+        private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands for toon shading
 
         public WorldRenderer(GraphicsDevice graphicsDevice, WorldManager worldManager)
         {
@@ -124,10 +127,14 @@ namespace TimelessTales.Rendering
         private void AddBlockFaces(List<VertexPositionColor> vertices, Vector3 pos, Color color,
                                    bool top, bool bottom, bool north, bool south, bool east, bool west)
         {
+            // Apply cel shading to all face colors for toon-like appearance
+            Color topColor = ApplyCelShading(Color.Lerp(color, Color.White, 0.2f));
+            Color bottomColor = ApplyCelShading(Color.Lerp(color, Color.Black, 0.3f));
+            Color sideColor = ApplyCelShading(Color.Lerp(color, Color.Black, 0.1f));
+            
             // Top face (Y+)
             if (top)
             {
-                Color topColor = Color.Lerp(color, Color.White, 0.2f);
                 AddQuad(vertices, pos,
                     new Vector3(0, 1, 0), new Vector3(1, 1, 0),
                     new Vector3(1, 1, 1), new Vector3(0, 1, 1), topColor);
@@ -136,7 +143,6 @@ namespace TimelessTales.Rendering
             // Bottom face (Y-)
             if (bottom)
             {
-                Color bottomColor = Color.Lerp(color, Color.Black, 0.3f);
                 AddQuad(vertices, pos,
                     new Vector3(0, 0, 1), new Vector3(1, 0, 1),
                     new Vector3(1, 0, 0), new Vector3(0, 0, 0), bottomColor);
@@ -145,7 +151,6 @@ namespace TimelessTales.Rendering
             // North face (Z+)
             if (north)
             {
-                Color sideColor = Color.Lerp(color, Color.Black, 0.1f);
                 AddQuad(vertices, pos,
                     new Vector3(0, 0, 1), new Vector3(0, 1, 1),
                     new Vector3(1, 1, 1), new Vector3(1, 0, 1), sideColor);
@@ -154,7 +159,6 @@ namespace TimelessTales.Rendering
             // South face (Z-)
             if (south)
             {
-                Color sideColor = Color.Lerp(color, Color.Black, 0.1f);
                 AddQuad(vertices, pos,
                     new Vector3(1, 0, 0), new Vector3(1, 1, 0),
                     new Vector3(0, 1, 0), new Vector3(0, 0, 0), sideColor);
@@ -175,6 +179,33 @@ namespace TimelessTales.Rendering
                     new Vector3(0, 0, 0), new Vector3(0, 1, 0),
                     new Vector3(0, 1, 1), new Vector3(0, 0, 1), color);
             }
+        }
+        
+        /// <summary>
+        /// Applies cel shading to a color by quantizing the RGB values into discrete bands
+        /// </summary>
+        private Color ApplyCelShading(Color color)
+        {
+            // Quantize each color channel to create cel shading effect
+            int r = QuantizeColorChannel(color.R, CEL_SHADING_BANDS);
+            int g = QuantizeColorChannel(color.G, CEL_SHADING_BANDS);
+            int b = QuantizeColorChannel(color.B, CEL_SHADING_BANDS);
+            
+            return new Color(r, g, b, color.A);
+        }
+        
+        /// <summary>
+        /// Quantizes a color channel (0-255) into discrete bands for cel shading
+        /// </summary>
+        private int QuantizeColorChannel(int value, int bands)
+        {
+            float normalized = value / 255.0f;
+            float bandSize = 1.0f / bands;
+            float bandIndex = MathF.Floor(normalized / bandSize);
+            
+            // Return the center of the band
+            float quantized = (bandIndex + 0.5f) * bandSize;
+            return (int)MathHelper.Clamp(quantized * 255, 0, 255);
         }
 
         private void AddQuad(List<VertexPositionColor> vertices, Vector3 basePos,
