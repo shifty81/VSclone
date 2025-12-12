@@ -69,10 +69,17 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Character skeleton system with bones
 - ✅ First-person arms visible
 - ✅ Body visible when looking down
-- 📋 Character customization:
+- ✅ Character customization:
+  - ✅ Character name property (default: "Wanderer")
+  - ✅ Skin tone customization (realistic human colors)
+  - ✅ Hair color and style options (6 styles: Bald, Short, Medium, Long, Ponytail, Braided)
+  - ✅ Eye color customization
+  - ✅ Body scaling (height/width)
+  - ✅ Gender presentation (Masculine, Feminine, Neutral)
+  - ✅ Clothing colors (shirt, pants)
+  - ✅ Character appearance used in rendering
   - 📋 Different voxel character models
   - 📋 Clothing/armor as voxel overlays
-  - 📋 Character color/texture variations
 - 📋 Support for importing voxel models:
   - 📋 MagicaVoxel (.vox) format support
   - 📋 Qubicle (.qb) format support
@@ -246,17 +253,25 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - 📋 Block drop system (silk touch vs normal)
 - 📋 Multi-block structures
 
-### 5.4 Inventory System
+### 5.4 Inventory & Equipment System
 - ✅ 40-slot inventory
 - ✅ Item stacking (64 per slot)
 - ✅ Hotbar selection (1-9 keys)
 - ✅ Starting items provided
 - ✅ Visual hotbar display
 - ✅ Selected slot highlight
-- 📋 Inventory UI screen (I key)
-- 📋 Item tooltips and descriptions
+- ✅ Simple inventory UI screen (I key)
+- ✅ Equipment system with 8 slots (Head, Chest, Legs, Feet, Hands, Back, Main Hand, Off Hand)
+- ✅ Equipment tracking and management
+- ✅ Tabbed menu UI (C key):
+  - ✅ Character tab: stats, appearance, equipment slots with visual preview
+  - ✅ Inventory tab: organized grid view of all items
+  - ✅ Crafting tab: material pouch display, crafting systems framework
+  - ✅ Map tab: player position and map info
+- 📋 Item tooltips and descriptions (basic version exists)
 - 📋 Crafting grid integration
-- 📋 Equipment slots
+- 📋 Visual rendering of equipped items on character
+- 📋 Drag-and-drop item management
 
 ---
 
@@ -300,8 +315,14 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Controls help screen
 - ✅ Pause menu (P key)
 - ✅ Debug overlay (F3 key with FPS, position, chunk info)
-- 📋 Inventory screen polish
-- 📋 Crafting interface
+- ✅ Tabbed menu system (C key):
+  - ✅ Character tab with stats, appearance, and equipment
+  - ✅ Inventory tab with organized grid
+  - ✅ Crafting tab with material pouch
+  - ✅ Map tab with position info
+- ✅ Simple inventory screen (I key)
+- 📋 Advanced crafting interface with recipes
+- 📋 Skill/progression UI
 
 ---
 
