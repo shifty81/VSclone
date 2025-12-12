@@ -60,6 +60,10 @@ namespace TimelessTales.Entities
         public float Thirst { get; set; } = 100f;
         public float MaxThirst { get; } = 100f;
         
+        // Character customization
+        public string CharacterName { get; set; } = "Wanderer";
+        public CharacterAppearance Appearance { get; private set; }
+        
         // Inventory and equipment
         public Inventory Inventory { get; private set; }
         public Equipment Equipment { get; private set; }
@@ -79,6 +83,9 @@ namespace TimelessTales.Entities
             Equipment = new Equipment();
             MaterialPouch = new MaterialPouch(); // Initialize material pouch
             SelectedBlock = BlockType.Stone;
+            
+            // Initialize character appearance with default human-like values
+            Appearance = new CharacterAppearance();
             
             // Initialize skeleton
             Skeleton = new Skeleton();
@@ -730,5 +737,59 @@ namespace TimelessTales.Entities
         {
             return _equippedItems[slot] == null;
         }
+
+        public Dictionary<EquipmentSlot, BlockType?> GetAllEquipped()
+        {
+            return new Dictionary<EquipmentSlot, BlockType?>(_equippedItems);
+        }
+    }
+
+    /// <summary>
+    /// Character appearance customization for more human-like details
+    /// </summary>
+    public class CharacterAppearance
+    {
+        // Skin tone (using realistic human skin color values)
+        public Color SkinTone { get; set; } = new Color(210, 180, 140); // Default: light tan
+        
+        // Hair
+        public Color HairColor { get; set; } = new Color(101, 67, 33); // Default: brown
+        public HairStyle HairStyle { get; set; } = HairStyle.Short;
+        
+        // Eyes
+        public Color EyeColor { get; set; } = new Color(70, 130, 180); // Default: blue
+        
+        // Body type
+        public float BodyScale { get; set; } = 1.0f; // Height/width multiplier (0.8 - 1.2)
+        
+        // Clothing colors (default if no equipment)
+        public Color ShirtColor { get; set; } = new Color(60, 100, 180); // Blue
+        public Color PantsColor { get; set; } = new Color(50, 50, 120); // Dark blue
+        
+        // Gender presentation (affects body proportions slightly)
+        public Gender Gender { get; set; } = Gender.Neutral;
+    }
+
+    /// <summary>
+    /// Hair style options for character customization
+    /// </summary>
+    public enum HairStyle
+    {
+        Bald,
+        Short,
+        Medium,
+        Long,
+        Ponytail,
+        Braided
+    }
+
+    /// <summary>
+    /// Gender presentation options (affects proportions)
+    /// </summary>
+    public enum Gender
+    {
+        Masculine,
+        Feminine,
+        Neutral
     }
 }

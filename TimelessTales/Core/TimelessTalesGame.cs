@@ -33,6 +33,7 @@ namespace TimelessTales.Core
         private CharacterStatusDisplay? _characterStatusDisplay;
         private PauseMenu? _pauseMenu;
         private DebugOverlay? _debugOverlay;
+        private TabMenu? _tabMenu;
         
         // Particle and audio systems
         private Particles.ParticleRenderer? _particleRenderer;
@@ -152,6 +153,10 @@ namespace TimelessTales.Core
                 _pauseMenu.OnResume += ResumGame;
                 _pauseMenu.OnMainMenu += ReturnToMainMenuFromPause;
                 Logger.Info("Pause menu initialized");
+                
+                // Initialize tab menu
+                _tabMenu = new TabMenu(GraphicsDevice);
+                Logger.Info("Tab menu initialized");
                 
                 Logger.Info("Content loading completed successfully");
             }
@@ -323,6 +328,14 @@ namespace TimelessTales.Core
                     {
                         HideControls();
                     }
+                    else if (_currentState == GameState.TabMenu)
+                    {
+                        // Close tab menu and return to playing
+                        Logger.Info("Closing tab menu");
+                        _currentState = GameState.Playing;
+                        IsMouseVisible = false;
+                        _inputManager!.SetMouseCaptured(true);
+                    }
                 }
 
                 if (_currentState == GameState.MainMenu)
@@ -336,6 +349,11 @@ namespace TimelessTales.Core
                 else if (_currentState == GameState.Controls)
                 {
                     _controlsScreen!.Update(gameTime);
+                }
+                else if (_currentState == GameState.TabMenu)
+                {
+                    _inputManager!.Update();
+                    _tabMenu!.Update(_inputManager);
                 }
                 else if (_currentState == GameState.Playing)
                 {
@@ -362,12 +380,22 @@ namespace TimelessTales.Core
                         _pauseMenu!.Update(gameTime);
                     }
                     
-                    // Toggle inventory
+                    // Toggle inventory (legacy simple inventory)
                     if (_inputManager.IsKeyPressed(Keys.I))
                     {
                         _inventoryOpen = !_inventoryOpen;
                         IsMouseVisible = _inventoryOpen;
                         _inputManager.SetMouseCaptured(!_inventoryOpen);
+                    }
+                    
+                    // Toggle tab menu (C for Character sheet / comprehensive menu)
+                    if (_inputManager.IsKeyPressed(Keys.C))
+                    {
+                        _currentState = GameState.TabMenu;
+                        IsMouseVisible = true;
+                        _inputManager.SetMouseCaptured(false);
+                        _inventoryOpen = false; // Close simple inventory
+                        _worldMapOpen = false; // Close world map
                     }
                     
                     // Toggle world map
@@ -552,6 +580,26 @@ namespace TimelessTales.Core
                     try
                     {
                         _controlsScreen!.Draw(_spriteBatch);
+                    }
+                    finally
+                    {
+                        _spriteBatch.End();
+                    }
+                }
+                else if (_currentState == GameState.TabMenu)
+                {
+                    // Draw the game world in the background (slightly darkened by tab menu overlay)
+                    GraphicsDevice.Clear(_timeManager!.GetSkyColor());
+                    _skyboxRenderer!.Draw(_camera!, _timeManager);
+                    _worldRenderer!.Draw(_camera!, gameTime);
+                    _waterRenderer!.Draw(_camera!);
+                    _playerRenderer!.Draw(_camera!, _player!);
+                    
+                    // Draw tab menu overlay
+                    _spriteBatch!.Begin();
+                    try
+                    {
+                        _tabMenu!.Draw(_spriteBatch, _player!);
                     }
                     finally
                     {

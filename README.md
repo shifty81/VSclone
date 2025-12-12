@@ -18,6 +18,11 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
   - Jump with physics (Space)
   - Mouse look camera
   - Collision detection
+  - **Character Customization**:
+    - Customizable name (default: "Wanderer")
+    - Human-like appearance system with skin tone, hair color/style, eye color
+    - Body scaling and gender presentation options
+    - Clothing colors (shirt, pants)
 
 - **Block System**
   - 20+ block types including:
@@ -34,13 +39,21 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
   - Raycasting for block selection
   - Reach distance: 5 blocks
 
-- **Inventory System**
+- **Inventory & Equipment System**
   - 40-slot inventory
   - Item stacking
   - Starting items (Stone, Dirt, Planks, Cobblestone, Wood, Grass, Sand, Gravel, Clay)
   - Hotbar selection (1-9 keys)
   - Visual hotbar display with selected slot highlight
   - Block breaking progress bar
+  - **Equipment System**:
+    - Equipment slots: Head, Chest, Legs, Feet, Hands, Back, Main Hand, Off Hand
+    - Visual equipment tracking (future: equipped items will show on character)
+  - **Tabbed Menu UI** (Press C):
+    - **Character Tab**: View stats, appearance, and equipment slots
+    - **Inventory Tab**: Organized grid view of all items
+    - **Crafting Tab**: Crafting system framework (knapping, pottery, metallurgy planned)
+    - **Map Tab**: Quick access to world position and map info
 
 - **Rendering**
   - 3D voxel rendering with face culling
@@ -65,12 +78,13 @@ A Vintage Story inspired voxel-based survival sandbox game built with C# and Mon
 | **Left Click** | Break block (hold to see progress) |
 | **Right Click** | Place block |
 | **1-9** | Select block type from hotbar |
-| **I** | Toggle inventory |
+| **I** | Toggle inventory (simple view) |
+| **C** | Toggle character sheet / tabbed menu (character, inventory, crafting, map) |
 | **M** | Toggle world map |
 | **F3** | Toggle debug overlay (FPS, position, chunk info) |
 | **F11** | Toggle fullscreen |
 | **P** | Pause |
-| **Escape** | Exit game |
+| **Escape** | Exit game / Close menus |
 
 ## User Interface
 
