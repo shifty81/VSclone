@@ -132,19 +132,55 @@ namespace TimelessTales.World
             float erosionFactor = Math.Clamp(erosion, -0.5f, 0.5f);
             terrainHeight *= (1.0f - erosionFactor * 0.3f); // Reduce height by up to 30% in eroded areas
             
-            // River carving - create deep valleys for rivers
+            // Get biome info for biome-specific river carving
+            float moisture = GetMoisture(worldX, worldZ, SEA_LEVEL + (int)(continentHeight + terrainHeight));
+            float temperature = GetTemperature(worldX, worldZ, SEA_LEVEL + (int)(continentHeight + terrainHeight));
+            BiomeType biome = GetBiome(moisture, temperature, SEA_LEVEL + (int)(continentHeight + terrainHeight));
+            
+            // Biome-specific river carving - create deep valleys for rivers
             float riverValue = _riverNoise.Evaluate(worldX * 0.01f, worldZ * 0.01f);
             if (Math.Abs(riverValue) < 0.05f && continentValue > 0)
             {
-                // River valley
+                var riverParams = GetRiverParameters(biome);
+                
+                // River valley - depth and width vary by biome
                 float riverDepth = (0.05f - Math.Abs(riverValue)) / 0.05f;
-                terrainHeight -= riverDepth * 12; // Carve river valley
+                terrainHeight -= riverDepth * riverParams.Depth;
             }
             
             // Combine continent shape with local terrain
             float finalHeight = continentHeight + terrainHeight;
             
             return SEA_LEVEL + (int)finalHeight;
+        }
+
+        /// <summary>
+        /// Get river generation parameters for a specific biome
+        /// </summary>
+        private (float Depth, float Width) GetRiverParameters(BiomeType biome)
+        {
+            return biome switch
+            {
+                // Ocean - no rivers
+                BiomeType.Ocean => (0f, 0f),
+                
+                // Tundra - shallow, narrow rivers (frozen much of year)
+                BiomeType.Tundra => (6f, 0.03f),
+                
+                // Boreal - moderate rivers
+                BiomeType.Boreal => (10f, 0.04f),
+                
+                // Temperate - well-developed river systems
+                BiomeType.Temperate => (12f, 0.05f),
+                
+                // Desert - rare but deep wadis/arroyos (erosion from flash floods)
+                BiomeType.Desert => (15f, 0.035f),
+                
+                // Tropical - large, deep rivers
+                BiomeType.Tropical => (14f, 0.06f),
+                
+                _ => (12f, 0.05f)
+            };
         }
 
         private float GetMoisture(int worldX, int worldZ, int height)
@@ -226,11 +262,10 @@ namespace TimelessTales.World
             if (y > surfaceHeight && y > SEA_LEVEL)
                 return BlockType.Air;
 
-            // Generate larger, more connected caves
+            // Generate biome-specific caves with proper 3D noise
             if (y < surfaceHeight - 3 && y > 5)
             {
-                float caveValue = _caveNoise.Evaluate(worldX * 0.04f, y * 0.04f, worldZ * 0.04f);
-                if (caveValue > 0.55f) // Lowered threshold for larger caves
+                if (ShouldGenerateCave(worldX, y, worldZ, surfaceHeight, biome))
                     return BlockType.Air;
             }
 
@@ -253,6 +288,62 @@ namespace TimelessTales.World
 
             // Geological rock layers - realistic strata
             return GetRockLayer(y, worldX, worldZ);
+        }
+
+        /// <summary>
+        /// Determines if a cave should be generated at this position based on biome-specific parameters
+        /// Uses multi-threshold 3D noise for more natural cave systems
+        /// </summary>
+        private bool ShouldGenerateCave(int worldX, int y, int worldZ, int surfaceHeight, BiomeType biome)
+        {
+            // Get biome-specific cave parameters
+            var caveParams = GetCaveParameters(biome);
+            
+            // Don't generate caves too close to surface (biome-specific)
+            int depthBelowSurface = surfaceHeight - y;
+            if (depthBelowSurface < caveParams.MinDepthBelowSurface)
+                return false;
+            
+            // Use 3D simplex noise for cave generation
+            float caveNoise1 = _caveNoise.Evaluate(worldX * caveParams.Scale, y * caveParams.Scale, worldZ * caveParams.Scale);
+            
+            // Use second noise layer for more complex cave shapes
+            float caveNoise2 = _erosionNoise.Evaluate(worldX * caveParams.Scale * 1.5f, y * caveParams.Scale * 1.5f, worldZ * caveParams.Scale * 1.5f);
+            
+            // Combine noise values for more interesting cave patterns
+            float combinedNoise = (caveNoise1 + caveNoise2 * 0.5f) / 1.5f;
+            
+            // Apply biome-specific threshold
+            return combinedNoise > caveParams.Threshold;
+        }
+
+        /// <summary>
+        /// Get cave generation parameters for a specific biome
+        /// </summary>
+        private (float Scale, float Threshold, int MinDepthBelowSurface) GetCaveParameters(BiomeType biome)
+        {
+            return biome switch
+            {
+                // Ocean - no caves (underwater)
+                BiomeType.Ocean => (0.04f, 0.99f, 100),
+                
+                // Tundra - fewer, smaller caves due to frozen ground
+                BiomeType.Tundra => (0.05f, 0.65f, 5),
+                
+                // Boreal - moderate caves
+                BiomeType.Boreal => (0.04f, 0.60f, 4),
+                
+                // Temperate - more caves, good for exploring
+                BiomeType.Temperate => (0.04f, 0.55f, 3),
+                
+                // Desert - large cave systems (erosion)
+                BiomeType.Desert => (0.035f, 0.50f, 3),
+                
+                // Tropical - extensive cave networks with large chambers
+                BiomeType.Tropical => (0.038f, 0.52f, 4),
+                
+                _ => (0.04f, 0.55f, 3)
+            };
         }
 
         private BlockType GetSurfaceBlock(BiomeType biome)
