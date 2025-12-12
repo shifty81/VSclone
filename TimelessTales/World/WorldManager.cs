@@ -129,7 +129,7 @@ namespace TimelessTales.World
 
         public IEnumerable<Chunk> GetLoadedChunks()
         {
-            return _chunks.Values;
+            return _chunks.Values.ToList();
         }
 
         public bool IsBlockSolid(int worldX, int worldY, int worldZ)
