@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using TimelessTales.Entities;
 using TimelessTales.Blocks;
 using TimelessTales.Core;
@@ -24,6 +25,10 @@ namespace TimelessTales.UI
         private WorldManager? _worldManager;
         private bool _inventoryOpen;
         private bool _worldMapOpen;
+        private InputManager? _inputManager;
+        
+        // Mouse interaction state
+        private int _hoveredSlotIndex = -1;
         
         // Simple text rendering constants
         private const int CHAR_WIDTH = 4;  // 3 pixels + 1 spacing
@@ -44,14 +49,24 @@ namespace TimelessTales.UI
             _pixelTexture.SetData(new[] { Color.White });
         }
 
-        public void Update(GameTime gameTime, Player player, TimeManager timeManager, WorldManager worldManager, bool isPaused, bool inventoryOpen = false, bool worldMapOpen = false)
+        public void Update(GameTime gameTime, Player player, TimeManager timeManager, WorldManager worldManager, bool isPaused, bool inventoryOpen = false, bool worldMapOpen = false, InputManager? inputManager = null)
         {
             _player = player;
             _timeManager = timeManager;
             _worldManager = worldManager;
             _inventoryOpen = inventoryOpen;
             _worldMapOpen = worldMapOpen;
-            // UI update logic if needed
+            _inputManager = inputManager;
+            
+            // Update mouse hover state for inventory
+            if (_inventoryOpen && _inputManager != null)
+            {
+                UpdateInventoryMouseHover();
+            }
+            else
+            {
+                _hoveredSlotIndex = -1;
+            }
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -257,17 +272,21 @@ namespace TimelessTales.UI
                 int x = gridX + spacing + (slotSize + spacing) * col;
                 int y = gridY + spacing + (slotSize + spacing) * row;
                 
-                // Draw slot background
+                // Determine if this slot is hovered
+                bool isHovered = (index == _hoveredSlotIndex);
+                
+                // Draw slot background (brighter if hovered)
                 spriteBatch.Draw(_pixelTexture,
                     new Rectangle(x, y, slotSize, slotSize),
-                    Color.Gray * 0.6f);
+                    isHovered ? Color.LightGray * 0.9f : Color.Gray * 0.6f);
                 
-                // Draw slot border
+                // Draw slot border (different color if hovered)
                 int borderWidth = 2;
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), Color.Black);
+                Color borderColor = isHovered ? Color.Yellow : Color.Black;
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), borderColor);
                 
                 // Draw item
                 Color blockColor = BlockRegistry.Get(item.Key).Color;
@@ -287,17 +306,21 @@ namespace TimelessTales.UI
                 int x = gridX + spacing + (slotSize + spacing) * col;
                 int y = gridY + spacing + (slotSize + spacing) * row;
                 
-                // Draw slot background
+                // Determine if this slot is hovered
+                bool isHovered = (index == _hoveredSlotIndex);
+                
+                // Draw slot background (brighter if hovered)
                 spriteBatch.Draw(_pixelTexture,
                     new Rectangle(x, y, slotSize, slotSize),
-                    Color.Gray * 0.6f);
+                    isHovered ? Color.LightGray * 0.9f : Color.Gray * 0.6f);
                 
-                // Draw slot border
+                // Draw slot border (different color if hovered)
                 int borderWidth = 2;
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), Color.Black);
-                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), Color.Black);
+                Color borderColor = isHovered ? Color.Yellow : Color.Black;
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, slotSize, borderWidth), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y + slotSize - borderWidth, slotSize, borderWidth), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x, y, borderWidth, slotSize), borderColor);
+                spriteBatch.Draw(_pixelTexture, new Rectangle(x + slotSize - borderWidth, y, borderWidth, slotSize), borderColor);
             }
             
             // Draw "Press I to close" message
@@ -986,6 +1009,50 @@ namespace TimelessTales.UI
             }
             
             return pattern;
+        }
+        
+        private void UpdateInventoryMouseHover()
+        {
+            if (_inputManager == null || _player == null)
+            {
+                _hoveredSlotIndex = -1;
+                return;
+            }
+            
+            // Get mouse position
+            int mouseX = _inputManager.GetMouseX();
+            int mouseY = _inputManager.GetMouseY();
+            
+            // Calculate inventory grid layout (must match DrawFullInventory)
+            int slotSize = 60;
+            int spacing = 10;
+            int slotsPerRow = 8;
+            int rows = 5;
+            
+            int gridWidth = (slotSize + spacing) * slotsPerRow + spacing;
+            int gridHeight = (slotSize + spacing) * rows + spacing;
+            int gridX = (_screenWidth - gridWidth) / 2;
+            int gridY = (_screenHeight - gridHeight) / 2 + 30;
+            
+            // Check which slot is hovered
+            _hoveredSlotIndex = -1;
+            for (int row = 0; row < rows; row++)
+            {
+                for (int col = 0; col < slotsPerRow; col++)
+                {
+                    int slotIndex = row * slotsPerRow + col;
+                    int x = gridX + spacing + (slotSize + spacing) * col;
+                    int y = gridY + spacing + (slotSize + spacing) * row;
+                    
+                    // Check if mouse is over this slot
+                    if (mouseX >= x && mouseX < x + slotSize &&
+                        mouseY >= y && mouseY < y + slotSize)
+                    {
+                        _hoveredSlotIndex = slotIndex;
+                        return;
+                    }
+                }
+            }
         }
     }
 }

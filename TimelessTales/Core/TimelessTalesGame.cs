@@ -208,6 +208,7 @@ namespace TimelessTales.Core
                     {
                         _inventoryOpen = !_inventoryOpen;
                         IsMouseVisible = _inventoryOpen;
+                        _inputManager.SetMouseCaptured(!_inventoryOpen);
                     }
                     
                     // Toggle world map
@@ -215,6 +216,7 @@ namespace TimelessTales.Core
                     {
                         _worldMapOpen = !_worldMapOpen;
                         IsMouseVisible = _worldMapOpen;
+                        _inputManager.SetMouseCaptured(!_worldMapOpen);
                     }
                     
                     // Toggle fullscreen
@@ -248,8 +250,8 @@ namespace TimelessTales.Core
                         _waterRenderer!.Update(gameTime);
                     }
                     
-                    // Always update UI
-                    _uiManager!.Update(gameTime, _player!, _timeManager!, _worldManager!, _isPaused, _inventoryOpen, _worldMapOpen);
+                    // Always update UI (pass InputManager for mouse interaction)
+                    _uiManager!.Update(gameTime, _player!, _timeManager!, _worldManager!, _isPaused, _inventoryOpen, _worldMapOpen, _inputManager);
                 }
 
                 base.Update(gameTime);
