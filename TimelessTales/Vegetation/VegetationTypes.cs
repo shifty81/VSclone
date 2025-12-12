@@ -15,6 +15,7 @@ namespace TimelessTales.Vegetation
     /// </summary>
     public enum VegetationType
     {
+        // Land vegetation
         Grass,
         TallGrass,
         Shrub,
@@ -22,6 +23,12 @@ namespace TimelessTales.Vegetation
         Flowers,
         Wheat,
         Carrot,
-        Flax
+        Flax,
+        
+        // Underwater vegetation
+        Kelp,           // Tall swaying kelp
+        Seaweed,        // Short seaweed
+        Coral,          // Colorful coral
+        SeaGrass        // Underwater grass
     }
 }

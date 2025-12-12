@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using TimelessTales.Blocks;
+using TimelessTales.Vegetation;
 
 namespace TimelessTales.World
 {
@@ -10,6 +11,7 @@ namespace TimelessTales.World
     {
         private readonly Dictionary<(int, int), Chunk> _chunks;
         private readonly WorldGenerator _generator;
+        private readonly VegetationManager _vegetationManager;
         private readonly int _seed;
         
         private const int RENDER_DISTANCE = 8; // Chunks
@@ -20,8 +22,14 @@ namespace TimelessTales.World
             _seed = seed;
             _chunks = new Dictionary<(int, int), Chunk>();
             _generator = new WorldGenerator(seed);
+            _vegetationManager = new VegetationManager(this);
             _spawnPosition = new Vector3(0, 70, 0);
         }
+        
+        /// <summary>
+        /// Get the vegetation manager for this world
+        /// </summary>
+        public VegetationManager VegetationManager => _vegetationManager;
 
         public void Initialize()
         {
@@ -88,6 +96,10 @@ namespace TimelessTales.World
             {
                 chunk = new Chunk(chunkX, chunkZ);
                 chunk.Generate(_generator);
+                
+                // Populate with vegetation after terrain generation
+                _vegetationManager.PopulateChunk(chunk);
+                
                 _chunks[key] = chunk;
             }
             return chunk;

@@ -221,9 +221,10 @@ namespace TimelessTales.Rendering
             Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.2f), CEL_SHADING_BANDS);
             Color sideColor = CelShadingUtility.ApplyCelShading(color, CEL_SHADING_BANDS);
             
+            // Increased overlap to eliminate visible seams between water blocks
+            const float OVERLAP = 0.01f;
+            
             // Top face (Y+) - with wave animation
-            // Extend slightly beyond block boundary to hide seams
-            const float OVERLAP = 0.001f;
             if (top)
             {
                 AddQuad(vertices, pos,
@@ -233,44 +234,54 @@ namespace TimelessTales.Rendering
                     new Vector3(-OVERLAP, 1 + waveOffset, 1 + OVERLAP), topColor);
             }
 
-            // Bottom face (Y-)
+            // Bottom face (Y-) - extend to hide seams
             if (bottom)
             {
                 AddQuad(vertices, pos,
-                    new Vector3(0, 0, 1), new Vector3(1, 0, 1),
-                    new Vector3(1, 0, 0), new Vector3(0, 0, 0), bottomColor);
+                    new Vector3(-OVERLAP, -OVERLAP, 1 + OVERLAP), 
+                    new Vector3(1 + OVERLAP, -OVERLAP, 1 + OVERLAP),
+                    new Vector3(1 + OVERLAP, -OVERLAP, -OVERLAP), 
+                    new Vector3(-OVERLAP, -OVERLAP, -OVERLAP), bottomColor);
             }
 
-            // North face (Z+)
+            // North face (Z+) - extend to hide seams
             if (north)
             {
                 AddQuad(vertices, pos,
-                    new Vector3(0, 0, 1), new Vector3(0, 1, 1),
-                    new Vector3(1, 1, 1), new Vector3(1, 0, 1), sideColor);
+                    new Vector3(-OVERLAP, -OVERLAP, 1 + OVERLAP), 
+                    new Vector3(-OVERLAP, 1 + OVERLAP, 1 + OVERLAP),
+                    new Vector3(1 + OVERLAP, 1 + OVERLAP, 1 + OVERLAP), 
+                    new Vector3(1 + OVERLAP, -OVERLAP, 1 + OVERLAP), sideColor);
             }
 
-            // South face (Z-)
+            // South face (Z-) - extend to hide seams
             if (south)
             {
                 AddQuad(vertices, pos,
-                    new Vector3(1, 0, 0), new Vector3(1, 1, 0),
-                    new Vector3(0, 1, 0), new Vector3(0, 0, 0), sideColor);
+                    new Vector3(1 + OVERLAP, -OVERLAP, -OVERLAP), 
+                    new Vector3(1 + OVERLAP, 1 + OVERLAP, -OVERLAP),
+                    new Vector3(-OVERLAP, 1 + OVERLAP, -OVERLAP), 
+                    new Vector3(-OVERLAP, -OVERLAP, -OVERLAP), sideColor);
             }
 
-            // East face (X+)
+            // East face (X+) - extend to hide seams
             if (east)
             {
                 AddQuad(vertices, pos,
-                    new Vector3(1, 0, 1), new Vector3(1, 1, 1),
-                    new Vector3(1, 1, 0), new Vector3(1, 0, 0), sideColor);
+                    new Vector3(1 + OVERLAP, -OVERLAP, 1 + OVERLAP), 
+                    new Vector3(1 + OVERLAP, 1 + OVERLAP, 1 + OVERLAP),
+                    new Vector3(1 + OVERLAP, 1 + OVERLAP, -OVERLAP), 
+                    new Vector3(1 + OVERLAP, -OVERLAP, -OVERLAP), sideColor);
             }
 
-            // West face (X-)
+            // West face (X-) - extend to hide seams
             if (west)
             {
                 AddQuad(vertices, pos,
-                    new Vector3(0, 0, 0), new Vector3(0, 1, 0),
-                    new Vector3(0, 1, 1), new Vector3(0, 0, 1), sideColor);
+                    new Vector3(-OVERLAP, -OVERLAP, -OVERLAP), 
+                    new Vector3(-OVERLAP, 1 + OVERLAP, -OVERLAP),
+                    new Vector3(-OVERLAP, 1 + OVERLAP, 1 + OVERLAP), 
+                    new Vector3(-OVERLAP, -OVERLAP, 1 + OVERLAP), sideColor);
             }
         }
 

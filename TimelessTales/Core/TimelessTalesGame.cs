@@ -21,6 +21,7 @@ namespace TimelessTales.Core
         private Player? _player;
         private WorldRenderer? _worldRenderer;
         private WaterRenderer? _waterRenderer;
+        private UnderwaterEffectRenderer? _underwaterEffectRenderer;
         private PlayerRenderer? _playerRenderer;
         private UIManager? _uiManager;
         private InputManager? _inputManager;
@@ -169,6 +170,7 @@ namespace TimelessTales.Core
                 Logger.Info("Initializing renderers...");
                 _worldRenderer = new WorldRenderer(GraphicsDevice, _worldManager);
                 _waterRenderer = new WaterRenderer(GraphicsDevice, _worldManager);
+                _underwaterEffectRenderer = new UnderwaterEffectRenderer(GraphicsDevice);
                 _playerRenderer = new PlayerRenderer(GraphicsDevice);
                 _skyboxRenderer = new SkyboxRenderer(GraphicsDevice);
                 Logger.Info("Renderers initialized");
@@ -347,6 +349,10 @@ namespace TimelessTales.Core
                         // Update world
                         _worldManager!.Update(_player.Position);
                         
+                        // Update vegetation growth
+                        float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                        _worldManager.VegetationManager.Update(deltaTime);
+                        
                         // Update water renderer (for wave animation)
                         _waterRenderer!.Update(gameTime);
                         
@@ -421,6 +427,9 @@ namespace TimelessTales.Core
                     
                     // Draw player arms (first-person view)
                     _playerRenderer!.Draw(_camera!, _player!);
+                    
+                    // Draw underwater effects overlay (after 3D rendering, before UI)
+                    _underwaterEffectRenderer!.Draw(_player!);
                     
                     // Draw UI (2D overlay)
                     _spriteBatch!.Begin();
