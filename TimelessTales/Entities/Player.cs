@@ -39,6 +39,10 @@ namespace TimelessTales.Entities
         public Inventory Inventory { get; private set; }
         public Equipment Equipment { get; private set; }
         public BlockType SelectedBlock { get; set; }
+        
+        // Character skeleton and animation
+        public Skeleton Skeleton { get; private set; }
+        public AnimationController AnimationController { get; private set; }
 
         public Player(Vector3 startPosition)
         {
@@ -48,6 +52,13 @@ namespace TimelessTales.Entities
             Inventory = new Inventory(40);
             Equipment = new Equipment();
             SelectedBlock = BlockType.Stone;
+            
+            // Initialize skeleton
+            Skeleton = new Skeleton();
+            InitializeSkeleton();
+            
+            // Initialize animation controller
+            AnimationController = new AnimationController(Skeleton);
             
             // Start with some basic blocks
             Inventory.AddItem(BlockType.Stone, 64);
@@ -60,6 +71,26 @@ namespace TimelessTales.Entities
             Inventory.AddItem(BlockType.Gravel, 32);
             Inventory.AddItem(BlockType.Clay, 32);
         }
+        
+        private void InitializeSkeleton()
+        {
+            // Root bone (center of character)
+            Bone root = Skeleton.AddBone("root", Vector3.Zero);
+            
+            // Torso (body)
+            Bone torso = Skeleton.AddBone("torso", new Vector3(0, 0.9f, 0), root);
+            
+            // Head
+            Bone head = Skeleton.AddBone("head", new Vector3(0, 0.6f, 0), torso);
+            
+            // Arms (attached to upper torso)
+            Bone rightArm = Skeleton.AddBone("right_arm", new Vector3(0.3f, 0.4f, 0), torso);
+            Bone leftArm = Skeleton.AddBone("left_arm", new Vector3(-0.3f, 0.4f, 0), torso);
+            
+            // Legs (attached to lower torso)
+            Bone rightLeg = Skeleton.AddBone("right_leg", new Vector3(0.15f, -0.2f, 0), root);
+            Bone leftLeg = Skeleton.AddBone("left_leg", new Vector3(-0.15f, -0.2f, 0), root);
+        }
 
         public void Update(GameTime gameTime, InputManager input, WorldManager world)
         {
@@ -68,6 +99,11 @@ namespace TimelessTales.Entities
             // Update camera rotation
             UpdateRotation(input);
             
+            // Check if player is moving for animation
+            bool isMoving = input.IsKeyDown(Keys.W) || input.IsKeyDown(Keys.A) || 
+                           input.IsKeyDown(Keys.S) || input.IsKeyDown(Keys.D);
+            bool isSprinting = input.IsKeyDown(Keys.LeftShift);
+            
             // Update movement
             UpdateMovement(input, deltaTime);
             
@@ -75,10 +111,14 @@ namespace TimelessTales.Entities
             ApplyPhysics(world, deltaTime);
             
             // Handle block interaction
+            bool isBreaking = input.IsLeftMouseDown() && _targetBlockPos.HasValue;
             HandleBlockInteraction(input, world, deltaTime);
             
             // Handle hotbar
             UpdateHotbar(input);
+            
+            // Update animations
+            AnimationController.Update(deltaTime, isMoving, isSprinting, isBreaking, _breakProgress);
         }
 
         private void UpdateRotation(InputManager input)
