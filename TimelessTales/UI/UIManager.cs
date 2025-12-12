@@ -745,6 +745,94 @@ namespace TimelessTales.UI
         }
         
         /// <summary>
+        /// Get terrain color for map display based on block type and height
+        /// Provides better visual distinction than simple height-based coloring
+        /// </summary>
+        private Color GetTerrainColorForMap(BlockType blockType, int surfaceY)
+        {
+            // Base colors for different terrain types
+            Color baseColor;
+            
+            switch (blockType)
+            {
+                // Water blocks - distinct blue colors
+                case BlockType.Water:
+                    baseColor = new Color(60, 140, 220); // Light blue for fresh water
+                    break;
+                case BlockType.Saltwater:
+                    baseColor = new Color(30, 80, 180); // Deep blue for ocean
+                    break;
+                
+                // Vegetation - green tones
+                case BlockType.Grass:
+                    baseColor = new Color(80, 180, 60); // Vibrant green
+                    break;
+                case BlockType.OakLeaves:
+                case BlockType.PineLeaves:
+                case BlockType.BirchLeaves:
+                case BlockType.Leaves:
+                    baseColor = new Color(40, 140, 40); // Dark green for forests
+                    break;
+                
+                // Desert/beach - sandy colors
+                case BlockType.Sand:
+                    baseColor = new Color(230, 200, 140); // Sandy yellow
+                    break;
+                
+                // Rocky terrain
+                case BlockType.Gravel:
+                    baseColor = new Color(140, 140, 140); // Gray for tundra/rocky areas
+                    break;
+                case BlockType.Stone:
+                case BlockType.Cobblestone:
+                    baseColor = new Color(120, 120, 120); // Stone gray
+                    break;
+                
+                // Clay/wetlands
+                case BlockType.Clay:
+                    baseColor = new Color(160, 130, 100); // Brown-gray for clay
+                    break;
+                
+                // Dirt - brown
+                case BlockType.Dirt:
+                    baseColor = new Color(120, 80, 50); // Brown
+                    break;
+                
+                // Wood/trees
+                case BlockType.OakLog:
+                case BlockType.PineLog:
+                case BlockType.BirchLog:
+                case BlockType.Wood:
+                    baseColor = new Color(100, 70, 40); // Brown for tree trunks
+                    break;
+                
+                // Default for other blocks
+                default:
+                    baseColor = new Color(100, 100, 100); // Neutral gray
+                    break;
+            }
+            
+            // Apply subtle height-based shading for depth perception
+            // Higher elevations get slightly brighter, lower get slightly darker
+            const int SEA_LEVEL = 64;
+            float heightOffset = (surfaceY - SEA_LEVEL) / 40f; // -1.6 to +4.8 range approx
+            heightOffset = MathHelper.Clamp(heightOffset, -0.3f, 0.3f);
+            
+            // Brighten high areas, darken low areas (except water which stays consistent)
+            if (blockType != BlockType.Water && blockType != BlockType.Saltwater)
+            {
+                float brightness = 1.0f + heightOffset;
+                baseColor = new Color(
+                    (int)(baseColor.R * brightness),
+                    (int)(baseColor.G * brightness),
+                    (int)(baseColor.B * brightness)
+                );
+            }
+            
+            return baseColor;
+        }
+
+        /// <summary>
         /// Get 3x5 pixel pattern for a character
         /// </summary>
         private bool[,] GetCharPattern(char c)
