@@ -4,9 +4,11 @@
 **Title**: Timeless Tales  
 **Genre**: Open-world Sandbox Survival & Creative  
 **Platform**: PC (Windows)  
-**Engine**: Custom C# Engine (MonoGame-based)  
+**Engine**: Custom C# Engine (MonoGame 3.8.4 with custom 3D rendering, no GeonBit)  
 **Target Audience**: Fans of complex survival simulations, creative builders, geology enthusiasts  
-**Monetization**: Single purchase, no microtransactions  
+**Monetization**: Single purchase, no microtransactions
+
+> **Note**: This project uses a custom voxel rendering architecture built directly on MonoGame, without third-party 3D engines like GeonBit. See [RENDERING_ARCHITECTURE.md](RENDERING_ARCHITECTURE.md) for technical details.  
 
 ## 1. Core Gameplay Loop
 
