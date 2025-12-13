@@ -116,6 +116,7 @@ public class TextureAtlas
 // WaterShader.fx
 float Time;
 float4x4 WorldViewProjection;
+float3 CameraPosition;
 
 struct VertexInput {
     float4 Position : POSITION0;
@@ -318,7 +319,6 @@ Here's a practical example of improving water without full rewrite:
 
 float4x4 WorldViewProjection;
 float Time;
-float4 WaterColor;
 
 struct VertexShaderInput
 {
