@@ -280,7 +280,7 @@ See **[ROADMAP.md](ROADMAP.md)** for the complete development roadmap with detai
 ## Technologies Used
 - **C# 12** (.NET 8.0)
 - **MonoGame 3.8.4** - Cross-platform game framework (Direct implementation, no GeonBit)
-- **Custom 3D Rendering** - Purpose-built voxel rendering system (11,412+ lines of code)
+- **Custom 3D Rendering** - Extensive purpose-built voxel rendering system
 - **SimplexNoise** - Procedural terrain generation
 
 ### Why No GeonBit or ManicDigger?
@@ -291,7 +291,7 @@ This project uses a **custom 3D rendering architecture** built directly on MonoG
 - Tailored optimizations for block-based gameplay
 - Educational value - learning engine fundamentals from scratch
 
-**Note on ManicDigger**: While Vintage Story is built on a ManicDigger fork, this project took a different architectural approach using MonoGame. The project has 11,412 lines of working code already implemented. Switching to ManicDigger would require starting a completely new project from scratch.
+**Note on ManicDigger**: While Vintage Story is built on a ManicDigger fork, this project took a different architectural approach using MonoGame. The project has substantial working code already implemented. Switching to ManicDigger would require starting a completely new project from scratch.
 
 See **[Docs/RENDERING_ARCHITECTURE.md](Docs/RENDERING_ARCHITECTURE.md)** for detailed technical explanation and **[Docs/MANICDIGGER_MIGRATION.md](Docs/MANICDIGGER_MIGRATION.md)** for analysis of the ManicDigger option.
 

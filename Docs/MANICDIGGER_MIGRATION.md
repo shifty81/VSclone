@@ -106,7 +106,7 @@ Since ManicDigger and MonoGame have completely different APIs and architectures,
 
 6. **All Other Systems**
    - Audio
-   - Particles  
+   - Particles
    - Time management
    - Everything else
 
@@ -270,7 +270,7 @@ Ask yourself:
 ## Important Considerations
 
 ### ManicDigger Status
-**Research Required**: 
+**Research Required**:
 - Is ManicDigger still actively maintained?
 - When was the last commit?
 - Is the community active?
