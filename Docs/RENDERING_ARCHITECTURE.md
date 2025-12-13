@@ -105,7 +105,7 @@ Our custom rendering system consists of several specialized renderers:
 
 ### Rendering Pipeline
 
-```
+```text
 1. Clear Screen
    ↓
 2. Setup Camera/View Matrix
