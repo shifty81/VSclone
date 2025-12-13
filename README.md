@@ -241,6 +241,7 @@ All project documentation has been organized in the **[Docs/](Docs/)** folder:
 - **[Docs/GDD.md](Docs/GDD.md)** - Complete Game Design Document
 - **[Docs/RENDERING_ARCHITECTURE.md](Docs/RENDERING_ARCHITECTURE.md)** - Why we use custom rendering (no GeonBit/ManicDigger)
 - **[Docs/MANICDIGGER_MIGRATION.md](Docs/MANICDIGGER_MIGRATION.md)** - Analysis of ManicDigger option and migration implications
+- **[Docs/MANICDIGGER_TECHNIQUES.md](Docs/MANICDIGGER_TECHNIQUES.md)** - How to implement ManicDigger rendering techniques in MonoGame
 - **[Docs/QUICKSTART.md](Docs/QUICKSTART.md)** - Quick start guide for developers
 - **[Docs/DEVELOPER.md](Docs/DEVELOPER.md)** - Developer documentation
 - **[Docs/CONTRIBUTING.md](Docs/CONTRIBUTING.md)** - Contribution guidelines
@@ -291,9 +292,9 @@ This project uses a **custom 3D rendering architecture** built directly on MonoG
 - Tailored optimizations for block-based gameplay
 - Educational value - learning engine fundamentals from scratch
 
-**Note on ManicDigger**: While Vintage Story is built on a ManicDigger fork, this project took a different architectural approach using MonoGame. The project has substantial working code already implemented. Switching to ManicDigger would require starting a completely new project from scratch.
+**Note on ManicDigger**: While Vintage Story is built on a ManicDigger fork, this project took a different architectural approach using MonoGame. The project has substantial working code already implemented. Switching to ManicDigger would require starting a completely new project from scratch. However, ManicDigger's rendering techniques (shaders, textures, water effects) can be implemented in MonoGame with 7-11 weeks of effort.
 
-See **[Docs/RENDERING_ARCHITECTURE.md](Docs/RENDERING_ARCHITECTURE.md)** for detailed technical explanation and **[Docs/MANICDIGGER_MIGRATION.md](Docs/MANICDIGGER_MIGRATION.md)** for analysis of the ManicDigger option.
+See **[Docs/RENDERING_ARCHITECTURE.md](Docs/RENDERING_ARCHITECTURE.md)** for detailed technical explanation, **[Docs/MANICDIGGER_MIGRATION.md](Docs/MANICDIGGER_MIGRATION.md)** for full migration analysis, and **[Docs/MANICDIGGER_TECHNIQUES.md](Docs/MANICDIGGER_TECHNIQUES.md)** for how to implement ManicDigger's rendering techniques in MonoGame.
 
 ## Inspired By
 This project is inspired by **Vintage Story** by Anego Studios, a remarkable survival sandbox game that emphasizes geological realism, complex crafting systems, and immersive gameplay.

@@ -61,7 +61,21 @@ This would be a **new project**, not a migration:
 3. Reimplement all features from scratch
 4. Archive or pause current Timeless Tales project
 
-See **[MANICDIGGER_MIGRATION.md](MANICDIGGER_MIGRATION.md)** for comprehensive analysis of this architectural decision, including:
+**Alternative: Adopt ManicDigger Techniques**:
+You can implement ManicDigger's rendering techniques (shaders, textures, water effects) in the current MonoGame codebase without a full rewrite:
+- Study their GLSL shaders, translate to HLSL for MonoGame
+- Implement advanced water rendering (caustics, refraction, reflection)
+- Add texture atlas system (foundation already exists)
+- **Effort**: 7-11 weeks vs 6-12 months for full rewrite
+
+See **[MANICDIGGER_TECHNIQUES.md](MANICDIGGER_TECHNIQUES.md)** for practical implementation guide, including:
+- How to implement advanced shaders in MonoGame
+- Sample water shader code (HLSL)
+- Texture system improvements
+- Step-by-step implementation plan
+- Effort estimates and limitations
+
+See **[MANICDIGGER_MIGRATION.md](MANICDIGGER_MIGRATION.md)** for comprehensive analysis of full migration, including:
 - Detailed comparison of options
 - What would need to be rewritten
 - Timeline estimates
