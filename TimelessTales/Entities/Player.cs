@@ -60,6 +60,10 @@ namespace TimelessTales.Entities
         public float Thirst { get; set; } = 100f;
         public float MaxThirst { get; } = 100f;
         
+        // Character customization
+        public string CharacterName { get; set; } = "Wanderer";
+        public CharacterAppearance Appearance { get; private set; }
+        
         // Inventory and equipment
         public Inventory Inventory { get; private set; }
         public Equipment Equipment { get; private set; }
@@ -79,6 +83,9 @@ namespace TimelessTales.Entities
             Equipment = new Equipment();
             MaterialPouch = new MaterialPouch(); // Initialize material pouch
             SelectedBlock = BlockType.Stone;
+            
+            // Initialize character appearance with default human-like values
+            Appearance = new CharacterAppearance();
             
             // Initialize skeleton
             Skeleton = new Skeleton();
@@ -730,5 +737,76 @@ namespace TimelessTales.Entities
         {
             return _equippedItems[slot] == null;
         }
+
+        public Dictionary<EquipmentSlot, BlockType?> GetAllEquipped()
+        {
+            return new Dictionary<EquipmentSlot, BlockType?>(_equippedItems);
+        }
+    }
+
+    /// <summary>
+    /// Character appearance customization for more human-like details
+    /// </summary>
+    public class CharacterAppearance
+    {
+        // Default appearance colors
+        public static readonly Color DEFAULT_SKIN_TONE = new Color(210, 180, 140); // Light tan
+        public static readonly Color DEFAULT_HAIR_COLOR = new Color(101, 67, 33); // Brown
+        public static readonly Color DEFAULT_EYE_COLOR = new Color(70, 130, 180); // Blue
+        public static readonly Color DEFAULT_SHIRT_COLOR = new Color(60, 100, 180); // Blue
+        public static readonly Color DEFAULT_PANTS_COLOR = new Color(50, 50, 120); // Dark blue
+        
+        // Body scale constraints
+        public const float MIN_BODY_SCALE = 0.8f;
+        public const float MAX_BODY_SCALE = 1.2f;
+        
+        private float _bodyScale = 1.0f;
+        
+        // Skin tone (using realistic human skin color values)
+        public Color SkinTone { get; set; } = DEFAULT_SKIN_TONE;
+        
+        // Hair
+        public Color HairColor { get; set; } = DEFAULT_HAIR_COLOR;
+        public HairStyle HairStyle { get; set; } = HairStyle.Short;
+        
+        // Eyes
+        public Color EyeColor { get; set; } = DEFAULT_EYE_COLOR;
+        
+        // Body type with validation
+        public float BodyScale 
+        { 
+            get => _bodyScale;
+            set => _bodyScale = MathHelper.Clamp(value, MIN_BODY_SCALE, MAX_BODY_SCALE);
+        }
+        
+        // Clothing colors (default if no equipment)
+        public Color ShirtColor { get; set; } = DEFAULT_SHIRT_COLOR;
+        public Color PantsColor { get; set; } = DEFAULT_PANTS_COLOR;
+        
+        // Gender presentation (affects body proportions slightly)
+        public Gender Gender { get; set; } = Gender.Neutral;
+    }
+
+    /// <summary>
+    /// Hair style options for character customization
+    /// </summary>
+    public enum HairStyle
+    {
+        Bald,
+        Short,
+        Medium,
+        Long,
+        Ponytail,
+        Braided
+    }
+
+    /// <summary>
+    /// Gender presentation options (affects proportions)
+    /// </summary>
+    public enum Gender
+    {
+        Masculine,
+        Feminine,
+        Neutral
     }
 }

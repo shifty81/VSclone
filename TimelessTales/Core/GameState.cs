@@ -10,6 +10,7 @@ namespace TimelessTales.Core
         Paused,
         Loading,
         Settings,
-        Controls
+        Controls,
+        TabMenu  // Tabbed menu for character, inventory, crafting, etc.
     }
 }

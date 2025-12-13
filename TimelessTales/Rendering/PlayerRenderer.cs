@@ -73,10 +73,10 @@ namespace TimelessTales.Rendering
         {
             var vertices = new List<VertexPositionColor>();
             
-            // Colors for different body parts
-            Color armColor = new Color(210, 180, 140);
-            Color torsoColor = new Color(60, 100, 180); // Blue shirt
-            Color legColor = new Color(50, 50, 120); // Dark blue pants
+            // Use character appearance for colors (more human-like)
+            Color armColor = player.Appearance.SkinTone;
+            Color torsoColor = player.Appearance.ShirtColor;
+            Color legColor = player.Appearance.PantsColor;
             
             // Calculate view directions
             Vector3 cameraPos = camera.Position;
