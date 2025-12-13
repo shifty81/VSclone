@@ -237,9 +237,10 @@ TimelessTales/
 All project documentation has been organized in the **[Docs/](Docs/)** folder:
 
 - **[ROADMAP.md](ROADMAP.md)** - Comprehensive development roadmap with feature tracking
-- **[Docs/FAQ.md](Docs/FAQ.md)** - Frequently Asked Questions (GeonBit, technical choices, gameplay)
+- **[Docs/FAQ.md](Docs/FAQ.md)** - Frequently Asked Questions (GeonBit, ManicDigger, technical choices, gameplay)
 - **[Docs/GDD.md](Docs/GDD.md)** - Complete Game Design Document
-- **[Docs/RENDERING_ARCHITECTURE.md](Docs/RENDERING_ARCHITECTURE.md)** - Why we use custom rendering (no GeonBit)
+- **[Docs/RENDERING_ARCHITECTURE.md](Docs/RENDERING_ARCHITECTURE.md)** - Why we use custom rendering (no GeonBit/ManicDigger)
+- **[Docs/MANICDIGGER_MIGRATION.md](Docs/MANICDIGGER_MIGRATION.md)** - Analysis of ManicDigger option and migration implications
 - **[Docs/QUICKSTART.md](Docs/QUICKSTART.md)** - Quick start guide for developers
 - **[Docs/DEVELOPER.md](Docs/DEVELOPER.md)** - Developer documentation
 - **[Docs/CONTRIBUTING.md](Docs/CONTRIBUTING.md)** - Contribution guidelines
@@ -279,17 +280,20 @@ See **[ROADMAP.md](ROADMAP.md)** for the complete development roadmap with detai
 ## Technologies Used
 - **C# 12** (.NET 8.0)
 - **MonoGame 3.8.4** - Cross-platform game framework (Direct implementation, no GeonBit)
-- **Custom 3D Rendering** - Purpose-built voxel rendering system
+- **Custom 3D Rendering** - Purpose-built voxel rendering system (11,412+ lines of code)
 - **SimplexNoise** - Procedural terrain generation
 
-### Why No GeonBit?
-This project uses a **custom 3D rendering architecture** built directly on MonoGame, without using third-party 3D engines like GeonBit. This provides:
+### Why No GeonBit or ManicDigger?
+This project uses a **custom 3D rendering architecture** built directly on MonoGame, without using third-party 3D engines like GeonBit or ManicDigger. This provides:
 - Better performance for voxel-based worlds
 - Complete control over rendering pipeline
 - Simpler dependency management
 - Tailored optimizations for block-based gameplay
+- Educational value - learning engine fundamentals from scratch
 
-See **[Docs/RENDERING_ARCHITECTURE.md](Docs/RENDERING_ARCHITECTURE.md)** for detailed technical explanation.
+**Note on ManicDigger**: While Vintage Story is built on a ManicDigger fork, this project took a different architectural approach using MonoGame. The project has 11,412 lines of working code already implemented. Switching to ManicDigger would require starting a completely new project from scratch.
+
+See **[Docs/RENDERING_ARCHITECTURE.md](Docs/RENDERING_ARCHITECTURE.md)** for detailed technical explanation and **[Docs/MANICDIGGER_MIGRATION.md](Docs/MANICDIGGER_MIGRATION.md)** for analysis of the ManicDigger option.
 
 ## Inspired By
 This project is inspired by **Vintage Story** by Anego Studios, a remarkable survival sandbox game that emphasizes geological realism, complex crafting systems, and immersive gameplay.

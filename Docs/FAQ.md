@@ -30,6 +30,44 @@ GeonBit is a 3D engine framework built on top of MonoGame that provides scene ma
 
 See **[RENDERING_ARCHITECTURE.md](RENDERING_ARCHITECTURE.md)** for a comprehensive technical explanation.
 
+### Can we use ManicDigger as a starting point?
+
+**Short Answer**: Not without starting over completely. Timeless Tales is already built with 11,412 lines of MonoGame code. Switching to ManicDigger would require discarding everything and starting a new project from scratch.
+
+**Key Facts**:
+- **Current Status**: Alpha 0.1 with ~6 months of development (11,412 lines of code)
+- **Migration Impact**: 100% code rewrite required - completely different APIs
+- **Time to Parity**: 6-12 months to reimplement current features on ManicDigger
+- **Recommendation**: Continue with MonoGame unless you have compelling reasons to restart
+
+**What is ManicDigger?**
+- Open-source voxel game engine (C#)
+- Uses OpenTK for OpenGL rendering (not MonoGame)
+- Vintage Story's original foundation (they heavily modified it)
+- Built-in multiplayer support
+- Different architecture from MonoGame
+
+**Why Current Project Uses MonoGame**:
+1. **Already Implemented**: 45+ files with working systems
+2. **Learning Goals**: Building from scratch teaches engine fundamentals
+3. **Lightweight**: Single dependency, clean architecture
+4. **Modern**: .NET 8.0 with modern C# features
+5. **Working**: Alpha 0.1 already released with many features
+
+**If You Want ManicDigger**:
+This would be a **new project**, not a migration:
+1. Create new repository (e.g., VSclone-ManicDigger)
+2. Fork or use ManicDigger as base
+3. Reimplement all features from scratch
+4. Archive or pause current Timeless Tales project
+
+See **[MANICDIGGER_MIGRATION.md](MANICDIGGER_MIGRATION.md)** for comprehensive analysis of this architectural decision, including:
+- Detailed comparison of options
+- What would need to be rewritten
+- Timeline estimates
+- Decision framework
+- Recommendations based on your goals
+
 ### Why MonoGame instead of Unity or Unreal?
 
 **MonoGame** was chosen because:

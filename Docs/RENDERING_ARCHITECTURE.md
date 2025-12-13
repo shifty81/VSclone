@@ -2,7 +2,9 @@
 
 ## Overview
 
-Timeless Tales uses a **custom 3D rendering architecture** built directly on **MonoGame 3.8.4**, without using third-party 3D engines like GeonBit, Unity3D, or similar frameworks.
+Timeless Tales uses a **custom 3D rendering architecture** built directly on **MonoGame 3.8.4**, without using third-party 3D engines like GeonBit, ManicDigger, Unity3D, or similar frameworks.
+
+> **Note on ManicDigger**: While Vintage Story runs on a fork of the ManicDigger engine, Timeless Tales uses a completely different architecture. This project was built from scratch using MonoGame with custom voxel rendering systems. See the FAQ for more details on this architectural decision.
 
 ## Why No GeonBit?
 
