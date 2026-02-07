@@ -2,7 +2,7 @@
 
 This roadmap tracks the progress of all features and systems in the Timeless Tales game. It is updated with each pull request to reflect the current state of development.
 
-**Last Updated:** 2025-12-12  
+**Last Updated:** 2026-02-07  
 **Current Version:** Alpha 0.1
 
 ---
@@ -238,9 +238,9 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Reach distance 5 blocks
 - 📋 Temporal stability system
 - 📋 Temperature management
-- 📋 Hunger and nutrition mechanics
-- 📋 Thirst system
-- 📋 Health system
+- ✅ Hunger and nutrition mechanics (depletion over time, sprint/swim multipliers)
+- ✅ Thirst system (depletion over time, sprint/swim multipliers)
+- ✅ Health system (starvation/dehydration damage, regeneration when well-fed)
 - 📋 Status effects
 
 ### 5.3 Block Interaction
@@ -464,6 +464,7 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ CollisionTests
 - ✅ TimeManagerTests
 - ✅ LoggerTests
+- ✅ SurvivalSystemTests (15 tests)
 - 📋 Integration tests
 - 📋 Performance benchmarks
 - 📋 Automated build pipeline
@@ -523,9 +524,10 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 ### Immediate (Current PR)
 1. ✅ Documentation organization (Docs/ folder)
 2. ✅ ROADMAP.md creation
-3. 🚧 Particle system foundation for bubbles
-4. 🚧 Audio system foundation
-5. 🚧 Vegetation growth stages system
+3. ✅ Particle system foundation for bubbles
+4. ✅ Audio system foundation
+5. ✅ Vegetation growth stages system
+6. ✅ Survival mechanics (hunger, thirst, health)
 
 ### Short-term (Next 1-2 PRs)
 1. Bubble particle effects underwater
@@ -535,10 +537,11 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 
 ### Medium-term (Next 2-4 months)
 1. Crafting system implementation
-2. Survival mechanics (hunger, thirst, temperature)
+2. ~~Survival mechanics (hunger, thirst, temperature)~~ ✅ Done
 3. Tool progression system
 4. Block textures and texture atlas
 5. Save/load system
+6. Temperature management
 
 ### Long-term (4+ months)
 1. Technology age progression

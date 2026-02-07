@@ -73,6 +73,9 @@ namespace TimelessTales.Entities
         // Character skeleton and animation
         public Skeleton Skeleton { get; private set; }
         public AnimationController AnimationController { get; private set; }
+        
+        // Survival system
+        private readonly SurvivalSystem _survivalSystem = new SurvivalSystem();
 
         public Player(Vector3 startPosition)
         {
@@ -160,6 +163,9 @@ namespace TimelessTales.Entities
             
             // Determine if player is swimming (moving in water)
             bool isSwimming = _isInWater && isMoving;
+            
+            // Update survival mechanics (hunger, thirst, health)
+            _survivalSystem.Update(this, deltaTime, isSprinting, isSwimming);
             
             // Update animations
             AnimationController.Update(deltaTime, isMoving, isSprinting, isBreaking, _breakProgress, _isInWater, isSwimming);
