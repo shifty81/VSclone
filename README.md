@@ -263,6 +263,7 @@ See **[ROADMAP.md](ROADMAP.md)** for the complete development roadmap with detai
 - [x] Improved inventory UI
 - [x] Block breaking visual feedback
 - [x] Documentation organization in Docs/ folder
+- [x] Survival mechanics (hunger/thirst depletion, health regen/damage)
 
 ### Next Steps
 - [ ] Particle system for underwater bubbles
@@ -271,7 +272,6 @@ See **[ROADMAP.md](ROADMAP.md)** for the complete development roadmap with detai
 - [ ] Points of interest generation
 - [ ] Temporal stability system
 - [ ] Temperature and season system
-- [ ] Hunger and nutrition mechanics
 - [ ] Advanced crafting (knapping, pottery, metallurgy)
 - [ ] Prospecting system for ore discovery
 - [ ] Block textures (currently using colored blocks)
