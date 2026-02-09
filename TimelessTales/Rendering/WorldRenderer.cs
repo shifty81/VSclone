@@ -23,6 +23,9 @@ namespace TimelessTales.Rendering
         // Key: (original color packed as int, lighting type 0=top, 1=bottom, 2=side)
         private readonly Dictionary<(int, int), Color> _celShadedColorCache;
         
+        // Reusable collections to avoid per-frame allocations
+        private readonly List<(int, int)> _keysToRemove;
+        
         private bool _disposed;
 
         public WorldRenderer(GraphicsDevice graphicsDevice, WorldManager worldManager)
@@ -31,6 +34,7 @@ namespace TimelessTales.Rendering
             _worldManager = worldManager;
             _chunkMeshes = new Dictionary<(int, int), ChunkMesh>();
             _celShadedColorCache = new Dictionary<(int, int), Color>();
+            _keysToRemove = new List<(int, int)>();
             
             // Initialize texture atlas
             _textureAtlas = new TextureAtlas(graphicsDevice);
@@ -57,45 +61,70 @@ namespace TimelessTales.Rendering
             _graphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
             _graphicsDevice.SamplerStates[0] = SamplerState.PointClamp; // Pixelated texture look
             
-            // Get currently loaded chunks
-            var loadedChunks = _worldManager.GetLoadedChunks().ToList();
-            var loadedChunkKeys = new HashSet<(int, int)>(
-                loadedChunks.Select(c => (c.ChunkX, c.ChunkZ))
-            );
+            // Build frustum for culling chunks outside camera view
+            BoundingFrustum frustum = new BoundingFrustum(camera.ViewMatrix * camera.ProjectionMatrix);
+            
+            // Get currently loaded chunks - iterate directly without ToList()
+            var loadedChunkKeys = new HashSet<(int, int)>();
+            foreach (var chunk in _worldManager.GetLoadedChunks())
+            {
+                loadedChunkKeys.Add((chunk.ChunkX, chunk.ChunkZ));
+            }
             
             // Remove meshes for unloaded chunks to free memory
-            var meshKeysToRemove = _chunkMeshes.Keys
-                .Where(key => !loadedChunkKeys.Contains(key))
-                .ToList();
-            
-            foreach (var key in meshKeysToRemove)
+            _keysToRemove.Clear();
+            foreach (var key in _chunkMeshes.Keys)
             {
+                if (!loadedChunkKeys.Contains(key))
+                {
+                    _keysToRemove.Add(key);
+                }
+            }
+            foreach (var key in _keysToRemove)
+            {
+                var mesh = _chunkMeshes[key];
+                mesh.Dispose();
                 _chunkMeshes.Remove(key);
             }
             
-            // Build/update chunk meshes
-            foreach (var chunk in loadedChunks)
+            // Build/update chunk meshes and draw
+            foreach (var chunk in _worldManager.GetLoadedChunks())
             {
                 var key = (chunk.ChunkX, chunk.ChunkZ);
                 
+                // Frustum culling - skip chunks outside camera view
+                int worldX = chunk.ChunkX * Chunk.CHUNK_SIZE;
+                int worldZ = chunk.ChunkZ * Chunk.CHUNK_SIZE;
+                BoundingBox chunkBounds = new BoundingBox(
+                    new Vector3(worldX, 0, worldZ),
+                    new Vector3(worldX + Chunk.CHUNK_SIZE, Chunk.CHUNK_HEIGHT, worldZ + Chunk.CHUNK_SIZE)
+                );
+                if (!frustum.Intersects(chunkBounds))
+                    continue;
+                
                 if (!_chunkMeshes.TryGetValue(key, out var mesh) || chunk.NeedsMeshRebuild)
                 {
+                    // Dispose old mesh GPU buffer before replacing
+                    if (mesh != null)
+                    {
+                        mesh.Dispose();
+                    }
                     mesh = BuildChunkMesh(chunk);
                     _chunkMeshes[key] = mesh;
                     chunk.NeedsMeshRebuild = false;
                 }
                 
-                // Draw chunk mesh
-                if (mesh != null && mesh.VertexCount > 0)
+                // Draw chunk mesh using GPU vertex buffer
+                if (mesh != null && mesh.VertexCount > 0 && mesh.VertexBuffer != null)
                 {
                     _effect.World = Matrix.Identity;
                     
                     foreach (var pass in _effect.CurrentTechnique.Passes)
                     {
                         pass.Apply();
-                        _graphicsDevice.DrawUserPrimitives(
+                        _graphicsDevice.SetVertexBuffer(mesh.VertexBuffer);
+                        _graphicsDevice.DrawPrimitives(
                             PrimitiveType.TriangleList,
-                            mesh.Vertices,
                             0,
                             mesh.VertexCount / 3
                         );
@@ -145,7 +174,7 @@ namespace TimelessTales.Rendering
                 }
             }
             
-            return new ChunkMesh(vertices.ToArray());
+            return new ChunkMesh(_graphicsDevice, vertices.ToArray());
         }
 
         private bool IsBlockOpaque(Chunk chunk, int x, int y, int z)
@@ -275,6 +304,11 @@ namespace TimelessTales.Rendering
         {
             if (!_disposed)
             {
+                foreach (var mesh in _chunkMeshes.Values)
+                {
+                    mesh.Dispose();
+                }
+                _chunkMeshes.Clear();
                 _effect?.Dispose();
                 _textureAtlas?.Dispose();
                 _disposed = true;
@@ -284,16 +318,33 @@ namespace TimelessTales.Rendering
     }
 
     /// <summary>
-    /// Contains mesh data for a chunk
+    /// Contains mesh data for a chunk, using a GPU vertex buffer for performance
     /// </summary>
-    public class ChunkMesh
+    public class ChunkMesh : IDisposable
     {
         public VertexPositionColorTexture[] Vertices { get; }
         public int VertexCount => Vertices.Length;
+        public VertexBuffer? VertexBuffer { get; private set; }
+        private bool _disposed;
 
-        public ChunkMesh(VertexPositionColorTexture[] vertices)
+        public ChunkMesh(GraphicsDevice graphicsDevice, VertexPositionColorTexture[] vertices)
         {
             Vertices = vertices;
+            if (vertices.Length > 0)
+            {
+                VertexBuffer = new VertexBuffer(graphicsDevice, typeof(VertexPositionColorTexture), vertices.Length, BufferUsage.WriteOnly);
+                VertexBuffer.SetData(vertices);
+            }
+        }
+        
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                VertexBuffer?.Dispose();
+                VertexBuffer = null;
+                _disposed = true;
+            }
         }
     }
 }

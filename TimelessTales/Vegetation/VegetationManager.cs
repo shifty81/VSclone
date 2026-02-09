@@ -34,22 +34,26 @@ namespace TimelessTales.Vegetation
             _random = new Random();
         }
         
+        // Throttle vegetation updates for performance
+        private float _updateAccumulator;
+        private const float VEGETATION_UPDATE_INTERVAL = 1.0f; // Only update growth every second
+        
         /// <summary>
-        /// Update all plants in the world
+        /// Update all plants in the world (throttled for performance)
         /// </summary>
-        /// <remarks>
-        /// Note: This currently updates all plants every frame. For large worlds with many plants,
-        /// consider implementing:
-        /// - Spatial partitioning (only update plants near player)
-        /// - Staggered updates (update subset each frame)
-        /// - Update intervals (e.g., update every 0.1 seconds instead of every frame)
-        /// </remarks>
         public void Update(float deltaTime)
         {
-            // Update all plants directly from dictionary values (no copy needed)
+            _updateAccumulator += deltaTime;
+            if (_updateAccumulator < VEGETATION_UPDATE_INTERVAL)
+                return;
+            
+            float elapsed = _updateAccumulator;
+            _updateAccumulator = 0;
+            
+            // Update all plants with accumulated time
             foreach (var plant in _plants.Values)
             {
-                if (plant.Update(deltaTime))
+                if (plant.Update(elapsed))
                 {
                     // Plant advanced to next stage - could trigger visual update
                     OnPlantStageChanged(plant);

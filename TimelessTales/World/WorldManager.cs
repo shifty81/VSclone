@@ -15,7 +15,8 @@ namespace TimelessTales.World
         private readonly PointOfInterestGenerator _poiGenerator;
         private readonly int _seed;
         
-        private const int RENDER_DISTANCE = 8; // Chunks
+        private const int RENDER_DISTANCE = 4; // Chunks (reduced from 8 for performance)
+        private const int MAX_CHUNKS_PER_FRAME = 2; // Limit chunk generation per frame to avoid spikes
         private Vector3 _spawnPosition;
 
         public WorldManager(int seed)
@@ -75,12 +76,20 @@ namespace TimelessTales.World
             int playerChunkX = (int)MathF.Floor(playerPosition.X / Chunk.CHUNK_SIZE);
             int playerChunkZ = (int)MathF.Floor(playerPosition.Z / Chunk.CHUNK_SIZE);
 
-            // Load nearby chunks
+            // Load nearby chunks - limit how many new chunks generate per frame
+            int chunksGenerated = 0;
             for (int x = playerChunkX - RENDER_DISTANCE; x <= playerChunkX + RENDER_DISTANCE; x++)
             {
                 for (int z = playerChunkZ - RENDER_DISTANCE; z <= playerChunkZ + RENDER_DISTANCE; z++)
                 {
-                    GetOrCreateChunk(x, z);
+                    var key = (x, z);
+                    if (!_chunks.ContainsKey(key))
+                    {
+                        if (chunksGenerated >= MAX_CHUNKS_PER_FRAME)
+                            continue; // Defer remaining chunks to next frame
+                        GetOrCreateChunk(x, z);
+                        chunksGenerated++;
+                    }
                 }
             }
 
