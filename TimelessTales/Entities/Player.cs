@@ -48,7 +48,6 @@ namespace TimelessTales.Entities
         private const float LEDGE_DETECT_DISTANCE = 0.8f; // How far forward to check for ledges
         private const float LEDGE_GRAB_HEIGHT_MIN = 0.5f; // Minimum ledge height above feet
         private const float LEDGE_GRAB_HEIGHT_MAX = 2.5f; // Maximum ledge height player can grab
-        private const float LEDGE_PULL_UP_SPEED = 3.0f; // Speed of pull-up motion
         private const float LEDGE_PULL_UP_DURATION = 0.5f; // Duration of pull-up animation in seconds
         
         // Block interaction
@@ -71,6 +70,7 @@ namespace TimelessTales.Entities
         private bool _isGrabbingLedge;
         private float _ledgePullUpTimer;
         private Vector3 _ledgeTargetPosition;
+        private Vector3 _ledgeStartPosition;
         
         // Public water state property for other systems (audio, particles, etc.)
         public bool IsUnderwater => _isInWater;
@@ -345,6 +345,7 @@ namespace TimelessTales.Entities
                         // Found a valid ledge - initiate grab
                         _isGrabbingLedge = true;
                         _ledgePullUpTimer = 0f;
+                        _ledgeStartPosition = Position;
                         _ledgeTargetPosition = new Vector3(bx + 0.5f, by + 1.0f, bz + 0.5f);
                         Velocity = Vector3.Zero; // Stop all movement during pull-up
                         return;
@@ -361,11 +362,11 @@ namespace TimelessTales.Entities
             _ledgePullUpTimer += deltaTime;
             float progress = MathHelper.Clamp(_ledgePullUpTimer / LEDGE_PULL_UP_DURATION, 0f, 1f);
             
-            // Smooth interpolation using ease-out curve
+            // Smooth interpolation using ease-out curve (frame-rate independent)
             float smoothProgress = 1f - MathF.Pow(1f - progress, 2f);
             
-            // Move player toward ledge target position
-            Position = Vector3.Lerp(Position, _ledgeTargetPosition, smoothProgress * LEDGE_PULL_UP_SPEED * deltaTime);
+            // Move player from start toward ledge target position based on progress
+            Position = Vector3.Lerp(_ledgeStartPosition, _ledgeTargetPosition, smoothProgress);
             
             if (progress >= 1f)
             {

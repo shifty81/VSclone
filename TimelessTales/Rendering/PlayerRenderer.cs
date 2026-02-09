@@ -71,7 +71,7 @@ namespace TimelessTales.Rendering
             _idleSwayTime += deltaTime;
             
             // Update view bob based on player movement
-            bool isMoving = player.Velocity.X != 0 || player.Velocity.Z != 0;
+            bool isMoving = MathF.Abs(player.Velocity.X) > float.Epsilon || MathF.Abs(player.Velocity.Z) > float.Epsilon;
             if (isMoving && !player.IsUnderwater)
             {
                 _viewBobTime += deltaTime * VIEW_BOB_WALK_SPEED;
