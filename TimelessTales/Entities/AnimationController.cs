@@ -14,11 +14,13 @@ namespace TimelessTales.Entities
         Breaking,
         Jumping,
         TreadingWater,
-        Swimming
+        Swimming,
+        LedgeGrab
     }
 
     /// <summary>
-    /// Controls animations for the player character
+    /// Controls animations for the player character with improved natural arm movement
+    /// and ledge grab support
     /// </summary>
     public class AnimationController
     {
@@ -27,6 +29,7 @@ namespace TimelessTales.Entities
         private float _animationTime = 0f;
         private bool _isBreaking = false;
         private float _breakingProgress = 0f;
+        private float _ledgeGrabProgress = 0f;
         
         // Animation parameters
         private const float WALK_SPEED = 2.0f;
@@ -37,19 +40,28 @@ namespace TimelessTales.Entities
         private const float TREAD_WATER_SPEED = 1.5f;
         private const float SWIM_SPEED = 2.5f;
         
+        // Improved arm motion parameters for more natural movement
+        private const float ARM_SECONDARY_MOTION = 0.15f; // Secondary shoulder/elbow motion
+        private const float ARM_LATERAL_SWAY = 0.08f; // Slight lateral arm sway during walk
+        
         public AnimationController(Skeleton skeleton)
         {
             _skeleton = skeleton;
         }
         
-        public void Update(float deltaTime, bool isMoving, bool isSprinting, bool isBreaking, float breakProgress, bool isInWater = false, bool isSwimming = false)
+        public void Update(float deltaTime, bool isMoving, bool isSprinting, bool isBreaking, float breakProgress, bool isInWater = false, bool isSwimming = false, bool isGrabbingLedge = false, float ledgeGrabProgress = 0f)
         {
             _animationTime += deltaTime;
             _isBreaking = isBreaking;
             _breakingProgress = breakProgress;
+            _ledgeGrabProgress = ledgeGrabProgress;
             
             // Determine current animation
-            if (isInWater)
+            if (isGrabbingLedge)
+            {
+                _currentAnimation = AnimationType.LedgeGrab;
+            }
+            else if (isInWater)
             {
                 _currentAnimation = isSwimming ? AnimationType.Swimming : AnimationType.TreadingWater;
             }
@@ -93,6 +105,9 @@ namespace TimelessTales.Entities
                 case AnimationType.Swimming:
                     ApplySwimmingAnimation();
                     break;
+                case AnimationType.LedgeGrab:
+                    ApplyLedgeGrabAnimation();
+                    break;
             }
             
             _skeleton.UpdateAllTransforms();
@@ -117,7 +132,7 @@ namespace TimelessTales.Entities
         {
             float phase = _animationTime * speed;
             
-            // Arms swing opposite to legs
+            // Arms swing opposite to legs with improved natural motion
             Bone? rightArm = _skeleton.GetBone("right_arm");
             Bone? leftArm = _skeleton.GetBone("left_arm");
             Bone? rightLeg = _skeleton.GetBone("right_leg");
@@ -125,14 +140,19 @@ namespace TimelessTales.Entities
             
             if (rightArm != null)
             {
+                // Primary swing + secondary shoulder rotation + slight lateral sway
                 float armSwing = MathF.Sin(phase) * ARM_SWING_AMOUNT;
-                rightArm.SetRotation(new Vector3(armSwing, 0, 0));
+                float secondaryMotion = MathF.Sin(phase * 2f) * ARM_SECONDARY_MOTION;
+                float lateralSway = MathF.Cos(phase) * ARM_LATERAL_SWAY;
+                rightArm.SetRotation(new Vector3(armSwing + secondaryMotion, lateralSway, 0));
             }
             
             if (leftArm != null)
             {
                 float armSwing = MathF.Sin(phase + MathF.PI) * ARM_SWING_AMOUNT;
-                leftArm.SetRotation(new Vector3(armSwing, 0, 0));
+                float secondaryMotion = MathF.Sin((phase + MathF.PI) * 2f) * ARM_SECONDARY_MOTION;
+                float lateralSway = MathF.Cos(phase + MathF.PI) * ARM_LATERAL_SWAY;
+                leftArm.SetRotation(new Vector3(armSwing + secondaryMotion, lateralSway, 0));
             }
             
             if (rightLeg != null)
@@ -147,12 +167,13 @@ namespace TimelessTales.Entities
                 leftLeg.SetRotation(new Vector3(legSwing, 0, 0));
             }
             
-            // Add slight torso rotation
+            // Add slight torso rotation for natural gait
             Bone? torso = _skeleton.GetBone("torso");
             if (torso != null)
             {
                 float torsoRotation = MathF.Sin(phase * 2) * 0.05f;
-                torso.SetRotation(new Vector3(0, torsoRotation, 0));
+                float torsoSway = MathF.Sin(phase) * 0.02f;
+                torso.SetRotation(new Vector3(torsoSway, torsoRotation, 0));
             }
         }
         
@@ -162,7 +183,6 @@ namespace TimelessTales.Entities
             Bone? rightArm = _skeleton.GetBone("right_arm");
             if (rightArm != null)
             {
-                // Swing from up to down as breaking progresses
                 float swingPhase = _breakingProgress * MathF.PI;
                 float armRotation = -BREAK_SWING_AMOUNT + MathF.Cos(swingPhase) * BREAK_SWING_AMOUNT;
                 rightArm.SetRotation(new Vector3(armRotation, 0, 0));
@@ -198,10 +218,10 @@ namespace TimelessTales.Entities
         
         private void ApplyTreadingWaterAnimation()
         {
-            // Idle treading water - subtle movements to stay afloat
             float phase = _animationTime * TREAD_WATER_SPEED;
             
             // Arms gently move in circular motion (like treading water)
+            // Improved with more natural figure-8 pattern
             Bone? rightArm = _skeleton.GetBone("right_arm");
             Bone? leftArm = _skeleton.GetBone("left_arm");
             
@@ -209,14 +229,16 @@ namespace TimelessTales.Entities
             {
                 float armX = MathF.Sin(phase) * 0.3f;
                 float armY = MathF.Cos(phase) * 0.2f;
-                rightArm.SetRotation(new Vector3(armX, armY, 0));
+                float armZ = MathF.Sin(phase * 0.5f) * 0.1f; // Slight roll for figure-8 motion
+                rightArm.SetRotation(new Vector3(armX, armY, armZ));
             }
             
             if (leftArm != null)
             {
                 float armX = MathF.Sin(phase + MathF.PI) * 0.3f;
                 float armY = MathF.Cos(phase + MathF.PI) * 0.2f;
-                leftArm.SetRotation(new Vector3(armX, armY, 0));
+                float armZ = MathF.Sin((phase + MathF.PI) * 0.5f) * 0.1f;
+                leftArm.SetRotation(new Vector3(armX, armY, armZ));
             }
             
             // Legs kick gently
@@ -246,26 +268,30 @@ namespace TimelessTales.Entities
         
         private void ApplySwimmingAnimation()
         {
-            // Swimming animation - more vigorous arm and leg movements
             float phase = _animationTime * SWIM_SPEED;
             
-            // Arms stroke in alternating pattern
+            // Improved swimming animation - more natural arm stroke with reach/pull phases
             Bone? rightArm = _skeleton.GetBone("right_arm");
             Bone? leftArm = _skeleton.GetBone("left_arm");
             
             if (rightArm != null)
             {
-                float armSwing = MathF.Sin(phase) * 0.8f;
-                rightArm.SetRotation(new Vector3(armSwing, 0, 0));
+                // Freestyle-like stroke: reach forward, pull back
+                float reach = MathF.Sin(phase) * 0.8f;
+                float lateralPull = MathF.Cos(phase) * 0.25f; // Arm sweeps out during pull phase
+                float rollMotion = MathF.Sin(phase * 0.5f) * 0.15f; // Body roll effect
+                rightArm.SetRotation(new Vector3(reach, lateralPull, rollMotion));
             }
             
             if (leftArm != null)
             {
-                float armSwing = MathF.Sin(phase + MathF.PI) * 0.8f;
-                leftArm.SetRotation(new Vector3(armSwing, 0, 0));
+                float reach = MathF.Sin(phase + MathF.PI) * 0.8f;
+                float lateralPull = MathF.Cos(phase + MathF.PI) * 0.25f;
+                float rollMotion = MathF.Sin((phase + MathF.PI) * 0.5f) * 0.15f;
+                leftArm.SetRotation(new Vector3(reach, lateralPull, rollMotion));
             }
             
-            // Legs kick in alternating pattern (flutter kick)
+            // Flutter kick
             Bone? rightLeg = _skeleton.GetBone("right_leg");
             Bone? leftLeg = _skeleton.GetBone("left_leg");
             
@@ -281,12 +307,61 @@ namespace TimelessTales.Entities
                 leftLeg.SetRotation(new Vector3(legSwing, 0, 0));
             }
             
-            // Torso tilts forward slightly when swimming
+            // Torso tilts forward with slight body roll for realistic freestyle
             Bone? torso = _skeleton.GetBone("torso");
             if (torso != null)
             {
                 float tilt = 0.2f; // Lean forward
-                torso.SetRotation(new Vector3(tilt, 0, 0));
+                float bodyRoll = MathF.Sin(phase) * 0.08f; // Subtle body roll
+                torso.SetRotation(new Vector3(tilt, 0, bodyRoll));
+            }
+        }
+        
+        /// <summary>
+        /// Ledge grab and pull-up animation - arms reach up and pull body over ledge
+        /// </summary>
+        private void ApplyLedgeGrabAnimation()
+        {
+            float progress = _ledgeGrabProgress;
+            
+            Bone? rightArm = _skeleton.GetBone("right_arm");
+            Bone? leftArm = _skeleton.GetBone("left_arm");
+            Bone? rightLeg = _skeleton.GetBone("right_leg");
+            Bone? leftLeg = _skeleton.GetBone("left_leg");
+            Bone? torso = _skeleton.GetBone("torso");
+            
+            if (progress < 0.4f)
+            {
+                // Phase 1: Arms reach up to grab ledge
+                float grabPhase = progress / 0.4f;
+                float armReach = MathHelper.Lerp(0f, -1.2f, grabPhase); // Arms reach overhead
+                
+                rightArm?.SetRotation(new Vector3(armReach, 0.1f, 0));
+                leftArm?.SetRotation(new Vector3(armReach, -0.1f, 0));
+                
+                // Legs dangle
+                rightLeg?.SetRotation(new Vector3(0.1f, 0, 0));
+                leftLeg?.SetRotation(new Vector3(-0.1f, 0, 0));
+            }
+            else
+            {
+                // Phase 2: Pull up - arms pull down, body rises
+                float pullPhase = (progress - 0.4f) / 0.6f;
+                float armPull = MathHelper.Lerp(-1.2f, 0.3f, pullPhase); // Arms pull body up
+                float legKick = MathF.Sin(pullPhase * MathF.PI) * 0.5f; // Legs kick during pull-up
+                
+                rightArm?.SetRotation(new Vector3(armPull, 0.1f, 0));
+                leftArm?.SetRotation(new Vector3(armPull, -0.1f, 0));
+                
+                rightLeg?.SetRotation(new Vector3(legKick, 0, 0));
+                leftLeg?.SetRotation(new Vector3(-legKick * 0.5f, 0, 0));
+            }
+            
+            // Torso leans forward during pull-up
+            if (torso != null)
+            {
+                float torsoPitch = progress < 0.4f ? 0.1f : MathHelper.Lerp(0.3f, 0f, (progress - 0.4f) / 0.6f);
+                torso.SetRotation(new Vector3(torsoPitch, 0, 0));
             }
         }
     }

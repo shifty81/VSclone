@@ -30,8 +30,14 @@ namespace TimelessTales.Rendering
         private float _idleSwayTime;
         private float _lastDeltaTime = 1f / 60f; // Default to 60fps, updated each frame
         private const float IDLE_SWAY_SPEED = 1.2f;
-        private const float IDLE_SWAY_AMOUNT = 0.008f;
-        private const float IDLE_BOB_AMOUNT = 0.005f;
+        private const float IDLE_SWAY_AMOUNT = 0.006f;
+        private const float IDLE_BOB_AMOUNT = 0.004f;
+        
+        // View bob parameters for natural first-person movement
+        private float _viewBobTime;
+        private const float VIEW_BOB_WALK_SPEED = 6.0f;
+        private const float VIEW_BOB_AMOUNT_X = 0.008f; // Horizontal sway
+        private const float VIEW_BOB_AMOUNT_Y = 0.012f; // Vertical bob
         
         // Held item dimensions
         private const float HELD_ITEM_SIZE = 0.15f;
@@ -63,6 +69,18 @@ namespace TimelessTales.Rendering
             float deltaTime = gameTime != null ? (float)gameTime.ElapsedGameTime.TotalSeconds : _lastDeltaTime;
             _lastDeltaTime = deltaTime;
             _idleSwayTime += deltaTime;
+            
+            // Update view bob based on player movement
+            bool isMoving = player.Velocity.X != 0 || player.Velocity.Z != 0;
+            if (isMoving && !player.IsUnderwater)
+            {
+                _viewBobTime += deltaTime * VIEW_BOB_WALK_SPEED;
+            }
+            else
+            {
+                // Smoothly reset view bob when stopping
+                _viewBobTime *= 0.9f;
+            }
             
             // Use skeleton bones for rendering with proper transformations
             
@@ -115,6 +133,11 @@ namespace TimelessTales.Rendering
             float idleSwayY = MathF.Sin(_idleSwayTime * IDLE_SWAY_SPEED * 2.0f) * IDLE_BOB_AMOUNT;
             Vector3 idleSway = right * idleSwayX + up * idleSwayY;
             
+            // View bob for natural first-person movement feel
+            float viewBobX = MathF.Sin(_viewBobTime) * VIEW_BOB_AMOUNT_X;
+            float viewBobY = MathF.Abs(MathF.Sin(_viewBobTime * 2f)) * VIEW_BOB_AMOUNT_Y;
+            Vector3 viewBob = right * viewBobX + up * viewBobY;
+            
             // Get skeleton bones
             var skeleton = player.Skeleton;
             Bone? rightArmBone = skeleton.GetBone("right_arm");
@@ -128,10 +151,11 @@ namespace TimelessTales.Rendering
             float armWidth = 0.12f;
             float armHeight = 0.12f;
             
-            // Draw right arm with bone rotation + idle sway
+            // Draw right arm with bone rotation + idle sway + view bob
+            // Improved position: arms lower and more to the side for natural FP view
             if (rightArmBone != null)
             {
-                Vector3 armBase = cameraPos + right * 0.35f - up * 0.25f + forward * 0.4f + idleSway;
+                Vector3 armBase = cameraPos + right * 0.32f - up * 0.30f + forward * 0.35f + idleSway + viewBob;
                 Matrix armRotation = Matrix.CreateRotationX(rightArmBone.LocalRotation.X) *
                                    Matrix.CreateRotationY(rightArmBone.LocalRotation.Y) *
                                    Matrix.CreateRotationZ(rightArmBone.LocalRotation.Z);
@@ -141,10 +165,10 @@ namespace TimelessTales.Rendering
                 DrawHeldItem(vertices, player, armBase, armLength, forward, right, up, armRotation);
             }
             
-            // Draw left arm with bone rotation + idle sway
+            // Draw left arm with bone rotation + idle sway + view bob
             if (leftArmBone != null)
             {
-                Vector3 leftArmBase = cameraPos - right * 0.35f - up * 0.25f + forward * 0.4f + idleSway;
+                Vector3 leftArmBase = cameraPos - right * 0.32f - up * 0.30f + forward * 0.35f + idleSway + viewBob;
                 Matrix armRotation = Matrix.CreateRotationX(leftArmBone.LocalRotation.X) *
                                    Matrix.CreateRotationY(leftArmBone.LocalRotation.Y) *
                                    Matrix.CreateRotationZ(leftArmBone.LocalRotation.Z);
