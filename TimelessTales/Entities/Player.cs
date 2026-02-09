@@ -35,6 +35,20 @@ namespace TimelessTales.Entities
         private const float BUOYANCY_THRESHOLD = 0.5f; // Minimum submersion depth to apply buoyancy
         private const float MIN_WATER_SPEED_FACTOR = 0.5f; // Minimum speed multiplier in water (50%)
         private const float WATER_SPEED_RANGE = 0.5f; // Range of speed reduction (50% to 100%)
+        private const float WATER_EXIT_BOOST = 6.0f; // Upward boost when near water surface edge
+        private const float WATER_STEP_UP_HEIGHT = 1.2f; // Max height to step up out of water
+        
+        // Breath/oxygen system parameters
+        private const float MAX_BREATH = 100f;
+        private const float BREATH_DEPLETION_RATE = 5.0f; // Units per second when submerged
+        private const float BREATH_RECOVERY_RATE = 20.0f; // Units per second when above water
+        private const float DROWNING_DAMAGE_RATE = 10.0f; // Health damage per second when out of breath
+        
+        // Ledge grab parameters
+        private const float LEDGE_DETECT_DISTANCE = 0.8f; // How far forward to check for ledges
+        private const float LEDGE_GRAB_HEIGHT_MIN = 0.5f; // Minimum ledge height above feet
+        private const float LEDGE_GRAB_HEIGHT_MAX = 2.5f; // Maximum ledge height player can grab
+        private const float LEDGE_PULL_UP_DURATION = 0.5f; // Duration of pull-up animation in seconds
         
         // Block interaction
         private const float REACH_DISTANCE = 5.0f;
@@ -47,10 +61,29 @@ namespace TimelessTales.Entities
         // Water state
         private bool _isInWater;
         private float _submersionDepth; // 0 = not in water, 1 = fully submerged
+        private bool _isFeetInWater; // Whether feet are in water (for exit detection)
+        
+        // Breath state
+        private float _breath;
+        
+        // Ledge grab state
+        private bool _isGrabbingLedge;
+        private float _ledgePullUpTimer;
+        private Vector3 _ledgeTargetPosition;
+        private Vector3 _ledgeStartPosition;
         
         // Public water state property for other systems (audio, particles, etc.)
         public bool IsUnderwater => _isInWater;
         public float SubmersionDepth => _submersionDepth;
+        
+        // Breath system public properties
+        public float Breath => _breath;
+        public float MaxBreath => MAX_BREATH;
+        public bool IsDrowning => _isInWater && _breath <= 0f;
+        
+        // Ledge grab public properties
+        public bool IsGrabbingLedge => _isGrabbingLedge;
+        public float LedgePullUpProgress => _ledgePullUpTimer / LEDGE_PULL_UP_DURATION;
         
         // Character stats
         public float Health { get; set; } = 100f;
@@ -89,6 +122,9 @@ namespace TimelessTales.Entities
             
             // Initialize character appearance with default human-like values
             Appearance = new CharacterAppearance();
+            
+            // Initialize breath
+            _breath = MAX_BREATH;
             
             // Initialize skeleton
             Skeleton = new Skeleton();
@@ -140,8 +176,20 @@ namespace TimelessTales.Entities
             // Check if player is in water
             UpdateWaterState(world);
             
+            // Update breath/oxygen system
+            UpdateBreath(deltaTime);
+            
             // Update camera rotation
             UpdateRotation(input);
+            
+            // Handle ledge grab state
+            if (_isGrabbingLedge)
+            {
+                UpdateLedgePullUp(deltaTime);
+                // During pull-up, skip normal movement/physics
+                AnimationController.Update(deltaTime, false, false, false, 0, false, false, _isGrabbingLedge, LedgePullUpProgress);
+                return;
+            }
             
             // Check if player is moving for animation
             bool isMoving = input.IsKeyDown(Keys.W) || input.IsKeyDown(Keys.A) || 
@@ -153,6 +201,12 @@ namespace TimelessTales.Entities
             
             // Apply physics (includes buoyancy if in water)
             ApplyPhysics(world, deltaTime);
+            
+            // Check for ledge grab opportunity (when not on ground, pressing forward + jump)
+            if (!_isOnGround && input.IsKeyDown(Keys.W) && input.IsKeyDown(Keys.Space))
+            {
+                TryGrabLedge(world);
+            }
             
             // Handle block interaction
             bool isBreaking = input.IsLeftMouseDown() && _targetBlockPos.HasValue;
@@ -168,7 +222,7 @@ namespace TimelessTales.Entities
             _survivalSystem.Update(this, deltaTime, isSprinting, isSwimming);
             
             // Update animations
-            AnimationController.Update(deltaTime, isMoving, isSprinting, isBreaking, _breakProgress, _isInWater, isSwimming);
+            AnimationController.Update(deltaTime, isMoving, isSprinting, isBreaking, _breakProgress, _isInWater, isSwimming, false, 0f);
         }
 
         private void UpdateRotation(InputManager input)
@@ -211,6 +265,14 @@ namespace TimelessTales.Entities
             // Calculate submersion depth (0 = not in water, 1 = fully submerged)
             _submersionDepth = waterSamples / (float)samples;
             
+            // Check if feet are in water (for water exit detection)
+            Vector3 feetPos = Position;
+            int fx = (int)MathF.Floor(feetPos.X);
+            int fy = (int)MathF.Floor(feetPos.Y);
+            int fz = (int)MathF.Floor(feetPos.Z);
+            BlockType feetBlock = world.GetBlock(fx, fy, fz);
+            _isFeetInWater = feetBlock == BlockType.Water || feetBlock == BlockType.Saltwater;
+            
             // Only consider player "underwater" when head/camera is submerged
             _isInWater = IsEyePositionInWater(world);
         }
@@ -226,6 +288,95 @@ namespace TimelessTales.Entities
             int eyeZ = (int)MathF.Floor(eyePos.Z);
             BlockType eyeBlock = world.GetBlock(eyeX, eyeY, eyeZ);
             return (eyeBlock == BlockType.Water || eyeBlock == BlockType.Saltwater);
+        }
+        
+        /// <summary>
+        /// Updates the breath/oxygen system. Breath depletes when head is underwater
+        /// and recovers when above water. Drowning damage occurs when out of breath.
+        /// </summary>
+        private void UpdateBreath(float deltaTime)
+        {
+            if (_isInWater)
+            {
+                // Deplete breath when head is underwater
+                _breath = MathF.Max(0f, _breath - BREATH_DEPLETION_RATE * deltaTime);
+                
+                // Apply drowning damage when out of breath
+                if (_breath <= 0f)
+                {
+                    Health = MathF.Max(0f, Health - DROWNING_DAMAGE_RATE * deltaTime);
+                }
+            }
+            else
+            {
+                // Recover breath when above water
+                _breath = MathF.Min(MAX_BREATH, _breath + BREATH_RECOVERY_RATE * deltaTime);
+            }
+        }
+        
+        /// <summary>
+        /// Attempts to detect and grab a ledge above the player.
+        /// Checks for a solid block at grab height with air above it.
+        /// </summary>
+        private void TryGrabLedge(WorldManager world)
+        {
+            Vector3 lookDir = GetLookDirection();
+            Vector3 horizontalDir = new Vector3(lookDir.X, 0, lookDir.Z);
+            if (horizontalDir.LengthSquared() > 0.001f)
+                horizontalDir.Normalize();
+            else
+                return;
+            
+            // Check positions in front of player at various heights for a ledge
+            Vector3 checkPos = Position + horizontalDir * LEDGE_DETECT_DISTANCE;
+            
+            for (float heightOffset = LEDGE_GRAB_HEIGHT_MIN; heightOffset <= LEDGE_GRAB_HEIGHT_MAX; heightOffset += 0.5f)
+            {
+                int bx = (int)MathF.Floor(checkPos.X);
+                int by = (int)MathF.Floor(Position.Y + heightOffset);
+                int bz = (int)MathF.Floor(checkPos.Z);
+                
+                // Check if there's a solid block at this height and air above it
+                if (world.IsBlockSolid(bx, by, bz) && !world.IsBlockSolid(bx, by + 1, bz))
+                {
+                    // Also verify there's space for the player to stand on top
+                    if (!world.IsBlockSolid(bx, by + 2, bz))
+                    {
+                        // Found a valid ledge - initiate grab
+                        _isGrabbingLedge = true;
+                        _ledgePullUpTimer = 0f;
+                        _ledgeStartPosition = Position;
+                        _ledgeTargetPosition = new Vector3(bx + 0.5f, by + 1.0f, bz + 0.5f);
+                        Velocity = Vector3.Zero; // Stop all movement during pull-up
+                        return;
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Updates the ledge pull-up animation and movement
+        /// </summary>
+        private void UpdateLedgePullUp(float deltaTime)
+        {
+            _ledgePullUpTimer += deltaTime;
+            float progress = MathHelper.Clamp(_ledgePullUpTimer / LEDGE_PULL_UP_DURATION, 0f, 1f);
+            
+            // Smooth interpolation using ease-out curve (frame-rate independent)
+            float smoothProgress = 1f - MathF.Pow(1f - progress, 2f);
+            
+            // Move player from start toward ledge target position based on progress
+            Position = Vector3.Lerp(_ledgeStartPosition, _ledgeTargetPosition, smoothProgress);
+            
+            if (progress >= 1f)
+            {
+                // Pull-up complete - place player on top of ledge
+                Position = _ledgeTargetPosition;
+                _isGrabbingLedge = false;
+                _ledgePullUpTimer = 0f;
+                _isOnGround = true;
+                Velocity = Vector3.Zero;
+            }
         }
 
         private void UpdateMovement(InputManager input, float deltaTime)
@@ -273,7 +424,12 @@ namespace TimelessTales.Entities
             // In water, space makes you swim upward
             if (input.IsKeyDown(Keys.Space))
             {
-                if (_isInWater)
+                if (_isFeetInWater && !_isInWater)
+                {
+                    // At water surface trying to get out - apply stronger boost
+                    Velocity = new Vector3(Velocity.X, WATER_EXIT_BOOST, Velocity.Z);
+                }
+                else if (_isInWater)
                 {
                     // Swimming upward - only when space is pressed
                     Velocity = new Vector3(Velocity.X, 3.0f, Velocity.Z);
@@ -342,7 +498,24 @@ namespace TimelessTales.Entities
             result.X = targetPos.X;
             if (CheckCollision(world, result))
             {
-                result.X = Position.X; // Revert X movement if collision
+                // If in water, try stepping up to get out
+                if (_isFeetInWater)
+                {
+                    Vector3 stepUpResult = result;
+                    stepUpResult.Y += WATER_STEP_UP_HEIGHT;
+                    if (!CheckCollision(world, stepUpResult))
+                    {
+                        result = stepUpResult;
+                    }
+                    else
+                    {
+                        result.X = Position.X; // Revert X movement if collision
+                    }
+                }
+                else
+                {
+                    result.X = Position.X; // Revert X movement if collision
+                }
             }
             
             // Try to move on Y axis
@@ -426,7 +599,24 @@ namespace TimelessTales.Entities
             result.Z = targetPos.Z;
             if (CheckCollision(world, result))
             {
-                result.Z = Position.Z; // Revert Z movement if collision
+                // If in water, try stepping up to get out
+                if (_isFeetInWater)
+                {
+                    Vector3 stepUpResult = result;
+                    stepUpResult.Y += WATER_STEP_UP_HEIGHT;
+                    if (!CheckCollision(world, stepUpResult))
+                    {
+                        result = stepUpResult;
+                    }
+                    else
+                    {
+                        result.Z = Position.Z; // Revert Z movement if collision
+                    }
+                }
+                else
+                {
+                    result.Z = Position.Z; // Revert Z movement if collision
+                }
             }
             
             return result;
