@@ -85,7 +85,7 @@ namespace TimelessTales.Tests
         }
 
         [Fact]
-        public void Plant_BerryShrub_ProducesBerriensOnMaturing()
+        public void Plant_BerryShrub_ProducesBerriesOnMaturing()
         {
             // Arrange
             var berryShrub = new Plant(Vector3.Zero, VegetationType.BerryShrub, GrowthStage.Growing);
