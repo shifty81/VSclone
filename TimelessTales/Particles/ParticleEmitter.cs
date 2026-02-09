@@ -23,6 +23,19 @@ namespace TimelessTales.Particles
         public Vector3 VelocityBase { get; set; }
         public Vector3 VelocityVariation { get; set; }
         
+        // Enhanced emitter properties
+        public float SizeVariation { get; set; } // Random size variation (0-1)
+        public bool EnableWobble { get; set; } // Enable wobble for spawned particles
+        public float WobbleAmplitude { get; set; } = 0.3f;
+        public float WobbleFrequency { get; set; } = 4.0f;
+        public float SurfacePopY { get; set; } = float.MaxValue; // Y level where particles pop
+        
+        // Periodic burst emission
+        public bool UseBurstMode { get; set; } // Emit in bursts
+        public float BurstInterval { get; set; } = 3.0f; // Seconds between bursts
+        public int BurstCount { get; set; } = 5; // Particles per burst
+        private float _burstTimer;
+        
         public ParticleEmitter(Vector3 position)
         {
             Position = position;
@@ -51,13 +64,28 @@ namespace TimelessTales.Particles
             // Emit new particles
             if (IsActive)
             {
-                _emissionTimer += deltaTime;
-                float emissionInterval = 1.0f / EmissionRate;
-                
-                while (_emissionTimer >= emissionInterval)
+                if (UseBurstMode)
                 {
-                    EmitParticle();
-                    _emissionTimer -= emissionInterval;
+                    _burstTimer += deltaTime;
+                    if (_burstTimer >= BurstInterval)
+                    {
+                        for (int i = 0; i < BurstCount; i++)
+                        {
+                            EmitParticle();
+                        }
+                        _burstTimer -= BurstInterval;
+                    }
+                }
+                else
+                {
+                    _emissionTimer += deltaTime;
+                    float emissionInterval = 1.0f / EmissionRate;
+                    
+                    while (_emissionTimer >= emissionInterval)
+                    {
+                        EmitParticle();
+                        _emissionTimer -= emissionInterval;
+                    }
                 }
             }
         }
@@ -78,7 +106,27 @@ namespace TimelessTales.Particles
                 ((float)_random.NextDouble() - 0.5f) * 0.2f
             );
             
-            var particle = new Particle(spawnPos, velocity, ParticleColor, ParticleSize, ParticleLifetime);
+            // Apply size variation
+            float size = ParticleSize;
+            if (SizeVariation > 0)
+            {
+                float variation = 1.0f + ((float)_random.NextDouble() - 0.5f) * SizeVariation * 2;
+                size *= Math.Max(0.1f, variation);
+            }
+            
+            var particle = new Particle(spawnPos, velocity, ParticleColor, size, ParticleLifetime);
+            
+            // Apply wobble settings
+            if (EnableWobble)
+            {
+                particle.HasWobble = true;
+                particle.WobbleAmplitude = WobbleAmplitude;
+                particle.WobbleFrequency = WobbleFrequency;
+            }
+            
+            // Apply surface pop level
+            particle.SurfacePopY = SurfacePopY;
+            
             _particles.Add(particle);
         }
         

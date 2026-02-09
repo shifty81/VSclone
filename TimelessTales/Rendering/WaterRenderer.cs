@@ -22,9 +22,13 @@ namespace TimelessTales.Rendering
         // Track which chunks need wave vertex updates (dirty when time changes)
         private float _lastWaveUpdateTime;
         private const float WAVE_UPDATE_INTERVAL = 0.05f; // ~20 updates/sec for wave animation (reduced from 30)
+        
+        // Reusable collections to avoid per-frame allocations
+        private readonly List<(int, int)> _keysToRemove;
 
         // Water visual parameters
         private const int SEA_LEVEL = 64;
+        private const int WATER_SCAN_MIN_Y = 40; // Lowest Y to scan for water (optimization)
         private const float WAVE_SPEED = 0.5f;
         private const float WAVE_HEIGHT = 0.08f;
         private const float MAX_DEPTH_FOR_COLOR_CALCULATION = 20.0f;
@@ -60,6 +64,7 @@ namespace TimelessTales.Rendering
             _graphicsDevice = graphicsDevice;
             _worldManager = worldManager;
             _waterMeshes = new Dictionary<(int, int), WaterMesh>();
+            _keysToRemove = new List<(int, int)>();
             _time = 0;
             _lastWaveUpdateTime = 0;
 
@@ -88,22 +93,30 @@ namespace TimelessTales.Rendering
             _graphicsDevice.BlendState = BlendState.AlphaBlend;
             _graphicsDevice.DepthStencilState = DepthStencilState.Default;
             _graphicsDevice.RasterizerState = RasterizerState.CullNone;
+            
+            // Build frustum for culling chunks outside camera view
+            BoundingFrustum frustum = new BoundingFrustum(camera.ViewMatrix * camera.ProjectionMatrix);
 
             // Throttle wave mesh rebuilds for performance (~20 fps for wave animation)
             bool needsWaveUpdate = (_time - _lastWaveUpdateTime) >= WAVE_UPDATE_INTERVAL;
 
-            // Get currently loaded chunks
-            var loadedChunks = _worldManager.GetLoadedChunks().ToList();
-            var loadedChunkKeys = new HashSet<(int, int)>(
-                loadedChunks.Select(c => (c.ChunkX, c.ChunkZ))
-            );
+            // Get currently loaded chunk keys without allocating ToList()
+            var loadedChunkKeys = new HashSet<(int, int)>();
+            foreach (var chunk in _worldManager.GetLoadedChunks())
+            {
+                loadedChunkKeys.Add((chunk.ChunkX, chunk.ChunkZ));
+            }
             
             // Remove meshes for unloaded chunks to free memory
-            var meshKeysToRemove = _waterMeshes.Keys
-                .Where(key => !loadedChunkKeys.Contains(key))
-                .ToList();
-            
-            foreach (var key in meshKeysToRemove)
+            _keysToRemove.Clear();
+            foreach (var key in _waterMeshes.Keys)
+            {
+                if (!loadedChunkKeys.Contains(key))
+                {
+                    _keysToRemove.Add(key);
+                }
+            }
+            foreach (var key in _keysToRemove)
             {
                 var mesh = _waterMeshes[key];
                 mesh.Dispose();
@@ -111,9 +124,19 @@ namespace TimelessTales.Rendering
             }
 
             // Build/update water meshes
-            foreach (var chunk in loadedChunks)
+            foreach (var chunk in _worldManager.GetLoadedChunks())
             {
                 var key = (chunk.ChunkX, chunk.ChunkZ);
+                
+                // Frustum culling - skip chunks outside camera view (only check water Y range)
+                int worldX = chunk.ChunkX * Chunk.CHUNK_SIZE;
+                int worldZ = chunk.ChunkZ * Chunk.CHUNK_SIZE;
+                BoundingBox chunkBounds = new BoundingBox(
+                    new Vector3(worldX, WATER_SCAN_MIN_Y, worldZ),
+                    new Vector3(worldX + Chunk.CHUNK_SIZE, SEA_LEVEL + 1, worldZ + Chunk.CHUNK_SIZE)
+                );
+                if (!frustum.Intersects(chunkBounds))
+                    continue;
 
                 if (!_waterMeshes.TryGetValue(key, out var mesh) || chunk.NeedsMeshRebuild || needsWaveUpdate)
                 {
@@ -162,9 +185,11 @@ namespace TimelessTales.Rendering
             int worldX = chunk.ChunkX * Chunk.CHUNK_SIZE;
             int worldZ = chunk.ChunkZ * Chunk.CHUNK_SIZE;
 
+            // Only scan Y range where water can exist (optimization: skip empty air above sea level
+            // and deep stone below water-relevant range)
             for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
             {
-                for (int y = 0; y < Chunk.CHUNK_HEIGHT; y++)
+                for (int y = WATER_SCAN_MIN_Y; y <= SEA_LEVEL; y++)
                 {
                     for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                     {

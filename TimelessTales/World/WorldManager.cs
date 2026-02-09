@@ -12,9 +12,11 @@ namespace TimelessTales.World
         private readonly Dictionary<(int, int), Chunk> _chunks;
         private readonly WorldGenerator _generator;
         private readonly VegetationManager _vegetationManager;
+        private readonly PointOfInterestGenerator _poiGenerator;
         private readonly int _seed;
         
-        private const int RENDER_DISTANCE = 8; // Chunks
+        private const int RENDER_DISTANCE = 4; // Chunks (reduced from 8 for performance)
+        private const int MAX_CHUNKS_PER_FRAME = 2; // Limit chunk generation per frame to avoid spikes
         private Vector3 _spawnPosition;
 
         public WorldManager(int seed)
@@ -23,6 +25,7 @@ namespace TimelessTales.World
             _chunks = new Dictionary<(int, int), Chunk>();
             _generator = new WorldGenerator(seed);
             _vegetationManager = new VegetationManager(this);
+            _poiGenerator = new PointOfInterestGenerator(seed);
             _spawnPosition = new Vector3(0, 70, 0);
         }
         
@@ -30,6 +33,11 @@ namespace TimelessTales.World
         /// Get the vegetation manager for this world
         /// </summary>
         public VegetationManager VegetationManager => _vegetationManager;
+        
+        /// <summary>
+        /// Get the point of interest generator for this world
+        /// </summary>
+        public PointOfInterestGenerator PoiGenerator => _poiGenerator;
 
         public void Initialize()
         {
@@ -68,12 +76,20 @@ namespace TimelessTales.World
             int playerChunkX = (int)MathF.Floor(playerPosition.X / Chunk.CHUNK_SIZE);
             int playerChunkZ = (int)MathF.Floor(playerPosition.Z / Chunk.CHUNK_SIZE);
 
-            // Load nearby chunks
+            // Load nearby chunks - limit how many new chunks generate per frame
+            int chunksGenerated = 0;
             for (int x = playerChunkX - RENDER_DISTANCE; x <= playerChunkX + RENDER_DISTANCE; x++)
             {
                 for (int z = playerChunkZ - RENDER_DISTANCE; z <= playerChunkZ + RENDER_DISTANCE; z++)
                 {
-                    GetOrCreateChunk(x, z);
+                    var key = (x, z);
+                    if (!_chunks.ContainsKey(key))
+                    {
+                        if (chunksGenerated >= MAX_CHUNKS_PER_FRAME)
+                            continue; // Defer remaining chunks to next frame
+                        GetOrCreateChunk(x, z);
+                        chunksGenerated++;
+                    }
                 }
             }
 
@@ -96,6 +112,9 @@ namespace TimelessTales.World
             {
                 chunk = new Chunk(chunkX, chunkZ);
                 chunk.Generate(_generator);
+                
+                // Generate points of interest
+                _poiGenerator.GenerateForChunk(chunk, _generator);
                 
                 // Populate with vegetation after terrain generation
                 _vegetationManager.PopulateChunk(chunk);

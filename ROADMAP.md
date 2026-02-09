@@ -2,7 +2,7 @@
 
 This roadmap tracks the progress of all features and systems in the Timeless Tales game. It is updated with each pull request to reflect the current state of development.
 
-**Last Updated:** 2026-02-07  
+**Last Updated:** 2026-02-09  
 **Current Version:** Alpha 0.1
 
 ---
@@ -37,12 +37,12 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Forward swimming animation with arm strokes
 - ✅ Animation controller with state transitions
 - ✅ Character skeleton system for voxel character
-- 📋 Particle system for bubbles:
-  - 📋 Bubble particle emitter
-  - 📋 Upward floating physics for bubbles
-  - 📋 Semi-transparent bubble rendering
-  - 📋 Periodic emission from character's mouth underwater
-  - 📋 Bubble pop animation when reaching surface
+- ✅ Particle system for bubbles:
+  - ✅ Bubble particle emitter
+  - ✅ Upward floating physics for bubbles
+  - ✅ Semi-transparent bubble rendering
+  - ✅ Periodic emission from character's mouth underwater
+  - ✅ Bubble pop animation when reaching surface
 
 ### 1.3 Character Water Interaction
 - ✅ Buoyancy physics system (upward force when submerged)
@@ -135,14 +135,14 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
   - 📋 Landslide physics for unsupported blocks
 
 ### 3.3 Points of Interest and Geographical Oddities
-- 📋 Procedural structure generation:
-  - 📋 Ancient ruins
-  - 📋 Abandoned settlements
+- ✅ Procedural structure generation:
+  - ✅ Ancient ruins
+  - ✅ Abandoned settlements
   - 📋 Cave systems with unique features
-  - 📋 Natural arches and formations
-  - 📋 Meteor impact sites
-  - 📋 Hot springs and geysers
-  - 📋 Crystal caverns
+  - ✅ Natural arches and formations
+  - ✅ Meteor impact sites
+  - ✅ Hot springs and geysers
+  - ✅ Crystal caverns
 - 📋 Lore placement system:
   - 📋 Environmental storytelling elements
   - 📋 Ancient cave paintings
@@ -152,20 +152,20 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 ### 3.4 Shrubbery, Grass, and Vegetation
 - ✅ Tree generation (TreeGenerator class)
 - ✅ Basic foliage blocks (Leaves, Wood)
-- 📋 Grass system:
-  - 📋 Grass block variants (short, medium, tall)
-  - 📋 Grass placement on suitable terrain
-  - 📋 Wind animation for grass
+- ✅ Grass system:
+  - ✅ Grass block variants (short, medium, tall)
+  - ✅ Grass placement on suitable terrain
+  - ✅ Wind animation for grass
   - 📋 Seasonal grass color changes
-- 📋 Shrubbery system:
-  - 📋 Bush/shrub voxel models
-  - 📋 Three growth stages (seedling, growing, mature)
-  - 📋 Growth progression over time
-  - 📋 Different shrub types per biome
-  - 📋 Berry-producing shrubs
-  - 📋 Harvestable resources from mature shrubs
+- ✅ Shrubbery system:
+  - ✅ Bush/shrub voxel models
+  - ✅ Three growth stages (seedling, growing, mature)
+  - ✅ Growth progression over time
+  - ✅ Different shrub types per biome
+  - ✅ Berry-producing shrubs
+  - ✅ Harvestable resources from mature shrubs
 - 📋 Advanced vegetation:
-  - 📋 Flowers and decorative plants
+  - ✅ Flowers and decorative plants
   - 📋 Vines and climbing plants
   - 📋 Mushrooms and fungi
   - 📋 Crops and farmable plants
@@ -176,18 +176,18 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 ## 4. Sound Changes Underwater
 
 ### 4.1 Audio System Foundation
-- 📋 Basic audio system setup:
-  - 📋 SoundEffect class integration
-  - 📋 Audio manager for sound playback
+- ✅ Basic audio system setup:
+  - ✅ SoundEffect class integration
+  - ✅ Audio manager for sound playback
   - 📋 3D spatial audio positioning
-  - 📋 Volume and pitch controls
+  - ✅ Volume and pitch controls
 
 ### 4.2 Underwater Audio Effects
-- 📋 Low-pass filter implementation:
-  - 📋 Frequency attenuation when underwater
-  - 📋 Muffled sound effect simulation
-  - 📋 Real-time audio manipulation
-  - 📋 Smooth transition when entering/exiting water
+- ✅ Low-pass filter implementation:
+  - ✅ Frequency attenuation when underwater
+  - ✅ Muffled sound effect simulation
+  - ✅ Real-time audio manipulation
+  - ✅ Smooth transition when entering/exiting water
 - 📋 Underwater ambient sounds:
   - 📋 Underwater bubbles sound
   - 📋 Muffled movement sounds
@@ -465,6 +465,10 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ TimeManagerTests
 - ✅ LoggerTests
 - ✅ SurvivalSystemTests (15 tests)
+- ✅ BubbleParticleTests (8 tests)
+- ✅ AudioManagerTests (8 tests)
+- ✅ VegetationPlacementTests (16 tests)
+- ✅ PointOfInterestTests (5 tests)
 - 📋 Integration tests
 - 📋 Performance benchmarks
 - 📋 Automated build pipeline
@@ -530,10 +534,10 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 6. ✅ Survival mechanics (hunger, thirst, health)
 
 ### Short-term (Next 1-2 PRs)
-1. Bubble particle effects underwater
-2. Underwater audio filtering
-3. Grass and shrubbery placement system
-4. Points of interest generation
+1. ~~Bubble particle effects underwater~~ ✅ Done
+2. ~~Underwater audio filtering~~ ✅ Done
+3. ~~Grass and shrubbery placement system~~ ✅ Done
+4. ~~Points of interest generation~~ ✅ Done
 
 ### Medium-term (Next 2-4 months)
 1. Crafting system implementation

@@ -74,7 +74,7 @@ namespace TimelessTales.World
                     for (int y = 0; y < Chunk.CHUNK_HEIGHT; y++)
                     {
                         BlockType block = GenerateBlock(wx, y, wz, surfaceHeight, biome);
-                        chunk.SetBlock(x, y, z, block);
+                        chunk.SetBlockFast(x, y, z, block);
                     }
                     
                     // Generate trees

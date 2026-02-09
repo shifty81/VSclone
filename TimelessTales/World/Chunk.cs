@@ -42,6 +42,17 @@ namespace TimelessTales.World
             _blocks[x, y, z] = blockType;
             NeedsMeshRebuild = true;
         }
+        
+        /// <summary>
+        /// Set a block without flagging mesh rebuild - use during bulk generation only
+        /// </summary>
+        public void SetBlockFast(int x, int y, int z, BlockType blockType)
+        {
+            if (x < 0 || x >= CHUNK_SIZE || y < 0 || y >= CHUNK_HEIGHT || z < 0 || z >= CHUNK_SIZE)
+                return;
+            
+            _blocks[x, y, z] = blockType;
+        }
 
         public void Generate(WorldGenerator generator)
         {

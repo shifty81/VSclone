@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace TimelessTales.Audio
 {
     /// <summary>
-    /// Manages audio playback and effects
+    /// Manages audio playback and effects including underwater filtering
     /// </summary>
     public class AudioManager
     {
@@ -18,6 +18,13 @@ namespace TimelessTales.Audio
         private const float UNDERWATER_VOLUME_MULTIPLIER = 0.6f;
         private const float UNDERWATER_PITCH_SHIFT = -0.3f; // Lower pitch underwater
         
+        // Depth-based audio attenuation
+        private float _submersionDepth; // 0.0 (surface) to 1.0 (fully submerged)
+        private float _currentTransition; // Smooth transition 0.0 to 1.0
+        private const float TRANSITION_SPEED = 3.0f; // Transition speed per second
+        private const float DEEP_VOLUME_MULTIPLIER = 0.3f; // Extra reduction at full depth
+        private const float DEEP_PITCH_SHIFT = -0.5f; // More muffled at full depth
+        
         public bool IsUnderwater
         {
             get => _isUnderwater;
@@ -26,10 +33,26 @@ namespace TimelessTales.Audio
                 if (_isUnderwater != value)
                 {
                     _isUnderwater = value;
-                    ApplyUnderwaterEffect();
+                    // Don't apply immediately - let smooth transition handle it
                 }
             }
         }
+        
+        /// <summary>
+        /// Submersion depth from 0.0 (surface) to 1.0 (fully submerged)
+        /// Used for depth-based audio attenuation
+        /// </summary>
+        public float SubmersionDepth
+        {
+            get => _submersionDepth;
+            set => _submersionDepth = Math.Clamp(value, 0.0f, 1.0f);
+        }
+        
+        /// <summary>
+        /// Current transition value (0 = normal, 1 = fully underwater)
+        /// Smoothly interpolates for gradual audio changes
+        /// </summary>
+        public float CurrentTransition => _currentTransition;
         
         public float MasterVolume { get; set; } = 1.0f;
         public float SoundEffectVolume { get; set; } = 1.0f;
@@ -40,6 +63,7 @@ namespace TimelessTales.Audio
             _loopingSounds = new Dictionary<string, SoundEffectInstance>();
             _originalVolumes = new Dictionary<string, float>();
             _isUnderwater = false;
+            _currentTransition = 0.0f;
         }
         
         /// <summary>
@@ -60,11 +84,18 @@ namespace TimelessTales.Audio
                 float finalVolume = volume * SoundEffectVolume * MasterVolume;
                 float finalPitch = pitch;
                 
-                // Apply underwater effect
-                if (_isUnderwater)
+                // Apply underwater effect with depth-based attenuation
+                if (_currentTransition > 0.01f)
                 {
-                    finalVolume *= UNDERWATER_VOLUME_MULTIPLIER;
-                    finalPitch += UNDERWATER_PITCH_SHIFT;
+                    float volumeMultiplier = Lerp(1.0f, 
+                        Lerp(UNDERWATER_VOLUME_MULTIPLIER, DEEP_VOLUME_MULTIPLIER, _submersionDepth), 
+                        _currentTransition);
+                    float pitchShift = Lerp(0.0f, 
+                        Lerp(UNDERWATER_PITCH_SHIFT, DEEP_PITCH_SHIFT, _submersionDepth), 
+                        _currentTransition);
+                    
+                    finalVolume *= volumeMultiplier;
+                    finalPitch += pitchShift;
                 }
                 
                 // Clamp values
@@ -92,10 +123,9 @@ namespace TimelessTales.Audio
                 // Store original volume for this instance
                 _originalVolumes[key] = finalVolume;
                 
-                if (_isUnderwater)
+                if (_currentTransition > 0.01f)
                 {
-                    instance.Volume *= UNDERWATER_VOLUME_MULTIPLIER;
-                    instance.Pitch = UNDERWATER_PITCH_SHIFT;
+                    ApplyUnderwaterToInstance(instance, finalVolume);
                 }
                 
                 instance.Play();
@@ -132,39 +162,69 @@ namespace TimelessTales.Audio
         }
         
         /// <summary>
-        /// Apply underwater effect to all currently playing looping sounds
+        /// Apply underwater effect to a single sound instance using current transition
         /// </summary>
-        private void ApplyUnderwaterEffect()
+        private void ApplyUnderwaterToInstance(SoundEffectInstance instance, float originalVolume)
+        {
+            float volumeMultiplier = Lerp(1.0f, 
+                Lerp(UNDERWATER_VOLUME_MULTIPLIER, DEEP_VOLUME_MULTIPLIER, _submersionDepth), 
+                _currentTransition);
+            float pitchShift = Lerp(0.0f, 
+                Lerp(UNDERWATER_PITCH_SHIFT, DEEP_PITCH_SHIFT, _submersionDepth), 
+                _currentTransition);
+            
+            instance.Volume = Math.Clamp(originalVolume * volumeMultiplier, 0.0f, 1.0f);
+            instance.Pitch = Math.Clamp(pitchShift, -1.0f, 1.0f);
+        }
+        
+        /// <summary>
+        /// Apply smooth underwater transition to all looping sounds
+        /// </summary>
+        private void ApplyUnderwaterTransition()
         {
             foreach (var kvp in _loopingSounds)
             {
                 string key = kvp.Key;
                 SoundEffectInstance instance = kvp.Value;
                 
-                // Get original volume or use current volume as fallback
                 float originalVolume = _originalVolumes.TryGetValue(key, out float vol) 
                     ? vol 
                     : SoundEffectVolume * MasterVolume;
                 
-                if (_isUnderwater)
-                {
-                    instance.Volume = originalVolume * UNDERWATER_VOLUME_MULTIPLIER;
-                    instance.Pitch = UNDERWATER_PITCH_SHIFT;
-                }
-                else
-                {
-                    instance.Volume = originalVolume;
-                    instance.Pitch = 0.0f;
-                }
+                ApplyUnderwaterToInstance(instance, originalVolume);
             }
         }
         
         /// <summary>
         /// Update audio system (call each frame)
+        /// Handles smooth underwater transition
         /// </summary>
-        public void Update()
+        public void Update(float deltaTime = 0.016f)
         {
-            // Future: Update 3D audio positions, fade effects, etc.
+            // Smooth transition towards target state
+            float target = _isUnderwater ? 1.0f : 0.0f;
+            
+            if (Math.Abs(_currentTransition - target) > 0.001f)
+            {
+                if (_currentTransition < target)
+                {
+                    _currentTransition = Math.Min(_currentTransition + TRANSITION_SPEED * deltaTime, target);
+                }
+                else
+                {
+                    _currentTransition = Math.Max(_currentTransition - TRANSITION_SPEED * deltaTime, target);
+                }
+                
+                ApplyUnderwaterTransition();
+            }
+        }
+        
+        /// <summary>
+        /// Linear interpolation helper
+        /// </summary>
+        private static float Lerp(float a, float b, float t)
+        {
+            return a + (b - a) * t;
         }
         
         /// <summary>
