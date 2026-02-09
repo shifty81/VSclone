@@ -28,6 +28,7 @@ namespace TimelessTales.Rendering
         
         // Idle arm sway parameters
         private float _idleSwayTime;
+        private float _lastDeltaTime = 1f / 60f; // Default to 60fps, updated each frame
         private const float IDLE_SWAY_SPEED = 1.2f;
         private const float IDLE_SWAY_AMOUNT = 0.008f;
         private const float IDLE_BOB_AMOUNT = 0.005f;
@@ -35,6 +36,13 @@ namespace TimelessTales.Rendering
         // Held item dimensions
         private const float HELD_ITEM_SIZE = 0.15f;
         private const float HELD_ITEM_LENGTH = 0.35f;
+        
+        // Tool-like block types that render as elongated items
+        private static readonly HashSet<BlockType> ToolLikeBlocks = new()
+        {
+            BlockType.Stick,
+            BlockType.Torch
+        };
 
         public PlayerRenderer(GraphicsDevice graphicsDevice)
         {
@@ -49,10 +57,12 @@ namespace TimelessTales.Rendering
             };
         }
 
-        public void Draw(Camera camera, Player player)
+        public void Draw(Camera camera, Player player, GameTime? gameTime = null)
         {
-            // Accumulate idle sway time
-            _idleSwayTime += 0.016f; // ~60fps tick
+            // Accumulate idle sway time using actual delta time for frame-rate independence
+            float deltaTime = gameTime != null ? (float)gameTime.ElapsedGameTime.TotalSeconds : _lastDeltaTime;
+            _lastDeltaTime = deltaTime;
+            _idleSwayTime += deltaTime;
             
             // Use skeleton bones for rendering with proper transformations
             
@@ -216,7 +226,7 @@ namespace TimelessTales.Rendering
             Vector3 handPos = armBase + handOffset;
             
             // Check if it's a tool-like item (sticks, torches) - render elongated
-            bool isToolLike = selectedBlock == BlockType.Stick || selectedBlock == BlockType.Torch;
+            bool isToolLike = ToolLikeBlocks.Contains(selectedBlock);
             
             if (isToolLike)
             {

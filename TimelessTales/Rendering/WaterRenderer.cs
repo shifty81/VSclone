@@ -36,9 +36,13 @@ namespace TimelessTales.Rendering
             (0.7f, 0.7f, 0.08f, 3.0f),   // Diagonal chop
         };
         
+        // Physical constants for Gerstner wave dispersion relation
+        private const float GRAVITY_CONSTANT = 9.81f; // m/s², standard gravity for wave dispersion
+        
         // Foam parameters
         private const float FOAM_THRESHOLD = 0.6f;  // Wave height ratio to trigger foam
         private const float FOAM_INTENSITY = 0.4f;   // How much foam brightens the water
+        private const float FOAM_NORMALIZATION_RANGE = 2.5f; // Max possible offset normalizer for foam calculation
         
         // Cel shading parameters
         private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands
@@ -259,7 +263,7 @@ namespace TimelessTales.Rendering
             foreach (var wave in GerstnerWaves)
             {
                 float frequency = 2.0f * MathF.PI / wave.Wavelength;
-                float phase = frequency * (wave.DirX * worldX + wave.DirZ * worldZ) + _time * MathF.Sqrt(9.81f * frequency);
+                float phase = frequency * (wave.DirX * worldX + wave.DirZ * worldZ) + _time * MathF.Sqrt(GRAVITY_CONSTANT * frequency);
                 // Gerstner vertical displacement: steepness * sin(phase) / frequency
                 totalOffset += wave.Steepness * MathF.Sin(phase) * WAVE_HEIGHT;
             }
@@ -274,7 +278,7 @@ namespace TimelessTales.Rendering
         public static float CalculateFoamFactor(float waveOffset, float waveHeight)
         {
             // Foam appears at wave crests (high positive displacement)
-            float normalizedHeight = waveOffset / (waveHeight * 2.5f); // Normalize to max possible offset
+            float normalizedHeight = waveOffset / (waveHeight * FOAM_NORMALIZATION_RANGE); // Normalize to max possible offset
             if (normalizedHeight > FOAM_THRESHOLD)
             {
                 return MathHelper.Clamp((normalizedHeight - FOAM_THRESHOLD) / (1.0f - FOAM_THRESHOLD), 0f, 1f) * FOAM_INTENSITY;
