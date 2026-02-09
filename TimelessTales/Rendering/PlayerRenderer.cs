@@ -2,11 +2,12 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using TimelessTales.Entities;
+using TimelessTales.Blocks;
 
 namespace TimelessTales.Rendering
 {
     /// <summary>
-    /// Renders the player's arms in first-person view
+    /// Renders the player's arms in first-person view with held tool/block visualization
     /// </summary>
     public class PlayerRenderer
     {
@@ -24,10 +25,21 @@ namespace TimelessTales.Rendering
         // Visibility cutoff percentages
         private const float BODY_MIN_VISIBILITY = 0.3f;  // Show body when visibility > 30%
         private const float LEG_MIN_VISIBILITY = 0.2f;   // Show legs when visibility > 20%
+        
+        // Idle arm sway parameters
+        private float _idleSwayTime;
+        private const float IDLE_SWAY_SPEED = 1.2f;
+        private const float IDLE_SWAY_AMOUNT = 0.008f;
+        private const float IDLE_BOB_AMOUNT = 0.005f;
+        
+        // Held item dimensions
+        private const float HELD_ITEM_SIZE = 0.15f;
+        private const float HELD_ITEM_LENGTH = 0.35f;
 
         public PlayerRenderer(GraphicsDevice graphicsDevice)
         {
             _graphicsDevice = graphicsDevice;
+            _idleSwayTime = 0f;
             
             // Initialize basic effect for rendering
             _effect = new BasicEffect(graphicsDevice)
@@ -39,6 +51,9 @@ namespace TimelessTales.Rendering
 
         public void Draw(Camera camera, Player player)
         {
+            // Accumulate idle sway time
+            _idleSwayTime += 0.016f; // ~60fps tick
+            
             // Use skeleton bones for rendering with proper transformations
             
             // Update camera matrices
@@ -85,6 +100,11 @@ namespace TimelessTales.Rendering
             Vector3 up = Vector3.Up;
             float pitch = camera.Rotation.X;
             
+            // Idle sway for natural arm movement (subtle breathing/sway when standing still)
+            float idleSwayX = MathF.Sin(_idleSwayTime * IDLE_SWAY_SPEED) * IDLE_SWAY_AMOUNT;
+            float idleSwayY = MathF.Sin(_idleSwayTime * IDLE_SWAY_SPEED * 2.0f) * IDLE_BOB_AMOUNT;
+            Vector3 idleSway = right * idleSwayX + up * idleSwayY;
+            
             // Get skeleton bones
             var skeleton = player.Skeleton;
             Bone? rightArmBone = skeleton.GetBone("right_arm");
@@ -98,20 +118,23 @@ namespace TimelessTales.Rendering
             float armWidth = 0.12f;
             float armHeight = 0.12f;
             
-            // Draw right arm with bone rotation
+            // Draw right arm with bone rotation + idle sway
             if (rightArmBone != null)
             {
-                Vector3 armBase = cameraPos + right * 0.35f - up * 0.25f + forward * 0.4f;
+                Vector3 armBase = cameraPos + right * 0.35f - up * 0.25f + forward * 0.4f + idleSway;
                 Matrix armRotation = Matrix.CreateRotationX(rightArmBone.LocalRotation.X) *
                                    Matrix.CreateRotationY(rightArmBone.LocalRotation.Y) *
                                    Matrix.CreateRotationZ(rightArmBone.LocalRotation.Z);
                 AddBoxWithRotation(vertices, armBase, armWidth, armHeight, armLength, armColor, forward, right, up, armRotation);
+                
+                // Draw held item in right hand
+                DrawHeldItem(vertices, player, armBase, armLength, forward, right, up, armRotation);
             }
             
-            // Draw left arm with bone rotation
+            // Draw left arm with bone rotation + idle sway
             if (leftArmBone != null)
             {
-                Vector3 leftArmBase = cameraPos - right * 0.35f - up * 0.25f + forward * 0.4f;
+                Vector3 leftArmBase = cameraPos - right * 0.35f - up * 0.25f + forward * 0.4f + idleSway;
                 Matrix armRotation = Matrix.CreateRotationX(leftArmBone.LocalRotation.X) *
                                    Matrix.CreateRotationY(leftArmBone.LocalRotation.Y) *
                                    Matrix.CreateRotationZ(leftArmBone.LocalRotation.Z);
@@ -172,6 +195,51 @@ namespace TimelessTales.Rendering
             }
             
             return vertices.ToArray();
+        }
+        
+        /// <summary>
+        /// Draws the currently selected block/tool in the player's right hand
+        /// </summary>
+        private void DrawHeldItem(List<VertexPositionColor> vertices, Player player,
+                                  Vector3 armBase, float armLength,
+                                  Vector3 forward, Vector3 right, Vector3 up, Matrix armRotation)
+        {
+            BlockType selectedBlock = player.SelectedBlock;
+            if (selectedBlock == BlockType.Air)
+                return;
+            
+            // Get the block color for rendering
+            Color itemColor = BlockRegistry.Get(selectedBlock).Color;
+            
+            // Position the held item at the end of the arm (hand position)
+            Vector3 handOffset = Vector3.Transform(forward * armLength, armRotation);
+            Vector3 handPos = armBase + handOffset;
+            
+            // Check if it's a tool-like item (sticks, torches) - render elongated
+            bool isToolLike = selectedBlock == BlockType.Stick || selectedBlock == BlockType.Torch;
+            
+            if (isToolLike)
+            {
+                // Render as an elongated tool shape
+                float toolWidth = HELD_ITEM_SIZE * 0.4f;
+                float toolLength = HELD_ITEM_LENGTH;
+                AddBoxWithRotation(vertices, handPos, toolWidth, toolWidth, toolLength, itemColor, forward, right, up, armRotation);
+                
+                // Add a lighter handle base for torches
+                if (selectedBlock == BlockType.Torch)
+                {
+                    Color flameColor = new Color(255, 200, 50); // Warm yellow
+                    Vector3 flameOffset = Vector3.Transform(forward * toolLength * 0.9f, armRotation);
+                    Vector3 flamePos = handPos + flameOffset;
+                    AddBoxWithRotation(vertices, flamePos, toolWidth * 1.5f, toolWidth * 1.5f, toolWidth * 1.5f, flameColor, forward, right, up, Matrix.Identity);
+                }
+            }
+            else
+            {
+                // Render as a small cube (block in hand)
+                float blockSize = HELD_ITEM_SIZE;
+                AddBoxWithRotation(vertices, handPos, blockSize, blockSize, blockSize, itemColor, forward, right, up, Matrix.Identity);
+            }
         }
 
         private void AddBox(List<VertexPositionColor> vertices, Vector3 basePos, 

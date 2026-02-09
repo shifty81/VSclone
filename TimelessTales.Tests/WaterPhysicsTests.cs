@@ -183,9 +183,9 @@ namespace TimelessTales.Tests
         public void WaveAnimation_ChangesOverTime()
         {
             // Wave offset should change based on position and time
-            // Using sine waves for animation
+            // Using Gerstner waves for more realistic ocean-like motion
             
-            const float WAVE_HEIGHT = 0.08f; // Updated from 0.05f
+            const float WAVE_HEIGHT = 0.08f;
             
             float time1 = 0.0f;
             float time2 = 1.0f;
@@ -193,23 +193,57 @@ namespace TimelessTales.Tests
             int worldX = 0;
             int worldZ = 0;
             
-            // Calculate wave at two different times (enhanced with third wave component)
-            float wave1_t1 = MathF.Sin(worldX * 0.3f + time1) * WAVE_HEIGHT;
-            float wave2_t1 = MathF.Sin(worldZ * 0.4f + time1 * 1.2f) * WAVE_HEIGHT;
-            float wave3_t1 = MathF.Sin((worldX + worldZ) * 0.2f + time1 * 0.8f) * WAVE_HEIGHT * 0.5f;
-            float totalWave_t1 = wave1_t1 + wave2_t1 + wave3_t1;
+            // Calculate Gerstner wave at two different times
+            // Gerstner waves use: steepness * sin(frequency * (dir.x*x + dir.z*z) + time * sqrt(g*f))
+            var waves = new[]
+            {
+                (DirX: 1.0f, DirZ: 0.0f, Steepness: 0.15f, Wavelength: 8.0f),
+                (DirX: 0.0f, DirZ: 1.0f, Steepness: 0.10f, Wavelength: 5.0f),
+                (DirX: 0.7f, DirZ: 0.7f, Steepness: 0.08f, Wavelength: 3.0f),
+            };
             
-            float wave1_t2 = MathF.Sin(worldX * 0.3f + time2) * WAVE_HEIGHT;
-            float wave2_t2 = MathF.Sin(worldZ * 0.4f + time2 * 1.2f) * WAVE_HEIGHT;
-            float wave3_t2 = MathF.Sin((worldX + worldZ) * 0.2f + time2 * 0.8f) * WAVE_HEIGHT * 0.5f;
-            float totalWave_t2 = wave1_t2 + wave2_t2 + wave3_t2;
+            float totalWave_t1 = 0f;
+            float totalWave_t2 = 0f;
+            
+            foreach (var wave in waves)
+            {
+                float frequency = 2.0f * MathF.PI / wave.Wavelength;
+                float phase_t1 = frequency * (wave.DirX * worldX + wave.DirZ * worldZ) + time1 * MathF.Sqrt(9.81f * frequency);
+                float phase_t2 = frequency * (wave.DirX * worldX + wave.DirZ * worldZ) + time2 * MathF.Sqrt(9.81f * frequency);
+                totalWave_t1 += wave.Steepness * MathF.Sin(phase_t1) * WAVE_HEIGHT;
+                totalWave_t2 += wave.Steepness * MathF.Sin(phase_t2) * WAVE_HEIGHT;
+            }
             
             // Assert wave position changes over time
             Assert.NotEqual(totalWave_t1, totalWave_t2);
             
-            // Verify wave amplitude is within expected range
-            Assert.True(MathF.Abs(totalWave_t1) <= WAVE_HEIGHT * 2.5f);
-            Assert.True(MathF.Abs(totalWave_t2) <= WAVE_HEIGHT * 2.5f);
+            // Verify wave amplitude is within expected range (sum of steepnesses * WAVE_HEIGHT)
+            float maxAmplitude = (0.15f + 0.10f + 0.08f) * WAVE_HEIGHT;
+            Assert.True(MathF.Abs(totalWave_t1) <= maxAmplitude);
+            Assert.True(MathF.Abs(totalWave_t2) <= maxAmplitude);
+        }
+        
+        [Fact]
+        public void FoamFactor_IsZero_BelowThreshold()
+        {
+            // Foam should not appear when wave offset is below the threshold
+            float waveHeight = 0.08f;
+            float lowOffset = waveHeight * 0.1f; // Very low wave
+            
+            float foamFactor = TimelessTales.Rendering.WaterRenderer.CalculateFoamFactor(lowOffset, waveHeight);
+            Assert.Equal(0f, foamFactor);
+        }
+        
+        [Fact]
+        public void FoamFactor_IsPositive_AtWaveCrest()
+        {
+            // Foam should appear at wave crests (high positive displacement)
+            float waveHeight = 0.08f;
+            float highOffset = waveHeight * 2.0f; // High crest
+            
+            float foamFactor = TimelessTales.Rendering.WaterRenderer.CalculateFoamFactor(highOffset, waveHeight);
+            Assert.True(foamFactor > 0f, "Foam should appear at wave crests");
+            Assert.True(foamFactor <= 0.4f, "Foam intensity should be capped");
         }
     }
 }

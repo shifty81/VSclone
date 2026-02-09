@@ -6,7 +6,8 @@ using TimelessTales.Blocks;
 namespace TimelessTales.Rendering
 {
     /// <summary>
-    /// Specialized renderer for translucent water blocks with wave animation and depth-based coloring
+    /// Specialized renderer for translucent water blocks with Gerstner wave animation,
+    /// foam effects, and depth-based coloring
     /// </summary>
     public class WaterRenderer
     {
@@ -15,12 +16,29 @@ namespace TimelessTales.Rendering
         private readonly BasicEffect _waterEffect;
         private readonly Dictionary<(int, int), WaterMesh> _waterMeshes;
         private float _time;
+        
+        // Track which chunks need wave vertex updates (dirty when time changes)
+        private float _lastWaveUpdateTime;
+        private const float WAVE_UPDATE_INTERVAL = 0.033f; // ~30 updates/sec for wave animation
 
         // Water visual parameters
         private const int SEA_LEVEL = 64;
         private const float WAVE_SPEED = 0.5f;
         private const float WAVE_HEIGHT = 0.08f;
         private const float MAX_DEPTH_FOR_COLOR_CALCULATION = 20.0f;
+        
+        // Gerstner wave parameters for more realistic wave motion
+        // Each wave component: (direction_x, direction_z, steepness, wavelength)
+        private static readonly (float DirX, float DirZ, float Steepness, float Wavelength)[] GerstnerWaves = new[]
+        {
+            (1.0f, 0.0f, 0.15f, 8.0f),   // Primary wave - long wavelength
+            (0.0f, 1.0f, 0.10f, 5.0f),   // Secondary cross-wave
+            (0.7f, 0.7f, 0.08f, 3.0f),   // Diagonal chop
+        };
+        
+        // Foam parameters
+        private const float FOAM_THRESHOLD = 0.6f;  // Wave height ratio to trigger foam
+        private const float FOAM_INTENSITY = 0.4f;   // How much foam brightens the water
         
         // Cel shading parameters
         private const int CEL_SHADING_BANDS = 4; // Number of discrete color bands
@@ -31,6 +49,7 @@ namespace TimelessTales.Rendering
             _worldManager = worldManager;
             _waterMeshes = new Dictionary<(int, int), WaterMesh>();
             _time = 0;
+            _lastWaveUpdateTime = 0;
 
             // Initialize effect for water rendering with alpha blending
             _waterEffect = new BasicEffect(graphicsDevice)
@@ -60,6 +79,9 @@ namespace TimelessTales.Rendering
             _graphicsDevice.DepthStencilState = DepthStencilState.Default;
             _graphicsDevice.RasterizerState = RasterizerState.CullNone; // Render both sides of water
 
+            // Throttle wave mesh rebuilds for performance (~30 fps for wave animation)
+            bool needsWaveUpdate = (_time - _lastWaveUpdateTime) >= WAVE_UPDATE_INTERVAL;
+
             // Get currently loaded chunks
             var loadedChunks = _worldManager.GetLoadedChunks().ToList();
             var loadedChunkKeys = new HashSet<(int, int)>(
@@ -81,7 +103,7 @@ namespace TimelessTales.Rendering
             {
                 var key = (chunk.ChunkX, chunk.ChunkZ);
 
-                if (!_waterMeshes.TryGetValue(key, out var mesh) || chunk.NeedsMeshRebuild)
+                if (!_waterMeshes.TryGetValue(key, out var mesh) || chunk.NeedsMeshRebuild || needsWaveUpdate)
                 {
                     mesh = BuildWaterMesh(chunk);
                     _waterMeshes[key] = mesh;
@@ -103,6 +125,11 @@ namespace TimelessTales.Rendering
                         );
                     }
                 }
+            }
+
+            if (needsWaveUpdate)
+            {
+                _lastWaveUpdateTime = _time;
             }
 
             // Restore default render states
@@ -225,12 +252,34 @@ namespace TimelessTales.Rendering
 
         private float CalculateWaveOffset(int worldX, int worldZ)
         {
-            // Enhanced wave pattern for more visible water motion
-            // Multiple overlapping waves at different frequencies create a more natural look
-            float wave1 = MathF.Sin(worldX * 0.3f + _time) * WAVE_HEIGHT;
-            float wave2 = MathF.Sin(worldZ * 0.4f + _time * 1.2f) * WAVE_HEIGHT;
-            float wave3 = MathF.Sin((worldX + worldZ) * 0.2f + _time * 0.8f) * WAVE_HEIGHT * 0.5f;
-            return wave1 + wave2 + wave3;
+            // Gerstner wave model for more realistic ocean-like wave motion
+            // Produces sharper crests and flatter troughs compared to simple sine waves
+            float totalOffset = 0f;
+            
+            foreach (var wave in GerstnerWaves)
+            {
+                float frequency = 2.0f * MathF.PI / wave.Wavelength;
+                float phase = frequency * (wave.DirX * worldX + wave.DirZ * worldZ) + _time * MathF.Sqrt(9.81f * frequency);
+                // Gerstner vertical displacement: steepness * sin(phase) / frequency
+                totalOffset += wave.Steepness * MathF.Sin(phase) * WAVE_HEIGHT;
+            }
+            
+            return totalOffset;
+        }
+        
+        /// <summary>
+        /// Calculates foam intensity at a given position based on wave crest height.
+        /// Returns a value 0-1 indicating how much foam to apply.
+        /// </summary>
+        public static float CalculateFoamFactor(float waveOffset, float waveHeight)
+        {
+            // Foam appears at wave crests (high positive displacement)
+            float normalizedHeight = waveOffset / (waveHeight * 2.5f); // Normalize to max possible offset
+            if (normalizedHeight > FOAM_THRESHOLD)
+            {
+                return MathHelper.Clamp((normalizedHeight - FOAM_THRESHOLD) / (1.0f - FOAM_THRESHOLD), 0f, 1f) * FOAM_INTENSITY;
+            }
+            return 0f;
         }
 
         private void AddWaterFaces(List<VertexPositionColor> vertices, Vector3 pos, Color color, float waveOffset,
@@ -239,6 +288,14 @@ namespace TimelessTales.Rendering
             // Apply cel shading to side/bottom faces but NOT to top surface to avoid grid lines
             // Top surface should be smooth to prevent visible banding/grid effect
             Color topColor = Color.Lerp(color, Color.White, 0.3f); // Lighter top, no cel shading
+            
+            // Apply foam brightening to top surface at wave crests
+            float foamFactor = CalculateFoamFactor(waveOffset, WAVE_HEIGHT);
+            if (foamFactor > 0f)
+            {
+                topColor = Color.Lerp(topColor, Color.White, foamFactor);
+            }
+            
             Color bottomColor = CelShadingUtility.ApplyCelShading(Color.Lerp(color, Color.Black, 0.2f), CEL_SHADING_BANDS);
             Color sideColor = CelShadingUtility.ApplyCelShading(color, CEL_SHADING_BANDS);
             
