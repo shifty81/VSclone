@@ -17,7 +17,10 @@ namespace TimelessTales.Vegetation
         
         // Vegetation placement parameters
         private const float GRASS_SPAWN_CHANCE = 0.15f;
+        private const float TALL_GRASS_SPAWN_CHANCE = 0.06f;
         private const float SHRUB_SPAWN_CHANCE = 0.05f;
+        private const float BERRY_SHRUB_SPAWN_CHANCE = 0.02f;
+        private const float FLOWER_SPAWN_CHANCE = 0.03f;
         private const float UNDERWATER_VEGETATION_SPAWN_CHANCE = 0.12f;
         private const float KELP_SPAWN_CHANCE = 0.03f;
         private const float CORAL_SPAWN_CHANCE = 0.02f;
@@ -106,7 +109,63 @@ namespace TimelessTales.Vegetation
         }
         
         /// <summary>
-        /// Attempt to place vegetation at a position
+        /// Get biome-specific vegetation density multiplier
+        /// </summary>
+        public static float GetBiomeDensityMultiplier(BiomeType biome, VegetationType vegType)
+        {
+            return biome switch
+            {
+                BiomeType.Tropical => vegType switch
+                {
+                    VegetationType.Grass => 1.5f,
+                    VegetationType.TallGrass => 1.8f,
+                    VegetationType.Shrub => 1.4f,
+                    VegetationType.BerryShrub => 1.6f,
+                    VegetationType.Flowers => 2.0f,
+                    _ => 1.0f
+                },
+                BiomeType.Temperate => vegType switch
+                {
+                    VegetationType.Grass => 1.2f,
+                    VegetationType.TallGrass => 1.0f,
+                    VegetationType.Shrub => 1.2f,
+                    VegetationType.BerryShrub => 1.3f,
+                    VegetationType.Flowers => 1.5f,
+                    _ => 1.0f
+                },
+                BiomeType.Boreal => vegType switch
+                {
+                    VegetationType.Grass => 0.8f,
+                    VegetationType.TallGrass => 0.5f,
+                    VegetationType.Shrub => 1.0f,
+                    VegetationType.BerryShrub => 1.2f, // Berry bushes common in boreal
+                    VegetationType.Flowers => 0.6f,
+                    _ => 1.0f
+                },
+                BiomeType.Tundra => vegType switch
+                {
+                    VegetationType.Grass => 0.4f,
+                    VegetationType.TallGrass => 0.1f,
+                    VegetationType.Shrub => 0.3f,
+                    VegetationType.BerryShrub => 0.4f,
+                    VegetationType.Flowers => 0.2f,
+                    _ => 1.0f
+                },
+                BiomeType.Desert => vegType switch
+                {
+                    VegetationType.Grass => 0.1f,
+                    VegetationType.TallGrass => 0.05f,
+                    VegetationType.Shrub => 0.2f,
+                    VegetationType.BerryShrub => 0.05f,
+                    VegetationType.Flowers => 0.1f,
+                    _ => 1.0f
+                },
+                _ => 1.0f
+            };
+        }
+        
+        /// <summary>
+        /// Attempt to place vegetation at a position with biome-aware density
         /// </summary>
         private void TryPlaceVegetation(int x, int y, int z, BlockType groundType)
         {
@@ -123,15 +182,46 @@ namespace TimelessTales.Vegetation
             // Determine what to place based on ground type and random chance
             if (groundType == BlockType.Grass)
             {
-                if (roll < SHRUB_SPAWN_CHANCE)
+                float cursor = 0f;
+                
+                // Berry shrub (rarest)
+                cursor += BERRY_SHRUB_SPAWN_CHANCE;
+                if (roll < cursor)
                 {
-                    // Place shrub
-                    PlacePlant(position, VegetationType.Shrub);
+                    PlacePlant(position, VegetationType.BerryShrub);
+                    return;
                 }
-                else if (roll < SHRUB_SPAWN_CHANCE + GRASS_SPAWN_CHANCE)
+                
+                // Shrub
+                cursor += SHRUB_SPAWN_CHANCE;
+                if (roll < cursor)
                 {
-                    // Place grass
+                    PlacePlant(position, VegetationType.Shrub);
+                    return;
+                }
+                
+                // Flowers
+                cursor += FLOWER_SPAWN_CHANCE;
+                if (roll < cursor)
+                {
+                    PlacePlant(position, VegetationType.Flowers);
+                    return;
+                }
+                
+                // Tall grass
+                cursor += TALL_GRASS_SPAWN_CHANCE;
+                if (roll < cursor)
+                {
+                    PlacePlant(position, VegetationType.TallGrass);
+                    return;
+                }
+                
+                // Regular grass (most common)
+                cursor += GRASS_SPAWN_CHANCE;
+                if (roll < cursor)
+                {
                     PlacePlant(position, VegetationType.Grass);
+                    return;
                 }
             }
         }
@@ -234,6 +324,23 @@ namespace TimelessTales.Vegetation
         public IEnumerable<Plant> GetAllPlants()
         {
             return _plants.Values;
+        }
+        
+        /// <summary>
+        /// Get count of plants by type
+        /// </summary>
+        public int GetPlantCount(VegetationType? type = null)
+        {
+            if (type == null)
+                return _plants.Count;
+            
+            int count = 0;
+            foreach (var plant in _plants.Values)
+            {
+                if (plant.Type == type.Value)
+                    count++;
+            }
+            return count;
         }
         
         /// <summary>

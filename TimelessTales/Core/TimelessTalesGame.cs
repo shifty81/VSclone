@@ -214,6 +214,7 @@ namespace TimelessTales.Core
                 _particleRenderer = new Particles.ParticleRenderer(GraphicsDevice);
                 
                 // Bubble emitter - for when player is underwater
+                // Enhanced with wobble motion, size variation, and periodic burst emission
                 _bubbleEmitter = new Particles.ParticleEmitter(Vector3.Zero)
                 {
                     EmissionRate = 3.0f,
@@ -222,7 +223,15 @@ namespace TimelessTales.Core
                     ParticleColor = new Color(200, 220, 255, 180),
                     VelocityBase = new Vector3(0, 0.5f, 0),
                     VelocityVariation = new Vector3(0.1f, 0.2f, 0.1f),
-                    IsActive = false // Start disabled
+                    IsActive = false, // Start disabled
+                    EnableWobble = true,
+                    WobbleAmplitude = 0.3f,
+                    WobbleFrequency = 4.0f,
+                    SizeVariation = 0.4f, // 40% size variation for natural look
+                    SurfacePopY = 64.0f, // Pop at sea level
+                    UseBurstMode = true, // Periodic bursts from mouth
+                    BurstInterval = 3.0f,
+                    BurstCount = 5
                 };
                 
                 // Splash emitter - for water entry/exit
@@ -469,8 +478,9 @@ namespace TimelessTales.Core
             float submersionDepth = _player.SubmersionDepth;
             bool isInWater = submersionDepth > 0;
             
-            // Update audio underwater state
+            // Update audio underwater state with depth information
             _audioManager.IsUnderwater = isUnderwater;
+            _audioManager.SubmersionDepth = submersionDepth;
             
             // Handle entering water
             if (isInWater && !_wasInWaterLastFrame)
@@ -540,8 +550,8 @@ namespace TimelessTales.Core
             _bubbleEmitter.Update(deltaTime);
             _splashEmitter.Update(deltaTime);
             
-            // Update audio manager
-            _audioManager.Update();
+            // Update audio manager with smooth transitions
+            _audioManager.Update(deltaTime);
             
             // Store state for next frame
             _wasUnderwaterLastFrame = isUnderwater;

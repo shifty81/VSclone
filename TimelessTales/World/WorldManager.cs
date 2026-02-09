@@ -12,6 +12,7 @@ namespace TimelessTales.World
         private readonly Dictionary<(int, int), Chunk> _chunks;
         private readonly WorldGenerator _generator;
         private readonly VegetationManager _vegetationManager;
+        private readonly PointOfInterestGenerator _poiGenerator;
         private readonly int _seed;
         
         private const int RENDER_DISTANCE = 8; // Chunks
@@ -23,6 +24,7 @@ namespace TimelessTales.World
             _chunks = new Dictionary<(int, int), Chunk>();
             _generator = new WorldGenerator(seed);
             _vegetationManager = new VegetationManager(this);
+            _poiGenerator = new PointOfInterestGenerator(seed);
             _spawnPosition = new Vector3(0, 70, 0);
         }
         
@@ -30,6 +32,11 @@ namespace TimelessTales.World
         /// Get the vegetation manager for this world
         /// </summary>
         public VegetationManager VegetationManager => _vegetationManager;
+        
+        /// <summary>
+        /// Get the point of interest generator for this world
+        /// </summary>
+        public PointOfInterestGenerator PoiGenerator => _poiGenerator;
 
         public void Initialize()
         {
@@ -96,6 +103,9 @@ namespace TimelessTales.World
             {
                 chunk = new Chunk(chunkX, chunkZ);
                 chunk.Generate(_generator);
+                
+                // Generate points of interest
+                _poiGenerator.GenerateForChunk(chunk, _generator);
                 
                 // Populate with vegetation after terrain generation
                 _vegetationManager.PopulateChunk(chunk);
