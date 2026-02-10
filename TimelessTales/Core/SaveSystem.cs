@@ -224,7 +224,7 @@ namespace TimelessTales.Core
 
         /// <summary>
         /// Write chunk blocks using RLE compression.
-        /// Iterates x, then y, then z (inner to outer) grouping consecutive same-type blocks.
+        /// Iterates z (inner), then y (middle), then x (outer) for consecutive block grouping.
         /// </summary>
         private static void WriteChunkBlocksRLE(BinaryWriter writer, BlockType[,,] blocks)
         {

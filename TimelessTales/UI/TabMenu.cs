@@ -59,6 +59,7 @@ namespace TimelessTales.UI
         private CraftingSystem _craftingSystem;
         private double _craftFeedbackTimer;
         private string? _craftFeedbackMessage;
+        private double _deltaTime;
 
         public TabMenu(GraphicsDevice graphicsDevice)
         {
@@ -72,8 +73,10 @@ namespace TimelessTales.UI
             _craftingSystem = new CraftingSystem();
         }
 
-        public void Update(InputManager input)
+        public void Update(InputManager input, GameTime gameTime)
         {
+            _deltaTime = gameTime.ElapsedGameTime.TotalSeconds;
+            
             MouseState mouseState = Mouse.GetState();
             int mouseX = mouseState.X;
             int mouseY = mouseState.Y;
@@ -679,7 +682,7 @@ namespace TimelessTales.UI
             
             // Decay craft feedback timer
             if (_craftFeedbackTimer > 0)
-                _craftFeedbackTimer -= 0.016; // ~1 frame at 60fps
+                _craftFeedbackTimer -= _deltaTime;
             
             MouseState mouseState = Mouse.GetState();
             bool clicked = mouseState.LeftButton == ButtonState.Pressed &&

@@ -81,6 +81,15 @@ namespace TimelessTales.Core
                     return 1.0f;
             }
         }
+
+        /// <summary>
+        /// Creates an independent copy of this tool definition with full durability.
+        /// Use this when giving a tool to a player to avoid shared state.
+        /// </summary>
+        public ToolDefinition Clone()
+        {
+            return new ToolDefinition(Name, Type, Tier, SpeedMultiplier, Durability);
+        }
     }
 
     public static class ToolRegistry
@@ -134,7 +143,7 @@ namespace TimelessTales.Core
 
         public static ToolDefinition? GetTool(string key)
         {
-            return _tools.TryGetValue(key, out var tool) ? tool : null;
+            return _tools.TryGetValue(key, out var tool) ? tool.Clone() : null;
         }
 
         public static Dictionary<string, ToolDefinition> GetAllTools()

@@ -537,7 +537,7 @@ namespace TimelessTales.Core
                 else if (_currentState == GameState.TabMenu)
                 {
                     _inputManager!.Update();
-                    _tabMenu!.Update(_inputManager);
+                    _tabMenu!.Update(_inputManager, gameTime);
                 }
                 else if (_currentState == GameState.Playing)
                 {
