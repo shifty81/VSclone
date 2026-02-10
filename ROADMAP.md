@@ -237,7 +237,7 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Player height 1.8 blocks
 - ✅ Reach distance 5 blocks
 - 📋 Temporal stability system
-- 📋 Temperature management
+- ✅ Temperature management (biome-based environmental temp, body temp drift, hypothermia/heatstroke damage)
 - ✅ Hunger and nutrition mechanics (depletion over time, sprint/swim multipliers)
 - ✅ Thirst system (depletion over time, sprint/swim multipliers)
 - ✅ Health system (starvation/dehydration damage, regeneration when well-fed)
@@ -310,11 +310,11 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Player coordinates display
 - ✅ World map (M key, 200 block radius)
 - ✅ Title screen
-- ✅ Character status display (health, hunger, thirst bars)
+- ✅ Character status display (health, hunger, thirst, temperature bars)
 - ✅ Settings/options menu
 - ✅ Controls help screen
 - ✅ Pause menu (P key)
-- ✅ Debug overlay (F3 key with FPS, position, chunk info)
+- ✅ Debug overlay (F3 key with FPS, position, chunk info, temperature)
 - ✅ Tabbed menu system (C key):
   - ✅ Character tab with stats, appearance, and equipment
   - ✅ Inventory tab with organized grid
@@ -333,7 +333,7 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Basic recipes (Wood→Planks, Planks→Sticks, Clay→RedClay, Stone→Cobblestone, Sand+Clay→Sandstone)
 - ✅ Crafting UI integration (click-to-craft in TabMenu)
 - ✅ Recipe categories (HandCrafting, Knapping, Pottery, Carpentry, Smelting)
-- 📋 Knapping system (flint tools)
+- ✅ Knapping system (flint tools: knife, axe head, shovel head, hoe head)
 - 📋 Pottery system (clay forming, drying, firing)
 - 📋 Metallurgy system:
   - 📋 Ore crushing
@@ -356,8 +356,8 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
   - ✅ Tool durability system (tools break after use)
   - ✅ Speed multipliers per tier (2x Wood → 10x Iron)
   - ✅ ToolRegistry with 20 pre-registered tools
-- 📋 Stone Age:
-  - 📋 Flint knapping
+- 🚧 Stone Age:
+  - ✅ Flint knapping (Flint block, knapping recipes for knife/axe/shovel/hoe heads)
   - ✅ Basic wooden tools (Wood tier: Pickaxe, Axe, Shovel, Hoe)
   - ✅ Stone tools (Stone tier: Pickaxe, Axe, Shovel, Hoe)
 - 📋 Copper Age:
@@ -482,6 +482,8 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ CraftingSystemTests (20 tests)
 - ✅ ToolSystemTests (18 tests)
 - ✅ SaveSystemTests (17 tests)
+- ✅ TemperatureSystemTests (18 tests)
+- ✅ KnappingSystemTests (14 tests)
 - 📋 Integration tests
 - 📋 Performance benchmarks
 - 📋 Automated build pipeline
@@ -558,7 +560,8 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 3. ~~Tool progression system~~ ✅ Done
 4. Block textures and texture atlas
 5. ~~Save/load system~~ ✅ Done
-6. Temperature management
+6. ~~Temperature management~~ ✅ Done
+7. ~~Knapping system (flint tools)~~ ✅ Done
 
 ### Long-term (4+ months)
 1. Technology age progression
