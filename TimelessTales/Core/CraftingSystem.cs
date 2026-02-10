@@ -143,6 +143,39 @@ namespace TimelessTales.Core
                 new Dictionary<BlockType, int> { { BlockType.Sand, 4 }, { BlockType.Clay, 1 } },
                 new Dictionary<BlockType, int> { { BlockType.Sandstone, 2 } },
                 CraftingCategory.HandCrafting));
+
+            // Knapping recipes - Stone Age tool creation
+            // 2 Flint -> 1 Flint Knife
+            RegisterRecipe(new CraftingRecipe(
+                "FLINT KNIFE",
+                "2 FLINT = 1 FLINT KNIFE",
+                new Dictionary<BlockType, int> { { BlockType.Flint, 2 } },
+                new Dictionary<BlockType, int> { { BlockType.FlintKnife, 1 } },
+                CraftingCategory.Knapping));
+
+            // 3 Flint -> 1 Flint Axe Head
+            RegisterRecipe(new CraftingRecipe(
+                "FLINT AXE HEAD",
+                "3 FLINT = 1 FLINT AXE HEAD",
+                new Dictionary<BlockType, int> { { BlockType.Flint, 3 } },
+                new Dictionary<BlockType, int> { { BlockType.FlintAxeHead, 1 } },
+                CraftingCategory.Knapping));
+
+            // 2 Flint -> 1 Flint Shovel Head
+            RegisterRecipe(new CraftingRecipe(
+                "FLINT SHOVEL",
+                "2 FLINT = 1 FLINT SHOVEL HEAD",
+                new Dictionary<BlockType, int> { { BlockType.Flint, 2 } },
+                new Dictionary<BlockType, int> { { BlockType.FlintShovelHead, 1 } },
+                CraftingCategory.Knapping));
+
+            // 2 Flint -> 1 Flint Hoe Head
+            RegisterRecipe(new CraftingRecipe(
+                "FLINT HOE",
+                "2 FLINT = 1 FLINT HOE HEAD",
+                new Dictionary<BlockType, int> { { BlockType.Flint, 2 } },
+                new Dictionary<BlockType, int> { { BlockType.FlintHoeHead, 1 } },
+                CraftingCategory.Knapping));
         }
     }
 }
