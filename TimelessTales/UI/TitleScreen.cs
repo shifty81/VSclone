@@ -26,6 +26,11 @@ namespace TimelessTales.UI
         public event Action? OnLoadGame;
         public event Action? OnJoin;
         public event Action? OnSettings;
+
+        /// <summary>
+        /// Enables the Load Game button when a save file exists
+        /// </summary>
+        public void EnableLoadButton() { _loadGameButton.IsEnabled = true; }
         
         public TitleScreen(GraphicsDevice graphicsDevice)
         {

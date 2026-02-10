@@ -846,6 +846,21 @@ namespace TimelessTales.Entities
             if (input.IsKeyPressed(Keys.D9)) SelectedBlock = BlockType.Clay;
         }
 
+        /// <summary>
+        /// Sets health value directly (for save/load system)
+        /// </summary>
+        public void SetHealth(float value) { Health = Math.Clamp(value, 0f, 100f); }
+
+        /// <summary>
+        /// Sets hunger value directly (for save/load system)
+        /// </summary>
+        public void SetHunger(float value) { Hunger = Math.Clamp(value, 0f, 100f); }
+
+        /// <summary>
+        /// Sets thirst value directly (for save/load system)
+        /// </summary>
+        public void SetThirst(float value) { Thirst = Math.Clamp(value, 0f, 100f); }
+
         public Vector3? GetTargetBlockPos() => _targetBlockPos;
         public float GetBreakProgress() => _breakProgress;
     }

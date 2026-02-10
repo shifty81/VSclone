@@ -169,6 +169,21 @@ namespace TimelessTales.World
             chunk.SetBlock(coords.localX, worldY, coords.localZ, blockType);
         }
 
+        /// <summary>
+        /// Gets the world seed for serialization
+        /// </summary>
+        public int Seed => _seed;
+
+        /// <summary>
+        /// Loads a pre-built chunk into the world, skipping generation.
+        /// Used by the save/load system.
+        /// </summary>
+        public void LoadChunk(Chunk chunk)
+        {
+            var key = (chunk.ChunkX, chunk.ChunkZ);
+            _chunks[key] = chunk;
+        }
+
         public IEnumerable<Chunk> GetLoadedChunks()
         {
             return _chunks.Values.ToList();

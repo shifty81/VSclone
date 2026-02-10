@@ -54,6 +54,19 @@ namespace TimelessTales.World
             _blocks[x, y, z] = blockType;
         }
 
+        /// <summary>
+        /// Creates a chunk with pre-loaded data (for save/load system)
+        /// </summary>
+        public Chunk(int chunkX, int chunkZ, bool isGenerated) : this(chunkX, chunkZ)
+        {
+            IsGenerated = isGenerated;
+        }
+
+        /// <summary>
+        /// Gets the raw block at specified position for serialization.
+        /// </summary>
+        public BlockType GetBlockRaw(int x, int y, int z) => _blocks[x, y, z];
+
         public void Generate(WorldGenerator generator)
         {
             generator.GenerateChunk(this);
