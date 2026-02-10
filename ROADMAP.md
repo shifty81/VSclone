@@ -2,7 +2,7 @@
 
 This roadmap tracks the progress of all features and systems in the Timeless Tales game. It is updated with each pull request to reflect the current state of development.
 
-**Last Updated:** 2026-02-09  
+**Last Updated:** 2026-02-10  
 **Current Version:** Alpha 0.1
 
 ---
@@ -224,7 +224,7 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ 20+ block types with properties
 - ✅ Block hardness and transparency
 - ✅ Gravity-affected blocks (sand, gravel)
-- 📋 Save/load world system
+- ✅ Save/load world system (binary serialization with RLE chunk compression)
 - 📋 World corruption recovery
 - 📋 World backup system
 
@@ -249,7 +249,7 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ Block breaking progress indicator
 - ✅ Raycasting for block selection
 - ✅ Block hardness affects break time
-- 📋 Tool effectiveness system
+- ✅ Tool effectiveness system (5 tiers, 4 tool types with block category effectiveness)
 - 📋 Block drop system (silk touch vs normal)
 - 📋 Multi-block structures
 
@@ -269,7 +269,7 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
   - ✅ Crafting tab: material pouch display, crafting systems framework
   - ✅ Map tab: player position and map info
 - 📋 Item tooltips and descriptions (basic version exists)
-- 📋 Crafting grid integration
+- ✅ Crafting grid integration (click-to-craft with CraftingSystem)
 - 📋 Visual rendering of equipped items on character
 - 📋 Drag-and-drop item management
 
@@ -321,7 +321,7 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
   - ✅ Crafting tab with material pouch
   - ✅ Map tab with position info
 - ✅ Simple inventory screen (I key)
-- 📋 Advanced crafting interface with recipes
+- ✅ Advanced crafting interface with recipes (dynamic recipe display from CraftingSystem)
 - 📋 Skill/progression UI
 
 ---
@@ -329,6 +329,10 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 ## 7. Crafting and Progression
 
 ### 7.1 Crafting Systems
+- ✅ Hand crafting system (CraftingSystem with recipe registry)
+- ✅ Basic recipes (Wood→Planks, Planks→Sticks, Clay→RedClay, Stone→Cobblestone, Sand+Clay→Sandstone)
+- ✅ Crafting UI integration (click-to-craft in TabMenu)
+- ✅ Recipe categories (HandCrafting, Knapping, Pottery, Carpentry, Smelting)
 - 📋 Knapping system (flint tools)
 - 📋 Pottery system (clay forming, drying, firing)
 - 📋 Metallurgy system:
@@ -346,22 +350,28 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - 📋 Advanced crafting stations
 
 ### 7.2 Technology Ages
+- 🚧 Tool Progression System:
+  - ✅ Tool tiers (Hand, Wood, Stone, Copper, Bronze, Iron)
+  - ✅ Tool types (Pickaxe, Axe, Shovel, Hoe) with effectiveness per block category
+  - ✅ Tool durability system (tools break after use)
+  - ✅ Speed multipliers per tier (2x Wood → 10x Iron)
+  - ✅ ToolRegistry with 20 pre-registered tools
 - 📋 Stone Age:
   - 📋 Flint knapping
-  - 📋 Basic wooden tools
-  - 📋 Stone tools
+  - ✅ Basic wooden tools (Wood tier: Pickaxe, Axe, Shovel, Hoe)
+  - ✅ Stone tools (Stone tier: Pickaxe, Axe, Shovel, Hoe)
 - 📋 Copper Age:
   - 📋 Native copper collection
   - 📋 Cold hammering
-  - 📋 Simple copper tools
+  - ✅ Copper tools defined (Copper tier: Pickaxe, Axe, Shovel, Hoe)
 - 📋 Bronze Age:
   - 📋 Ore smelting
   - 📋 Tin and copper alloying
-  - 📋 Bronze tools and weapons
+  - ✅ Bronze tools defined (Bronze tier: Pickaxe, Axe, Shovel, Hoe)
 - 📋 Iron Age:
   - 📋 Advanced metallurgy
   - 📋 Steel creation
-  - 📋 Iron tools and machinery
+  - ✅ Iron tools defined (Iron tier: Pickaxe, Axe, Shovel, Hoe)
 
 ### 7.3 Prospecting and Resources
 - 📋 Prospecting pick system
@@ -469,6 +479,9 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 - ✅ AudioManagerTests (8 tests)
 - ✅ VegetationPlacementTests (16 tests)
 - ✅ PointOfInterestTests (5 tests)
+- ✅ CraftingSystemTests (20 tests)
+- ✅ ToolSystemTests (18 tests)
+- ✅ SaveSystemTests (17 tests)
 - 📋 Integration tests
 - 📋 Performance benchmarks
 - 📋 Automated build pipeline
@@ -540,11 +553,11 @@ This roadmap tracks the progress of all features and systems in the Timeless Tal
 4. ~~Points of interest generation~~ ✅ Done
 
 ### Medium-term (Next 2-4 months)
-1. Crafting system implementation
+1. ~~Crafting system implementation~~ ✅ Done
 2. ~~Survival mechanics (hunger, thirst, temperature)~~ ✅ Done
-3. Tool progression system
+3. ~~Tool progression system~~ ✅ Done
 4. Block textures and texture atlas
-5. Save/load system
+5. ~~Save/load system~~ ✅ Done
 6. Temperature management
 
 ### Long-term (4+ months)
