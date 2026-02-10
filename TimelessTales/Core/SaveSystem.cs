@@ -48,6 +48,13 @@ namespace TimelessTales.Core
         private const string SAVE_DIRECTORY = "Saves";
         private const string SAVE_FILE = "world.sav";
         private const int SAVE_VERSION = 1;
+        
+        // Validation limits to prevent malicious save files
+        private const int MAX_INVENTORY_ENTRIES = 1000;
+        private const int MAX_POUCH_ENTRIES = 1000;
+        private const int MAX_CHUNKS = 10000;
+        private const int MAX_RLE_RUNS = 100000; // Max RLE runs per chunk
+        private static readonly int TOTAL_BLOCKS_PER_CHUNK = Chunk.CHUNK_SIZE * Chunk.CHUNK_HEIGHT * Chunk.CHUNK_SIZE;
 
         /// <summary>
         /// Get the full path to the save file
@@ -184,6 +191,8 @@ namespace TimelessTales.Core
                 p.SelectedBlock = (BlockType)reader.ReadInt32();
 
                 int invCount = reader.ReadInt32();
+                if (invCount < 0 || invCount > MAX_INVENTORY_ENTRIES)
+                    throw new InvalidDataException($"Invalid inventory count: {invCount}");
                 for (int i = 0; i < invCount; i++)
                 {
                     var type = (BlockType)reader.ReadInt32();
@@ -192,6 +201,8 @@ namespace TimelessTales.Core
                 }
 
                 int pouchCount = reader.ReadInt32();
+                if (pouchCount < 0 || pouchCount > MAX_POUCH_ENTRIES)
+                    throw new InvalidDataException($"Invalid pouch count: {pouchCount}");
                 for (int i = 0; i < pouchCount; i++)
                 {
                     var type = (MaterialType)reader.ReadInt32();
@@ -203,6 +214,8 @@ namespace TimelessTales.Core
 
                 // Chunks
                 int chunkCount = reader.ReadInt32();
+                if (chunkCount < 0 || chunkCount > MAX_CHUNKS)
+                    throw new InvalidDataException($"Invalid chunk count: {chunkCount}");
                 for (int i = 0; i < chunkCount; i++)
                 {
                     var chunk = new ChunkSaveData();
@@ -273,6 +286,9 @@ namespace TimelessTales.Core
             var blocks = new BlockType[Chunk.CHUNK_SIZE, Chunk.CHUNK_HEIGHT, Chunk.CHUNK_SIZE];
 
             int runCount = reader.ReadInt32();
+            if (runCount < 0 || runCount > MAX_RLE_RUNS)
+                throw new InvalidDataException($"Invalid RLE run count: {runCount}");
+
             int x = 0, y = 0, z = 0;
 
             for (int r = 0; r < runCount; r++)
@@ -282,6 +298,9 @@ namespace TimelessTales.Core
 
                 for (int i = 0; i < count; i++)
                 {
+                    if (x >= Chunk.CHUNK_SIZE)
+                        throw new InvalidDataException("Chunk data overflow: too many blocks in RLE data");
+
                     blocks[x, y, z] = (BlockType)blockType;
                     z++;
                     if (z >= Chunk.CHUNK_SIZE)
