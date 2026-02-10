@@ -251,6 +251,17 @@ namespace TimelessTales.World
             }
         }
 
+        /// <summary>
+        /// Gets the biome type at the given world coordinates.
+        /// </summary>
+        public BiomeType GetBiomeAt(int worldX, int worldZ)
+        {
+            int surfaceHeight = GetTerrainHeight(worldX, worldZ);
+            float moisture = GetMoisture(worldX, worldZ, surfaceHeight);
+            float temperature = GetTemperature(worldX, worldZ, surfaceHeight);
+            return GetBiome(moisture, temperature, surfaceHeight);
+        }
+
         private BlockType GenerateBlock(int worldX, int y, int worldZ, int surfaceHeight, BiomeType biome)
         {
             // Water at sea level and below
@@ -450,6 +461,10 @@ namespace TimelessTales.World
             // Coal in sedimentary layers (y: 40-70)
             if (y > 40 && y < 70 && baseRock == BlockType.Sandstone && oreValue > 0.83f)
                 return BlockType.Coal;
+
+            // Flint nodules in limestone (y: 35-55, naturally occurring in chalk/limestone)
+            if (y > 35 && y < 55 && baseRock == BlockType.Limestone && oreValue > 0.80f)
+                return BlockType.Flint;
 
             return baseRock;
         }

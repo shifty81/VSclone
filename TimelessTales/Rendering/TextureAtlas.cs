@@ -119,6 +119,17 @@ namespace TimelessTales.Rendering
             // Water (simple blue with noise)
             GenerateWaterTexture(textureData, currentTile++, new Color(30, 100, 200, 180)); // Water
             GenerateWaterTexture(textureData, currentTile++, new Color(20, 60, 160, 180)); // Saltwater
+            
+            // Note: Clay types (RedClay 27, BlueClay 28, FireClay 29), light sources (Torch 30, Lantern 31),
+            // Stick (32) use fallback textures from their block colors.
+            // Tiles 27-32 are generated via color fallback in the renderer.
+            
+            // Knapping materials and products (tiles 33-37)
+            GenerateStoneTexture(textureData, currentTile++, new Color(50, 50, 55)); // Flint
+            GenerateStoneTexture(textureData, currentTile++, new Color(60, 60, 65)); // Flint Knife
+            GenerateStoneTexture(textureData, currentTile++, new Color(55, 55, 60)); // Flint Axe Head
+            GenerateStoneTexture(textureData, currentTile++, new Color(55, 55, 60)); // Flint Shovel Head
+            GenerateStoneTexture(textureData, currentTile++, new Color(55, 55, 60)); // Flint Hoe Head
 
             // Set the texture data
             _texture.SetData(textureData);

@@ -48,7 +48,13 @@ namespace TimelessTales.Blocks
         // Light sources
         Torch,
         Lantern,
-        Stick
+        Stick,
+        // Knapping materials and products
+        Flint,
+        FlintKnife,
+        FlintAxeHead,
+        FlintShovelHead,
+        FlintHoeHead
     }
 
     /// <summary>
@@ -155,6 +161,13 @@ namespace TimelessTales.Blocks
             
             // Stick - crafting material and drops from trees
             Register(new BlockDefinition(BlockType.Stick, "Stick", 0.1f, new Color(120, 80, 40), false, false, false, 32));
+            
+            // Knapping materials and products
+            Register(new BlockDefinition(BlockType.Flint, "Flint", 1.0f, new Color(50, 50, 55), false, false, false, 33));
+            Register(new BlockDefinition(BlockType.FlintKnife, "Flint Knife", 0.1f, new Color(60, 60, 65), false, false, false, 34));
+            Register(new BlockDefinition(BlockType.FlintAxeHead, "Flint Axe Head", 0.1f, new Color(55, 55, 60), false, false, false, 35));
+            Register(new BlockDefinition(BlockType.FlintShovelHead, "Flint Shovel Head", 0.1f, new Color(55, 55, 60), false, false, false, 36));
+            Register(new BlockDefinition(BlockType.FlintHoeHead, "Flint Hoe Head", 0.1f, new Color(55, 55, 60), false, false, false, 37));
         }
 
         public static void Register(BlockDefinition block)

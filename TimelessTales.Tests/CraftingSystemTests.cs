@@ -224,7 +224,7 @@ namespace TimelessTales.Tests
 
             Assert.True(handCrafting.Count >= 4);
             Assert.Single(pottery);
-            Assert.Empty(knapping);
+            Assert.True(knapping.Count >= 4);
         }
 
         [Fact]

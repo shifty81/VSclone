@@ -39,6 +39,11 @@ namespace TimelessTales.World
         /// </summary>
         public PointOfInterestGenerator PoiGenerator => _poiGenerator;
 
+        /// <summary>
+        /// Get the world generator for biome and terrain queries
+        /// </summary>
+        public WorldGenerator Generator => _generator;
+
         public void Initialize()
         {
             // Pre-generate spawn chunks

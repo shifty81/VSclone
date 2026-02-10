@@ -92,6 +92,8 @@ namespace TimelessTales.Entities
         public float MaxHunger { get; } = 100f;
         public float Thirst { get; set; } = 100f;
         public float MaxThirst { get; } = 100f;
+        public float BodyTemperature { get; set; } = 50f; // 0-100 scale, 50 = comfortable
+        public float MaxBodyTemperature { get; } = 100f;
         
         // Character customization
         public string CharacterName { get; set; } = "Wanderer";

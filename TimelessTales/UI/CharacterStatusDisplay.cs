@@ -50,6 +50,26 @@ namespace TimelessTales.UI
             // Draw thirst bar (blue)
             DrawStatusBar(spriteBatch, MARGIN_X, currentY, player.Thirst, player.MaxThirst, 
                 new Color(60, 140, 220), new Color(30, 70, 110), "THIRST");
+            currentY += BAR_HEIGHT + BAR_SPACING;
+            
+            // Draw temperature bar (gradient from blue to red based on body temperature)
+            Color tempFillColor = GetTemperatureBarColor(player.BodyTemperature);
+            Color tempBgColor = Color.Lerp(tempFillColor, Color.Black, 0.5f);
+            DrawStatusBar(spriteBatch, MARGIN_X, currentY, player.BodyTemperature, player.MaxBodyTemperature, 
+                tempFillColor, tempBgColor, "TEMP");
+        }
+        
+        private Color GetTemperatureBarColor(float bodyTemp)
+        {
+            if (bodyTemp <= 25f)
+                return new Color(60, 100, 220); // Cold blue
+            if (bodyTemp <= 40f)
+                return Color.Lerp(new Color(60, 100, 220), new Color(60, 180, 60), (bodyTemp - 25f) / 15f);
+            if (bodyTemp <= 60f)
+                return new Color(60, 180, 60); // Comfortable green
+            if (bodyTemp <= 75f)
+                return Color.Lerp(new Color(60, 180, 60), new Color(220, 120, 40), (bodyTemp - 60f) / 15f);
+            return new Color(220, 60, 40); // Hot red
         }
         
         private void DrawStatusBar(SpriteBatch spriteBatch, int x, int y, float current, float max, 
@@ -219,6 +239,15 @@ namespace TimelessTales.UI
                         { true, true, true }
                     };
                     break;
+                case 'M':
+                    pattern = new bool[,] {
+                        { true, false, true },
+                        { true, true, true },
+                        { true, false, true },
+                        { true, false, true },
+                        { true, false, true }
+                    };
+                    break;
                 case 'N':
                     pattern = new bool[,] {
                         { true, false, true },
@@ -226,6 +255,15 @@ namespace TimelessTales.UI
                         { true, true, true },
                         { true, false, true },
                         { true, false, true }
+                    };
+                    break;
+                case 'P':
+                    pattern = new bool[,] {
+                        { true, true, false },
+                        { true, false, true },
+                        { true, true, false },
+                        { true, false, false },
+                        { true, false, false }
                     };
                     break;
                 case 'R':
