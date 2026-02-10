@@ -116,21 +116,22 @@ namespace TimelessTales.Tests
         }
 
         [Fact]
-        public void Craft_ClayBlock_RemovesInputAndAddsOutput()
+        public void Craft_RedClay_RemovesInputAndAddsOutput()
         {
             // Arrange
             var system = new CraftingSystem();
             var inventory = new Inventory(40);
             inventory.AddItem(BlockType.Clay, 8);
 
-            var clayBlock = system.GetAllRecipes()[2];
+            var redClay = system.GetAllRecipes()[2];
 
             // Act
-            bool result = system.Craft(clayBlock, inventory);
+            bool result = system.Craft(redClay, inventory);
 
             // Assert
             Assert.True(result);
-            Assert.Equal(5, inventory.GetItemCount(BlockType.Clay)); // 8 - 4 + 1
+            Assert.Equal(4, inventory.GetItemCount(BlockType.Clay)); // 8 - 4
+            Assert.Equal(2, inventory.GetItemCount(BlockType.RedClay));
         }
 
         [Fact]
@@ -218,9 +219,11 @@ namespace TimelessTales.Tests
             var system = new CraftingSystem();
 
             var handCrafting = system.GetRecipesByCategory(CraftingCategory.HandCrafting);
+            var pottery = system.GetRecipesByCategory(CraftingCategory.Pottery);
             var knapping = system.GetRecipesByCategory(CraftingCategory.Knapping);
 
-            Assert.True(handCrafting.Count >= 5);
+            Assert.True(handCrafting.Count >= 4);
+            Assert.Single(pottery);
             Assert.Empty(knapping);
         }
 

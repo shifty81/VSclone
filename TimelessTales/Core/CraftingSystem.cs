@@ -120,13 +120,13 @@ namespace TimelessTales.Core
                 new Dictionary<BlockType, int> { { BlockType.Stick, 4 } },
                 CraftingCategory.HandCrafting));
 
-            // 4 Clay -> 1 Clay Block (compresses clay)
+            // 4 Clay -> 2 Red Clay (shaped clay blocks)
             RegisterRecipe(new CraftingRecipe(
-                "CLAY BLOCK",
-                "4 CLAY = 1 CLAY BLOCK",
+                "RED CLAY",
+                "4 CLAY = 2 RED CLAY",
                 new Dictionary<BlockType, int> { { BlockType.Clay, 4 } },
-                new Dictionary<BlockType, int> { { BlockType.Clay, 1 } },
-                CraftingCategory.HandCrafting));
+                new Dictionary<BlockType, int> { { BlockType.RedClay, 2 } },
+                CraftingCategory.Pottery));
 
             // 2 Stone -> 1 Cobblestone
             RegisterRecipe(new CraftingRecipe(
