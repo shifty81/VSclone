@@ -54,6 +54,11 @@ namespace TimelessTales.UI
         private int _hoveredEquipmentSlot = -1;
         private int _hoveredInventorySlot = -1;
         private MouseState _previousMouseState;
+        
+        // Crafting
+        private CraftingSystem _craftingSystem;
+        private double _craftFeedbackTimer;
+        private string? _craftFeedbackMessage;
 
         public TabMenu(GraphicsDevice graphicsDevice)
         {
@@ -64,6 +69,7 @@ namespace TimelessTales.UI
             _pixelTexture.SetData(new[] { Color.White });
             
             _previousMouseState = Mouse.GetState();
+            _craftingSystem = new CraftingSystem();
         }
 
         public void Update(InputManager input)
@@ -671,41 +677,66 @@ namespace TimelessTales.UI
             DrawText(spriteBatch, "HAND RECIPES", x, lineY, Color.White);
             lineY += 18;
             
-            // Show basic hand-craftable recipes based on available materials
-            var items = player.Inventory.GetAllItems();
+            // Decay craft feedback timer
+            if (_craftFeedbackTimer > 0)
+                _craftFeedbackTimer -= 0.016; // ~1 frame at 60fps
             
-            // Recipe: 1 Wood -> 4 Planks
-            if (items.ContainsKey(BlockType.Wood))
+            MouseState mouseState = Mouse.GetState();
+            bool clicked = mouseState.LeftButton == ButtonState.Pressed &&
+                           _previousMouseState.LeftButton == ButtonState.Released;
+            
+            var allRecipes = _craftingSystem.GetAllRecipes();
+            
+            foreach (var recipe in allRecipes)
             {
-                DrawRecipeEntry(spriteBatch, x, lineY, availableWidth, "WOOD > PLANK", "1 WOOD = 4 PLANKS", Color.Green);
+                if (lineY + 30 > y + availableHeight - 20) break;
+                
+                bool canCraft = _craftingSystem.CanCraft(recipe, player.Inventory);
+                Color recipeColor = canCraft ? Color.Green : Color.DarkGray;
+                
+                // Build input description with color hints
+                string inputDesc = "";
+                foreach (var input in recipe.Inputs)
+                {
+                    if (inputDesc.Length > 0) inputDesc += " + ";
+                    int have = player.Inventory.GetItemCount(input.Key);
+                    inputDesc += $"{input.Value} {input.Key} ({have})";
+                }
+                
+                // Check for click on this recipe entry
+                var entryRect = new Rectangle(x, lineY, availableWidth - 4, 26);
+                bool hovered = entryRect.Contains(mouseState.X, mouseState.Y);
+                
+                if (hovered && canCraft && clicked)
+                {
+                    if (_craftingSystem.Craft(recipe, player.Inventory))
+                    {
+                        _craftFeedbackTimer = 1.0;
+                        _craftFeedbackMessage = $"CRAFTED {recipe.Name}!";
+                    }
+                }
+                
+                // Highlight on hover
+                Color borderColor = recipeColor;
+                if (hovered && canCraft)
+                    borderColor = Color.Yellow;
+                
+                DrawRecipeEntry(spriteBatch, x, lineY, availableWidth, recipe.Name, recipe.Description, borderColor);
                 lineY += 30;
             }
             
-            // Recipe: 2 Planks -> 4 Sticks (if sticks exist)
-            if (items.ContainsKey(BlockType.Planks) && items[BlockType.Planks] >= 2)
+            // Show craft feedback
+            if (_craftFeedbackTimer > 0 && _craftFeedbackMessage != null)
             {
-                DrawRecipeEntry(spriteBatch, x, lineY, availableWidth, "PLANK > STICK", "2 PLANKS = 4 STICKS", Color.Green);
-                lineY += 30;
-            }
-            
-            // Recipe: 4 Clay -> Clay Block (always show if clay available)
-            if (items.ContainsKey(BlockType.Clay) && items[BlockType.Clay] >= 4)
-            {
-                DrawRecipeEntry(spriteBatch, x, lineY, availableWidth, "CLAY BLOCK", "4 CLAY = 1 BLOCK", Color.Green);
-                lineY += 30;
-            }
-            
-            // Show unavailable recipes dimmed
-            if (!items.ContainsKey(BlockType.Wood))
-            {
-                DrawRecipeEntry(spriteBatch, x, lineY, availableWidth, "WOOD > PLANK", "NEED: WOOD", Color.DarkGray);
-                lineY += 30;
+                float alpha = (float)System.Math.Min(1.0, _craftFeedbackTimer * 2);
+                DrawText(spriteBatch, _craftFeedbackMessage, x, lineY, Color.Lime * alpha);
+                lineY += 16;
             }
             
             if (lineY < y + availableHeight - 20)
             {
                 lineY = y + availableHeight - 16;
-                DrawText(spriteBatch, "MORE COMING SOON", x, lineY, Color.DarkGray);
+                DrawText(spriteBatch, "CLICK TO CRAFT", x, lineY, Color.DarkGray);
             }
         }
         
