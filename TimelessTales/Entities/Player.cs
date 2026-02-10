@@ -102,6 +102,7 @@ namespace TimelessTales.Entities
         public Equipment Equipment { get; private set; }
         public MaterialPouch MaterialPouch { get; private set; } // New material pouch for crafting bits
         public BlockType SelectedBlock { get; set; }
+        public ToolDefinition? CurrentTool { get; set; }
         
         // Character skeleton and animation
         public Skeleton Skeleton { get; private set; }
@@ -685,7 +686,10 @@ namespace TimelessTales.Entities
                 // Left click - break block
                 if (input.IsLeftMouseDown())
                 {
-                    _breakProgress += deltaTime / BREAK_TIME;
+                    float breakTime = ToolRegistry.CalculateBreakTime(
+                        world.GetBlock((int)_targetBlockPos.Value.X, (int)_targetBlockPos.Value.Y, (int)_targetBlockPos.Value.Z),
+                        CurrentTool);
+                    _breakProgress += deltaTime / breakTime;
                     
                     if (_breakProgress >= 1.0f)
                     {
@@ -737,6 +741,17 @@ namespace TimelessTales.Entities
                             else
                             {
                                 Logger.Info($"Collected {dropAmount:F1} {drop.Value.material} (Pouch: {MaterialPouch.GetFillPercentage() * 100:F0}% full)");
+                            }
+                        }
+                        
+                        // Reduce tool durability
+                        if (CurrentTool != null)
+                        {
+                            CurrentTool.CurrentDurability -= 1;
+                            if (CurrentTool.CurrentDurability <= 0)
+                            {
+                                Logger.Info($"{CurrentTool.Name} has broken!");
+                                CurrentTool = null;
                             }
                         }
                         
@@ -830,6 +845,21 @@ namespace TimelessTales.Entities
             if (input.IsKeyPressed(Keys.D8)) SelectedBlock = BlockType.Gravel;
             if (input.IsKeyPressed(Keys.D9)) SelectedBlock = BlockType.Clay;
         }
+
+        /// <summary>
+        /// Sets health value directly (for save/load system)
+        /// </summary>
+        public void SetHealth(float value) { Health = Math.Clamp(value, 0f, 100f); }
+
+        /// <summary>
+        /// Sets hunger value directly (for save/load system)
+        /// </summary>
+        public void SetHunger(float value) { Hunger = Math.Clamp(value, 0f, 100f); }
+
+        /// <summary>
+        /// Sets thirst value directly (for save/load system)
+        /// </summary>
+        public void SetThirst(float value) { Thirst = Math.Clamp(value, 0f, 100f); }
 
         public Vector3? GetTargetBlockPos() => _targetBlockPos;
         public float GetBreakProgress() => _breakProgress;

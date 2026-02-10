@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using TimelessTales.Blocks;
 using TimelessTales.World;
 using TimelessTales.Entities;
 using TimelessTales.Rendering;
@@ -134,7 +135,10 @@ namespace TimelessTales.Core
                 // Initialize title screen
                 _titleScreen = new TitleScreen(GraphicsDevice);
                 _titleScreen.OnNewGame += StartNewGame;
+                _titleScreen.OnLoadGame += LoadSavedGame;
                 _titleScreen.OnSettings += ShowSettings;
+                if (SaveSystem.SaveExists())
+                    _titleScreen.EnableLoadButton();
                 Logger.Info("Title screen initialized");
                 
                 // Initialize settings menu
@@ -304,9 +308,179 @@ namespace TimelessTales.Core
         private void ReturnToMainMenuFromPause()
         {
             Logger.Info("Returning to main menu from pause");
+            SaveCurrentGame();
             _currentState = GameState.MainMenu;
             _isPaused = false;
             IsMouseVisible = true;
+        }
+
+        private void SaveCurrentGame()
+        {
+            if (_player == null || _worldManager == null || _timeManager == null)
+                return;
+
+            try
+            {
+                var data = new WorldSaveData
+                {
+                    Seed = _worldManager.Seed,
+                    SpawnX = _worldManager.GetSpawnPosition().X,
+                    SpawnY = _worldManager.GetSpawnPosition().Y,
+                    SpawnZ = _worldManager.GetSpawnPosition().Z,
+                    DayCount = _timeManager.DayCount,
+                    TimeOfDay = _timeManager.TimeOfDay,
+                    Player = new PlayerSaveData
+                    {
+                        PositionX = _player.Position.X,
+                        PositionY = _player.Position.Y,
+                        PositionZ = _player.Position.Z,
+                        RotationX = _player.Rotation.X,
+                        RotationY = _player.Rotation.Y,
+                        Health = _player.Health,
+                        Hunger = _player.Hunger,
+                        Thirst = _player.Thirst,
+                        SelectedBlock = _player.SelectedBlock,
+                        InventoryItems = _player.Inventory.GetAllItems(),
+                        PouchMaterials = _player.MaterialPouch.GetAllMaterials()
+                    }
+                };
+
+                foreach (var chunk in _worldManager.GetLoadedChunks())
+                {
+                    var chunkData = new ChunkSaveData
+                    {
+                        ChunkX = chunk.ChunkX,
+                        ChunkZ = chunk.ChunkZ,
+                        Blocks = new BlockType[Chunk.CHUNK_SIZE, Chunk.CHUNK_HEIGHT, Chunk.CHUNK_SIZE]
+                    };
+                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                        for (int y = 0; y < Chunk.CHUNK_HEIGHT; y++)
+                            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                                chunkData.Blocks[x, y, z] = chunk.GetBlockRaw(x, y, z);
+                    data.Chunks.Add(chunkData);
+                }
+
+                if (SaveSystem.SaveGame(data))
+                {
+                    Logger.Info("Game saved successfully");
+                    _titleScreen?.EnableLoadButton();
+                }
+                else
+                {
+                    Logger.Error("Failed to save game");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error saving game", ex);
+            }
+        }
+
+        private void LoadSavedGame()
+        {
+            try
+            {
+                Logger.Info("Loading saved game...");
+                var data = SaveSystem.LoadGame();
+                if (data == null)
+                {
+                    Logger.Error("Failed to load save file");
+                    return;
+                }
+
+                _currentState = GameState.Loading;
+                IsMouseVisible = false;
+
+                // Initialize world manager with saved seed
+                _worldManager = new WorldManager(data.Seed);
+
+                // Load saved chunks instead of generating
+                foreach (var chunkData in data.Chunks)
+                {
+                    var chunk = new Chunk(chunkData.ChunkX, chunkData.ChunkZ, true);
+                    for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+                        for (int y = 0; y < Chunk.CHUNK_HEIGHT; y++)
+                            for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                                chunk.SetBlockFast(x, y, z, chunkData.Blocks[x, y, z]);
+                    chunk.NeedsMeshRebuild = true;
+                    _worldManager.LoadChunk(chunk);
+                }
+
+                // Create player at saved position
+                var playerPos = new Vector3(data.Player.PositionX, data.Player.PositionY, data.Player.PositionZ);
+                _player = new Player(playerPos);
+                _player.Rotation = new Vector2(data.Player.RotationX, data.Player.RotationY);
+                _player.SetHealth(data.Player.Health);
+                _player.SetHunger(data.Player.Hunger);
+                _player.SetThirst(data.Player.Thirst);
+                _player.SelectedBlock = data.Player.SelectedBlock;
+
+                // Restore inventory
+                foreach (var kvp in data.Player.InventoryItems)
+                    _player.Inventory.AddItem(kvp.Key, kvp.Value);
+
+                // Restore material pouch
+                foreach (var kvp in data.Player.PouchMaterials)
+                    _player.MaterialPouch.AddMaterial(kvp.Key, kvp.Value);
+
+                _camera!.Position = playerPos + new Vector3(0, 1.62f, 0);
+                _camera.Rotation = _player.Rotation;
+
+                // Initialize renderers (same as StartNewGame)
+                _worldRenderer = new WorldRenderer(GraphicsDevice, _worldManager);
+                _waterRenderer = new WaterRenderer(GraphicsDevice, _worldManager);
+                _underwaterEffectRenderer = new UnderwaterEffectRenderer(GraphicsDevice);
+                _playerRenderer = new PlayerRenderer(GraphicsDevice);
+                _skyboxRenderer = new SkyboxRenderer(GraphicsDevice);
+                _uiManager = new UIManager(_spriteBatch!, Content);
+                _characterStatusDisplay = new CharacterStatusDisplay(GraphicsDevice);
+                _debugOverlay = new DebugOverlay(GraphicsDevice);
+
+                // Initialize particle system
+                _particleRenderer = new Particles.ParticleRenderer(GraphicsDevice);
+                _bubbleEmitter = new Particles.ParticleEmitter(Vector3.Zero)
+                {
+                    EmissionRate = 3.0f,
+                    ParticleLifetime = 2.5f,
+                    ParticleSize = 0.08f,
+                    ParticleColor = new Color(200, 220, 255, 180),
+                    VelocityBase = new Vector3(0, 0.5f, 0),
+                    VelocityVariation = new Vector3(0.1f, 0.2f, 0.1f),
+                    IsActive = false,
+                    EnableWobble = true,
+                    WobbleAmplitude = 0.3f,
+                    WobbleFrequency = 4.0f,
+                    SizeVariation = 0.4f,
+                    SurfacePopY = 64.0f,
+                    UseBurstMode = true,
+                    BurstInterval = 3.0f,
+                    BurstCount = 5
+                };
+                _splashEmitter = new Particles.ParticleEmitter(Vector3.Zero)
+                {
+                    EmissionRate = 50.0f,
+                    ParticleLifetime = 0.8f,
+                    ParticleSize = 0.12f,
+                    ParticleColor = new Color(150, 190, 230, 200),
+                    VelocityBase = new Vector3(0, 2.0f, 0),
+                    VelocityVariation = new Vector3(1.5f, 1.0f, 1.5f),
+                    IsActive = false
+                };
+                _allEmitters = new List<Particles.ParticleEmitter> { _bubbleEmitter, _splashEmitter };
+                _audioManager = new Audio.AudioManager();
+
+                // Restore time
+                _timeManager!.SetTime(data.TimeOfDay, data.DayCount);
+
+                _currentState = GameState.Playing;
+                Logger.Info("Saved game loaded successfully");
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error loading saved game", ex);
+                _currentState = GameState.MainMenu;
+                IsMouseVisible = true;
+            }
         }
 
         protected override void Update(GameTime gameTime)
@@ -319,7 +493,8 @@ namespace TimelessTales.Core
                 {
                     if (_currentState == GameState.Playing)
                     {
-                        // Return to main menu from game
+                        // Save game before returning to main menu
+                        SaveCurrentGame();
                         Logger.Info("Returning to main menu");
                         _currentState = GameState.MainMenu;
                         IsMouseVisible = true;
@@ -362,7 +537,7 @@ namespace TimelessTales.Core
                 else if (_currentState == GameState.TabMenu)
                 {
                     _inputManager!.Update();
-                    _tabMenu!.Update(_inputManager);
+                    _tabMenu!.Update(_inputManager, gameTime);
                 }
                 else if (_currentState == GameState.Playing)
                 {

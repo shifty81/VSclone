@@ -45,6 +45,15 @@ namespace TimelessTales.Core
         /// Gets the current day count since game start
         /// </summary>
         public int DayCount => _dayCount;
+
+        /// <summary>
+        /// Sets the time state directly (for save/load system)
+        /// </summary>
+        public void SetTime(float timeOfDay, int dayCount)
+        {
+            _timeOfDay = Math.Clamp(timeOfDay, 0f, 1f);
+            _dayCount = dayCount;
+        }
         
         /// <summary>
         /// Returns true if it's currently daytime
