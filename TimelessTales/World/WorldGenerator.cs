@@ -251,6 +251,17 @@ namespace TimelessTales.World
             }
         }
 
+        /// <summary>
+        /// Gets the biome type at the given world coordinates.
+        /// </summary>
+        public BiomeType GetBiomeAt(int worldX, int worldZ)
+        {
+            int surfaceHeight = GetTerrainHeight(worldX, worldZ);
+            float moisture = GetMoisture(worldX, worldZ, surfaceHeight);
+            float temperature = GetTemperature(worldX, worldZ, surfaceHeight);
+            return GetBiome(moisture, temperature, surfaceHeight);
+        }
+
         private BlockType GenerateBlock(int worldX, int y, int worldZ, int surfaceHeight, BiomeType biome)
         {
             // Water at sea level and below

@@ -53,9 +53,9 @@ namespace TimelessTales.UI
             
             // Draw semi-transparent background panel
             int panelWidth = 250;
-            int panelHeight = 150;
+            int panelHeight = 165;
             int panelX = 10;
-            int panelY = 220; // Below character status bars
+            int panelY = 244; // Below character status bars (4 bars)
             
             spriteBatch.Draw(_pixelTexture,
                 new Rectangle(panelX, panelY, panelWidth, panelHeight),
@@ -107,6 +107,13 @@ namespace TimelessTales.UI
             {
                 DrawText(spriteBatch, "NOT IN WATER", textX, textY, Color.Gray);
             }
+            textY += lineHeight;
+            
+            // Temperature status
+            string tempStatus = Entities.TemperatureSystem.GetTemperatureStatus(player.BodyTemperature);
+            Color tempColor = player.BodyTemperature < 30f ? Color.CornflowerBlue : 
+                              player.BodyTemperature > 70f ? Color.OrangeRed : Color.LightGreen;
+            DrawText(spriteBatch, $"TEMP: {player.BodyTemperature:F1} {tempStatus}", textX, textY, tempColor);
         }
         
         private void DrawText(SpriteBatch spriteBatch, string text, int x, int y, Color color)
